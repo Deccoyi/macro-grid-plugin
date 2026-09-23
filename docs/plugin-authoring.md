@@ -150,6 +150,13 @@ Bir OBS input'u silinir/yeniden adlandırılırsa, o input için ürettiğiniz `
 dinamik bir değişken sonsuza kadar `VariableStore`'da kalmamalı — `store.Remove(name)` ile açıkça silin
 (bir `Set` gibi `Changed` event'i tetikler, ama değeri ve varlığını kaldırır). Adı sabit olmayan (kullanıcı
 verisine göre üretilen) her değişken için geçerli.
+
+### İkon paketleri
+
+Bir plugin editörün ikon seçicisine kendi ikonlarını ekleyebilir: `IIconPackSource`'u (`Id`, `DisplayName`,
+`IconNames`, `GetIconSvg(name)`) uygulayıp `host.RegisterIconPack(pack)` ile kaydedin. Seçicide paket ayrı bir
+kategori olarak görünür. SVG'lerde `stroke="currentColor"` kullanın, editör seçilen rengi kök `<svg>`'ye
+uygular. İkonları DLL'e `EmbeddedResource` olarak gömmek en basiti. Gerçek örnek: [PLCIcons/](../PLCIcons/).
 - Loglamak için `host.Log(string)` kullanın (host'un dosya loguna plugin id'nizle etiketlenerek yazılır) —
   yoğun/sık tekrarlayan durumlar için değil, bağlantı durumu/hata gibi seyrek olaylar için.
 - Bir sağlayıcı hem `IVariableProvider` hem `IVariableCatalogSource` uyguluyorsa (bkz. server repo'daki
@@ -181,6 +188,6 @@ sekmesinde renkli bir nokta + `detail` metniyle gösterilir):
   online/merkezi katalog yok.
 - **Sıcak yükleme:** yeni kopyalanan bir plugin için sunucu yeniden başlatılmadan devreye girmiyor
   (`PluginLoadContext` collectible olsa da, host tarafında henüz bir "reload" akışı yok).
-- **Widget türü / `plugin-html` köprüsü kaydı:** `IPluginHost` şu an yalnızca `IActionHandler` ve
-  `IVariableProvider` kaydını destekliyor; `macro-station/docs/plan.md`'deki plugin'e özel widget türü
+- **Widget türü / `plugin-html` köprüsü kaydı:** `IPluginHost` aksiyon, değişken sağlayıcı, ayar sayfası,
+  durum öğesi ve ikon paketi kaydını destekliyor ama widget türü kaydı yok; `macro-station/docs/plan.md`'deki plugin'e özel widget türü
   ve sandbox'lı `plugin-html` iframe köprüsü henüz eklenmedi.
