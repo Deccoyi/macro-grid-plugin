@@ -17,9 +17,10 @@ karşılaştırma ve aritmetik blokları) editörün ikon seçiciye ekler.
 İkonlar `src/icons/*.svg` altında, DLL içine gömülü olarak taşınır (ayrı dosya okuma yok). İkon seçicide
 **"PLC İkonları"** kategorisi olarak görünür:
 
-`add`, `calculate`, `coil`, `convert`, `divide`, `empty-block`, `equal`, `f-trig`, `greater`,
-`greater-equal`, `lesser`, `lesser-equal`, `move`, `multiply`, `n`, `nc`, `no`, `not-equal`, `p`,
-`r-trig`, `reset-coil`, `set-coil`, `subtract`, `timer-convert`, `tof-timer`, `ton-timer`, `tp-timer`.
+`add`, `calculate`, `close-branch`, `coil`, `convert`, `divide`, `empty-block`, `equal`, `f-trig`,
+`greater`, `greater-equal`, `lesser`, `lesser-equal`, `move`, `multiply`, `n`, `nc`, `no`,
+`not-equal`, `open-branch`, `p`, `r-trig`, `reset-coil`, `set-coil`, `subtract`, `timer-convert`,
+`tof-timer`, `ton-timer`, `tp-timer`.
 
 Her SVG `stroke="currentColor"` kullanır; editör, ikonu seçildiği rengi taşıyan bir `data:` URI'ye
 çevirirken kök `<svg>` etiketine `color="…"` ekleyerek bunu boyar (ayrı bir CSS bağlamı olmadığından

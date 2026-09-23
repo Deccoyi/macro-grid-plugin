@@ -18,10 +18,10 @@ public sealed class PlcIconPack : IIconPackSource
     // Sorted so the picker's default ordering doesn't depend on the filesystem's own order.
     private static readonly string[] Names =
     [
-        "add", "calculate", "coil", "convert", "divide", "empty-block", "equal", "f-trig",
-        "greater", "greater-equal", "lesser", "lesser-equal", "move", "multiply", "n", "nc", "no",
-        "not-equal", "p", "r-trig", "reset-coil", "set-coil", "subtract", "timer-convert",
-        "tof-timer", "ton-timer", "tp-timer",
+        "add", "calculate", "close-branch", "coil", "convert", "divide", "empty-block", "equal",
+        "f-trig", "greater", "greater-equal", "lesser", "lesser-equal", "move", "multiply", "n",
+        "nc", "no", "not-equal", "open-branch", "p", "r-trig", "reset-coil", "set-coil", "subtract",
+        "timer-convert", "tof-timer", "ton-timer", "tp-timer",
     ];
 
     public string Id => "plc-icons";
