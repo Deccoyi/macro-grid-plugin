@@ -1,15 +1,13 @@
-# Changelog — PLC İkonları
+# Changelog — PLC Icons
 
-Bu dosya yalnızca bu plugin'in sürümünü takip eder (ana programdan bağımsız — bkz. `../agent-and-repo-rules.md` madde 1).
+New features and fixes in the PLC Icons pack. For technical details, see [CHANGELOG-developer.md](CHANGELOG-developer.md).
 
-## [0.1.1] - 2026-09-23
-### Added
-- İki yeni ikon: `open-branch`, `close-branch` (dal ayırma/birleştirme).
+## 0.1.1 - 2026-09-23
+### New
+- Two new icons for opening and closing a branch.
+
 ### Fixed
-- `p` ikonu `stroke`/`fill`'i `#000` yerine `currentColor` kullanacak şekilde düzeltildi — diğer tüm
-  ikonlarla tutarlı olmadığı için editörün ikon seçicisindeki renklendirme onda çalışmıyordu.
+- One icon could not be recolored. Now it can, like the others.
 
-## [0.1.0] - 2026-09-23
-### Added
-- İlk sürüm: `IIconPackSource` üzerinden editörün ikon seçicisine "PLC İkonları" kategorisi olarak
-  eklenen 27 adet ladder-logic ikonu (bobin, zamanlayıcılar, karşılaştırma ve aritmetik blokları).
+## 0.1.0 - 2026-09-23
+- First release: 27 ladder-logic icons, including coils, timers, comparisons and math blocks.

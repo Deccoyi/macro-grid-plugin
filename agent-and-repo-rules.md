@@ -4,12 +4,12 @@ Bu repo (`macro-station-plugins`), Macro Station'ın **server** (`macro-station`
 
 > **Not (2026-09-23):** `macro-station` repo'sunda gerçek plugin *yükleyicisi* kuruldu (`IPlugin`/`IPluginHost`, `AssemblyLoadContext` izolasyonu, `%AppData%/MacroStation/plugins/` klasör taraması, editörde "Klasörden Yükle…" akışı — bkz. `MacroStation.Core/Plugins/` ve [docs/plugin-authoring.md](docs/plugin-authoring.md)). Aynı gün, bu repoda **ilk gerçek plugin de yazıldı: [OBS/](OBS/)** — `_backup/obs-plugin-reference/`'daki taslak temel alınarak obs-websocket v5 bağlantısı, sahne/yayın/kayıt/ses aksiyonları ve `obs.*` değişkenleri. Bu, plugin'e özel ayar ihtiyacının (host/port/şifre) `IPluginHost`'a `DataDirectory`/`Log` eklenmesini gerektirdiğini ortaya çıkardı — Plugin SDK bu yüzden `0.1.0`'dan `0.2.0`'a çıktı (bkz. `OBS/README.md` ve `docs/plugin-authoring.md`). İkinci plugin, [PLCIcons/](PLCIcons/) (`plc-icons`), Plugin SDK `0.3.0`'da eklenen `IIconPackSource`/`IPluginHost.RegisterIconPack` üzerinden 27 adet ladder-logic ikonunu editörün ikon seçicisine "PLC İkonları" kategorisi olarak ekler — bağlantısı/ayarı yok, tamamen statik. Soundboard/WebView-chat gibi diğer plugin'ler hâlâ yazılmadı.
 >
-> **Not (2026-09-23, devamı):** Aynı `0.3.0` SDK bump'ı içinde OBS plugin'i de `0.2.0`'a yükseltildi — bağlantı katmanı baştan yazıldı (doğru event subscription bitleri, zaman aşımları, `RequestBatch`, kapanış koduna göre şifre-hatası ayrımı), bir `ObsState` önbelleği eklendi, ayarları artık kendi `IPluginSettingsPage`'i ile schema-driven formda, ~20 aksiyonun tamamı `IActionDescriptor`/`IOptionsSource` kullanıyor. Ayrıntı: `OBS/CHANGELOG.md` `[0.2.0]`.
+> **Not (2026-09-23, devamı):** Aynı `0.3.0` SDK bump'ı içinde OBS plugin'i de `0.2.0`'a yükseltildi — bağlantı katmanı baştan yazıldı (doğru event subscription bitleri, zaman aşımları, `RequestBatch`, kapanış koduna göre şifre-hatası ayrımı), bir `ObsState` önbelleği eklendi, ayarları artık kendi `IPluginSettingsPage`'i ile schema-driven formda, ~20 aksiyonun tamamı `IActionDescriptor`/`IOptionsSource` kullanıyor. Ayrıntı: `OBS/CHANGELOG-developer.md` `[0.2.0]`.
 
 ## 1. Bağımsız versiyonlama
 
 - Her plugin **kendi sürüm numarasını** taşır (semver: `MAJOR.MINOR.PATCH`), ana programın (`macro-station`) sürümünden bağımsız.
-- Bir plugin'in sürümü yalnızca o plugin'in kendi `CHANGELOG.md`'sinde ilerler. Ana programın sürüm bump'ı bir plugin'in sürümünü otomatik değiştirmez, tetiklemez.
+- A plugin's version moves only in that plugin's own changelogs (`CHANGELOG-developer.md` and the short public `CHANGELOG.md`). A version bump of the main program never changes or triggers a plugin's version.
 - Aynı şekilde iki farklı plugin birbirinin sürümüne bağlı/duyarlı değildir — biri 3.0.0'dayken diğeri 0.1.0'da olabilir, aralarında bir uyumluluk ilişkisi yoktur (bkz. madde 2).
 - Bir plugin'in sürüm bump'ı (özellikle MAJOR) da — tıpkı ana programda olduğu gibi — sessizce yapılmaz, kullanıcıya sorulur.
 
@@ -50,7 +50,8 @@ macro-station-plugins/
 ├── agent-and-repo-rules.md      (bu dosya)
 ├── <PluginAdi>/
 │   ├── plugin.json               zorunlu manifesto (madde 3)
-│   ├── CHANGELOG.md               bu plugin'e özel, ana programınkinden bağımsız
+│   ├── CHANGELOG.md               short public changelog for this plugin, independent of the main program
+│   ├── CHANGELOG-developer.md     detailed technical changelog for this plugin
 │   ├── README.md                  ne yaptığı, kurulum/bağımlılık notları (örn. OBS plugin'i için "OBS WebSocket sunucusu açık olmalı")
 │   └── src/                       kaynak kod (C# .csproj veya JS/TS dosyaları)
 ```
