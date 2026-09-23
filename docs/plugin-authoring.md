@@ -17,15 +17,14 @@ içeriyorsa plugin olarak tanınır:
 ```
 <klasör>/
 ├── plugin.json       zorunlu manifesto (aşağıda)
-└── <entry dosyası>   plugin.json'daki "entry" alanında adı geçen DLL (csharp) — js henüz çalıştırılmıyor
+└── <entry dosyası>   plugin.json'daki "entry" alanında adı geçen DLL (csharp) ya da script (js)
 ```
 
 Klasör adı önemli değil; kimlik `plugin.json`'daki `id` alanından gelir. Editördeki "Klasörden Yükle…"
 düğmesi seçilen kaynağı `plugins/<id>/` altına kopyalar (aynı id ikinci kez yüklenemez — host reddeder).
 
-**Yükleme, sunucu her açıldığında bir kez olur** (`PluginLoader.LoadAll`, DI container kurulmadan önce
-çalışır — bkz. `ServerApp.cs`). Yeni kopyalanan bir plugin'in devreye girmesi için **sunucunun yeniden
-başlatılması gerekir**; editör bunu kopyalama sonrası açıkça söyler.
+**Yükleme:** sunucu açılırken `PluginManager` klasörü tarar; ayrıca editörden kurulan/yeniden yüklenen/kaldırılan
+plugin'ler **sunucu yeniden başlatılmadan** devreye girer (bkz. "Hot loading, reload and unload" bölümü).
 
 ## 2. `plugin.json` şeması
 
@@ -51,9 +50,9 @@ başlatılması gerekir**; editör bunu kopyalama sonrası açıkça söyler.
 | `version` | evet | Plugin'in kendi semver'i — sunucudan bağımsız (bkz. `macro-station/docs/versioning.md`). |
 | `sdkVersion` | evet | Plugin SDK'sına (`MacroStation.Plugin.Abstractions`) karşı npm tarzı caret aralığı, örn. `"^0.1.0"`. Sunucudaki gerçek SDK sürümü bu aralığı karşılamıyorsa plugin **yüklenmez**, "Uyumsuz" olarak listelenir. |
 | `minServerVersion` | evet | Gerekli asgari sunucu (Host) sürümü. Sunucu bundan eskiyse plugin **yüklenmez**. |
-| `entry` | evet | `kind: "csharp"` için giriş DLL'inin dosya adı (klasörün köküne göre). `kind: "js"` için giriş script — ama JS runtime henüz yok (madde 5). |
+| `entry` | evet | `kind: "csharp"` için giriş DLL'inin dosya adı (klasörün köküne göre). `kind: "js"` için giriş script (genelde `index.js`). |
 | `kind` | evet | `"csharp"` veya `"js"`. |
-| `permissions` | hayır | Yalnızca `kind: "js"` için — henüz uygulanmıyor. |
+| `permissions` | hayır | Yalnızca `kind: "js"` için: script'in ihtiyaç duyduğu izinler. Kullanıcı editörde onaylamadan script çalışmaz (bkz. "JavaScript plugins"). |
 
 Sürüm uyumluluk kuralları `macro-station/docs/versioning.md`'deki "Plugin uyumluluk beyanı" bölümüyle
 birebir aynı — iki dosya arasında tutarsızlık fark ederseniz `versioning.md` esas alınır, burası ona göre
@@ -176,18 +175,107 @@ uygular. İkonları DLL'e `EmbeddedResource` olarak gömmek en basiti. Gerçek �
 sekmesinde renkli bir nokta + `detail` metniyle gösterilir):
 
 - **Loaded** — yüklendi, aksiyonları/değişkenleri devrede.
-- **Incompatible** — `sdkVersion`/`minServerVersion` uyuşmuyor, ya da `kind: "js"` (JS runtime henüz yok).
+- **Incompatible** — `sdkVersion`/`minServerVersion` uyuşmuyor, (JS plugin'lerde: bilinmeyen izin ya da script hatası `Error`'dır).
+- **NeedsApproval** — JS plugin'in istediği izinler henüz onaylanmadı; onaylanana kadar çalışmaz.
 - **Error** — `plugin.json` ayrıştırılamadı, `entry` dosyası bulunamadı, id çakışması, ya da `Initialize`
   sırasında exception.
 
+## JavaScript plugins
+
+A plugin with `"kind": "js"` is one script (`entry`, usually `index.js`) that runs in a sandbox inside the server. Use it
+for small integrations (poll a local HTTP API, publish a variable, add an action) without building a DLL. A complete
+example is [../HelloJs/](../HelloJs/).
+
+### Permissions
+
+Declare what the script needs in `plugin.json`; the user approves the list in the editor's Plugins window before the
+script runs (status `NeedsApproval`). An update that asks for more than was approved waits for approval again.
+
+| Permission | Lets the script |
+|---|---|
+| `variables` | read any variable and publish its own |
+| `actions` | register actions |
+| `input` | press key combinations and type text on the PC |
+| `http:<host>:<port>` | send HTTP requests to exactly that host and port (one entry per target, e.g. `http:localhost:4455`) |
+
+Timers, settings pages, status items and logging need no permission. An unknown permission string makes the plugin an
+`Error`. A call without its permission throws an ordinary JavaScript `Error` that the script can catch.
+
+### The `host` object
+
+Everything goes through the global, read-only `host`. There is no `require`, no `fetch`, no file access and no access to .NET.
+
+```js
+host.log(message)
+
+host.variables.set(name, value)      // value: number, string, boolean or null
+host.variables.get(name)
+host.variables.remove(name)
+host.variables.describe([{ name, description, example, category }])   // lists them in the editor's variable picker
+
+host.registerAction({ type, name, category, description, icon, fields, run(context, settings) {} })
+// context: { deviceId, pageId, widgetId, value }   settings: the values of the action's fields
+// fields: the same shape as the C# SettingField: { key, label, kind: 'Text'|'Number'|'Bool'|'Select'|..., default, min, max, options }
+
+host.settings.page(fields)           // adds a settings page to the plugin (stored in settings.json)
+host.settings.get()                  // the current values as an object
+host.status(id, text, level)         // a status bar item; level: 'Idle' | 'Ok' | 'Busy' | 'Warning' | 'Error'
+
+host.input.hotkey('ctrl+shift+m')    // needs 'input'
+host.input.type('hello')             // needs 'input'
+
+host.http.get(url, { headers })      // needs http:<host>:<port>; returns { status, body } (body is text), synchronous
+host.http.post(url, body, { headers })   // body is sent as JSON
+
+const id = host.every(ms, fn)        // repeat, shortest 100 ms
+host.after(ms, fn)                   // once
+host.cancel(id)
+host.permissions                     // what was granted
+```
+
+Rules the host enforces:
+
+- **Names are yours.** Variable names and action types must start with `<plugin id>.`, so a plugin can never overwrite
+  `system.cpu` or another plugin's values.
+- **Register at the top level.** Actions, the settings page and variable descriptions must be registered while the script
+  first runs; registrations made later from a callback are ignored. Variables can be set at any time.
+- **Time and memory are limited per call** (start-up, each action, each timer tick): 2 seconds, 32 MB, 2 million statements,
+  recursion depth 100. A call that goes over fails with an error; the plugin keeps running. HTTP requests time out after 5 s
+  and responses are capped at 1 MB, redirects are not followed.
+- **One thing at a time.** The script runs on its own thread, one call at a time, so a slow plugin never blocks the server
+  or another plugin, but it also means `host.http` blocks the plugin's own other callbacks while it waits. At most 20
+  timers; ticks that pile up while the script is busy are dropped.
+- **A plugin that fails 5 times in a row is switched off** (status `Error` with the last message); Reload starts it again.
+- Uninstalling a plugin unloads it, removes its variables and forgets its approval.
+
+There is no `async`/`await` host API yet and no bridge for a plugin to draw its own widget (`plugin-html`); both are planned.
+
+## Hot loading, reload and unload
+
+A plugin is installed, reloaded and removed while the server runs (Plugins window in the editor); no restart is needed.
+What that means for plugin code:
+
+- **`Initialize` may run more than once per server run** (install, reload, replacing a plugin with a new version), each
+  time in a fresh instance and a fresh load context. Keep state in the plugin instance, not in `static` fields that must
+  survive.
+- **Stop everything you started.** On unload the host cancels the `CancellationToken` passed to your `IVariableProvider.RunAsync`
+  and waits a few seconds, then calls `Dispose` / `DisposeAsync` on the plugin instance and on every action, provider,
+  settings page and icon pack you registered, if they implement `IDisposable` / `IAsyncDisposable`. Close sockets and stop
+  timers and threads there. Anything still running keeps the plugin's assembly in memory until the server restarts.
+- **Variables you set are removed on unload** automatically; you do not have to call `Remove` for them.
+- **Your assemblies are loaded from memory,** so your files are never locked and can be replaced while the plugin runs, but
+  `Assembly.Location` is empty inside a plugin. Use `IPluginHost.DataDirectory` to find your own files.
+- **Action types must be unique.** If one of your action types is already registered (by the host or another plugin), the
+  whole plugin fails to load with an `Error` entry and nothing of it stays registered.
+- Installing a folder whose `plugin.json` has an id that is already installed replaces that plugin; files the plugin wrote
+  into its own folder (such as `settings.json`) are kept.
+
 ## 5. Kapsam dışı (henüz yok)
 
-- **JS/Jint plugin çalıştırma:** manifesto `kind: "js"` olarak tanınıyor ve listede görünüyor, ama
-  sandbox'lı Jint runtime'ı henüz yazılmadı (Aşama 7 — `macro-station/docs/plan.md`).
+- **JS plugin `async` API'si ve `plugin-html` widget köprüsü:** JS plugin'ler çalışıyor (bkz. "JavaScript plugins") ama
+  script'ler senkron çalışır ve kendi widget'larını çizemez.
 - **Plugin keşif/katalog sayfası:** şu an tek yol editördeki "Klasörden Yükle…" ile elle seçmek; bir
   online/merkezi katalog yok.
-- **Sıcak yükleme:** yeni kopyalanan bir plugin için sunucu yeniden başlatılmadan devreye girmiyor
-  (`PluginLoadContext` collectible olsa da, host tarafında henüz bir "reload" akışı yok).
 - **Widget türü / `plugin-html` köprüsü kaydı:** `IPluginHost` aksiyon, değişken sağlayıcı, ayar sayfası,
   durum öğesi ve ikon paketi kaydını destekliyor ama widget türü kaydı yok; `macro-station/docs/plan.md`'deki plugin'e özel widget türü
   ve sandbox'lı `plugin-html` iframe köprüsü henüz eklenmedi.
