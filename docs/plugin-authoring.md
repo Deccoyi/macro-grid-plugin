@@ -95,8 +95,12 @@ Notlar:
   toplanıp built-in olanlarla aynı şekilde DI container'a eklenir — çalışma zamanında aksiyon/değişken
   tipleri arasında bir fark yoktur.
 - Plugin'inizin kendi ayarlarına (bağlantı bilgisi, API anahtarı, ...) ihtiyacı varsa `host.DataDirectory`
-  (plugin'in kendi kurulum klasörü, yazılabilir) altına kendi JSON dosyanızı okuyup/yazın — host'un
-  plugin'lere özel bir ayar UI'ı/deposu henüz yok (madde 5). Gerçek örnek: `OBS/src/ObsSettings.cs`.
+  (plugin'in kendi kurulum klasörü, yazılabilir) altına kendi `settings.json`'ınızı okuyup/yazın. Host'un
+  plugin'e özel bir ayar **şeması** yok, ama editörden okuyup/yazabilmeniz için jenerik bir ham-JSON
+  köprüsü var: `GET`/`PUT /api/plugins/{id}/settings`, doğrudan bu dosyayı okur/üzerine yazar — editör
+  tarafında formu (alanlar, etiketler, doğrulama) siz kendi plugin'inize özel kodlarsınız (OBS örneği:
+  `macro-station/editor/src/windows/PluginsWindow.tsx`'teki `ObsSettingsInline`). Gerçek örnek:
+  `OBS/src/ObsSettings.cs` + `OBS/README.md`'deki "Ayarlar" bölümü.
 - Loglamak için `host.Log(string)` kullanın (host'un dosya loguna plugin id'nizle etiketlenerek yazılır) —
   yoğun/sık tekrarlayan durumlar için değil, bağlantı durumu/hata gibi seyrek olaylar için.
 - Bir sağlayıcı hem `IVariableProvider` hem `IVariableCatalogSource` uyguluyorsa (bkz. server repo'daki

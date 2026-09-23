@@ -19,9 +19,16 @@ Macro Station için OBS Studio eklentisi. [obs-websocket v5](https://github.com/
 
 ## Ayarlar
 
-Bu eklentinin editörde henüz bir ayar ekranı yok (host'un plugin'lere yönelik genel bir ayar arayüzü/
-depolaması henüz yok — bkz. `../docs/plugin-authoring.md` §5). Bunun yerine, eklenti ilk çalıştığında
-kendi klasörüne (`%AppData%/MacroStation/plugins/obs/settings.json`) şu varsayılanlarla bir dosya yazar:
+Editördeki **Eklentiler** penceresinde OBS satırının yanındaki dişli ikonuna tıklayın — **Etkin**,
+**Sunucu**, **Port**, **Şifre** alanları ve bir **Kaydet** düğmesi açılır. Kaydettikten sonra sunucuyu
+yeniden başlatmanıza gerek yok; bağlantı döngüsü ayarları her yeniden bağlanma denemesinde diskten tekrar
+okur (en geç birkaç saniye içinde bağlanır).
+
+Bu form, host'un plugin'lere özel bir ayar şeması/UI'ı olmadığı için (bkz. `../docs/plugin-authoring.md`
+§"Ayarlar") host'taki genel `/api/plugins/{id}/settings` (GET/PUT, ham JSON) uç noktası üzerinden bu
+eklentinin kendi `%AppData%/MacroStation/plugins/obs/settings.json`'ını okuyup yazıyor — editördeki form
+OBS'e özel, ama taşıma katmanı jenerik. Eklenti ilk çalıştığında bu dosyayı yoksa şu varsayılanlarla
+kendisi oluşturur:
 
 ```json
 {
@@ -31,10 +38,6 @@ kendi klasörüne (`%AppData%/MacroStation/plugins/obs/settings.json`) şu varsa
   "password": ""
 }
 ```
-
-`enabled: true` yapıp OBS'in WebSocket şifresini (varsa) `password` alanına yazın, kaydedin — sunucuyu
-yeniden başlatmanıza gerek yok, bağlantı döngüsü ayarları her yeniden bağlanma denemesinde diskten
-tekrar okur (en geç birkaç saniye içinde bağlanır).
 
 ## Sağladığı değişkenler
 
