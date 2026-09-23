@@ -2,7 +2,7 @@
 
 Bu repo (`macro-station-plugins`), Macro Station'ın **server** (`macro-station`) ve **client** (`macro-station-client`) repolarından ayrı, üçüncü bağımsız repo. Server/editör tarafındaki genel ürün planı için `macro-station/docs/plan.md` ve `agent-notes.md`'ye bakılabilir (Plugin sistemi bölümü) — ama bu repo kendi kurallarıyla, kendi başına yaşar.
 
-> **Not (2026-09-23):** Bu repo şu an sadece bu kural dosyasıyla var — henüz hiçbir plugin yazılmadı, yazılmayacak da (bu turda). Server tarafındaki gerçek plugin *yükleyicisi* (`IPlugin`/`IPluginHost`, `AssemblyLoadContext` izolasyonu, `plugins/` klasör taraması) da henüz `macro-station` repo'sunda inşa edilmedi. Bu kurallar, o altyapı ve ilk plugin'ler yazılmaya başlanınca uygulanacak — şimdiden netleştirilip yazılı hale getiriliyor.
+> **Not (2026-09-23):** `macro-station` repo'sunda gerçek plugin *yükleyicisi* artık kuruldu (`IPlugin`/`IPluginHost`, `AssemblyLoadContext` izolasyonu, `%AppData%/MacroStation/plugins/` klasör taraması, editörde "Klasörden Yükle…" akışı — bkz. `MacroStation.Core/Plugins/` ve [docs/plugin-authoring.md](docs/plugin-authoring.md)). Ama bu repoda hâlâ **hiçbir gerçek plugin yazılmadı** — sıradaki iş kullanıcının seçeceği ilk plugin (OBS, Soundboard, ...) olacak, bu turda değil.
 
 ## 1. Bağımsız versiyonlama
 
@@ -25,11 +25,13 @@ Bu repo (`macro-station-plugins`), Macro Station'ın **server** (`macro-station`
   - `id`: benzersiz, değişmez kimlik (örn. `"obs"`, `"audio"`, `"soundboard"`). Ana programda ve diğer plugin'lerle çakışmaması kullanıcının/geliştiricinin sorumluluğunda; ana program aynı `id`'yi ikinci kez yüklemeyi reddeder.
   - `name`: kullanıcıya gösterilen ad (editördeki "Eklentiler" listesinde).
   - `version`: plugin'in kendi sürümü (madde 1).
-  - `minHostVersion` / `maxHostVersion` (veya tek bir `hostVersionRange` semver aralığı): bu plugin'in **hangi ana program (macro-station) sürüm aralığıyla uyumlu olduğu**. Ana program, bir plugin'i yüklerken kendi sürümünü bu aralıkla karşılaştırır; uyuşmuyorsa plugin'i **yüklemez** ve editörde açık bir uyarı gösterir ("X plugin'i Y sürümü gerektiriyor, mevcut sürüm Z") — sessizce yüklenip daha sonra tuhaf hatalar vermez.
+  - `sdkVersion`: Plugin SDK'sına (`MacroStation.Plugin.Abstractions`) karşı npm tarzı caret aralığı (örn. `"^0.1.0"`).
+  - `minServerVersion`: bu plugin'in ihtiyaç duyduğu asgari ana program (macro-station) sürümü. Ana program, bir plugin'i yüklerken kendi sürümünü/SDK sürümünü bu iki alanla karşılaştırır; uyuşmuyorsa plugin'i **yüklemez** ve editörde açık bir uyarı gösterir ("Uyumsuz: SDK X istiyor, sunucudaki SDK Y") — sessizce yüklenip daha sonra tuhaf hatalar vermez.
   - `entry`: giriş derlemesi/dosyası (C# plugin için DLL adı, JS plugin için giriş script'i).
   - `kind`: `"csharp"` | `"js"` (madde 4).
 - Manifesto ayrıca (varsa) JS plugin'ler için `permissions` listesini taşır (`macro-station/docs/plan.md`'deki JS plugin izin modeliyle birebir aynı: `"variables"`, `"actions"`, `"http:host:port"`, `"input"` gibi).
 - Manifesto şeması değişirse (yeni zorunlu alan eklenirse) bu, ana programın kendi sürümünde bir MINOR/MAJOR değişiklik olarak ele alınır ve eski manifestoların hâlâ okunabilir kalması (ya da açıkça reddedilmesi, sessizce yanlış yorumlanmaması) hedeflenir.
+- Tam şema, alan alan açıklamayla ve örnek bir plugin ile birlikte: [docs/plugin-authoring.md](docs/plugin-authoring.md).
 
 ## 4. C# plugin'leri vs JS plugin'leri (ayrım netleştirilmeli)
 
@@ -53,4 +55,4 @@ macro-station-plugins/
 
 ## 6. Ne zaman uygulanacak
 
-Bu kurallar **şimdiden** yazılı, ama şu an (2026-09-23 itibarıyla) bu repo'da hiçbir plugin geliştirilmiyor — sıradaki iş `macro-station` server repo'sundaki Aşama 5 kalemleri (bkz. o repo'nun `docs/plan.md`'si). Server tarafında gerçek `IPlugin`/`IPluginHost`/`AssemblyLoadContext` yükleyicisi kurulmadan bu repo'da yazılacak bir plugin zaten çalıştırılamaz — loader inşa edilene kadar bu dosya bir **sözleşme/hazırlık** olarak duruyor, kod yazımı için bir sinyal değil.
+Server tarafındaki gerçek `IPlugin`/`IPluginHost`/`AssemblyLoadContext` yükleyicisi artık kuruldu (2026-09-23) — bkz. [docs/plugin-authoring.md](docs/plugin-authoring.md). Ama bu repoda hâlâ hiçbir plugin geliştirilmiyor: ilk gerçek plugin'in ne olacağı (OBS, Soundboard, ...) ve ne zaman başlanacağı ayrı, açık bir kullanıcı kararı — bu dosya ve `docs/plugin-authoring.md` o karar verilene kadar bir **sözleşme/hazırlık** olarak duruyor, kod yazımı için bir sinyal değil.
