@@ -7,7 +7,7 @@ Macro Station için OBS Studio eklentisi. [obs-websocket v5](https://github.com/
 
 - OBS Studio 28 veya üstü.
 - OBS içinde **Araçlar → WebSocket Server Ayarları**'ndan sunucu açık olmalı. Bir şifre belirlediyseniz
-  aşağıdaki `settings.json`'a aynen yazın.
+  aşağıdaki ayar formuna aynen yazın.
 
 ## Kurulum
 
@@ -20,37 +20,67 @@ Macro Station için OBS Studio eklentisi. [obs-websocket v5](https://github.com/
 ## Ayarlar
 
 Editördeki **Eklentiler** penceresinde OBS satırının yanındaki dişli ikonuna tıklayın — **Etkin**,
-**Sunucu**, **Port**, **Şifre** alanları ve bir **Kaydet** düğmesi açılır. Kaydettikten sonra sunucuyu
-yeniden başlatmanıza gerek yok; bağlantı döngüsü ayarları her yeniden bağlanma denemesinde diskten tekrar
-okur (en geç birkaç saniye içinde bağlanır).
-
-Bu form, host'un plugin'lere özel bir ayar şeması/UI'ı olmadığı için (bkz. `../docs/plugin-authoring.md`
-§"Ayarlar") host'taki genel `/api/plugins/{id}/settings` (GET/PUT, ham JSON) uç noktası üzerinden bu
-eklentinin kendi `%AppData%/MacroStation/plugins/obs/settings.json`'ını okuyup yazıyor — editördeki form
-OBS'e özel, ama taşıma katmanı jenerik. Eklenti ilk çalıştığında bu dosyayı yoksa şu varsayılanlarla
-kendisi oluşturur:
+**Sunucu**, **Port**, **Şifre** alanları ve bir **Kaydet** düğmesi açılır (host'un genel schema-driven ayar
+penceresi, bkz. `../docs/plugin-authoring.md` §"`SettingField` — şema-tabanlı formlar" — bu eklenti kendi
+`ObsSettingsPage : IPluginSettingsPage`'ini kaydeder, editörde artık OBS'e özel kod yok). Kaydettikten
+sonra sunucuyu yeniden başlatmanıza gerek yok; ayar sayfası kaydedince bağlantı döngüsüne haber verir,
+birkaç saniye içinde yeni ayarlarla yeniden bağlanır. Ayarlar diskte
+`%AppData%/MacroStation/plugins/obs/settings.json`'da tutulur, ilk çalıştırmada yoksa şu varsayılanlarla
+kendisi oluşturulur:
 
 ```json
-{
-  "enabled": false,
-  "host": "127.0.0.1",
-  "port": 4455,
-  "password": ""
-}
+{ "enabled": false, "host": "127.0.0.1", "port": 4455, "password": "" }
 ```
 
-## Sağladığı değişkenler
+## Durum çubuğu
 
-`obs.connected`, `obs.streaming`, `obs.stream.duration`, `obs.recording`, `obs.record.duration`,
-`obs.scene.current`, `obs.stats.fps`, `obs.stats.cpu`.
+Editörün pencere-geneli durum çubuğunda "OBS · bağlı" / "OBS · bağlanıyor…" / "OBS · şifre hatalı" / "OBS
+· Ns sonra tekrar denenecek" gibi bir metin görünür; bağlıyken FPS ve (yayın/kayıt açıksa) süre de eklenir.
+Tıklamak ayar penceresini açar.
 
-## Sağladığı aksiyonlar
+## Sağladığı değişkenler (~45)
 
-`obs.setScene` (ayar: `sceneName`), `obs.startStream`/`obs.stopStream`/`obs.toggleStream`,
-`obs.startRecord`/`obs.stopRecord`/`obs.toggleRecord`, `obs.setMute` (ayar: `inputName`, `muted`),
-`obs.toggleMute` (ayar: `inputName`), `obs.setVolume` (ayar: `inputName`, `volume` — 0..1 doğrusal çarpan,
-OBS'in kendi `inputVolumeMul`'ıyla birebir, dB değil).
+**Bağlantı:** `obs.connected`, `obs.status`, `obs.ws.in`, `obs.ws.out`.
+**Sahne/durum:** `obs.scene.current`, `obs.scene.preview`, `obs.studioMode`, `obs.transition.current`,
+`obs.profile.current`, `obs.sceneCollection.current`.
+**Yayın:** `obs.streaming`, `obs.stream.reconnecting`, `obs.stream.duration`, `obs.stream.timecode`,
+`obs.stream.congestion`, `obs.stream.bytes`, `obs.stream.kbps`, `obs.stream.frames.dropped/total/droppedPercent`.
+**Kayıt:** `obs.recording`, `obs.record.paused`, `obs.record.duration`, `obs.record.timecode`,
+`obs.record.bytes`, `obs.record.kbps`.
+**Çıkışlar:** `obs.virtualcam`, `obs.replayBuffer`.
+**İstatistik:** `obs.stats.fps`, `obs.stats.cpu`, `obs.stats.memory`, `obs.stats.disk`, `obs.stats.renderTime`,
+`obs.stats.render.skipped/total/skippedPercent`, `obs.stats.output.skipped/total/skippedPercent`.
+**Dinamik:** her ses girişi için `obs.input.<slug>.muted`/`obs.input.<slug>.volumeDb`; her sahne öğesi için
+`obs.item.<sahneSlug>.<kaynakSlug>.visible`. `<slug>`, adın küçük harfe çevrilip `[a-z0-9]` dışındaki her
+karakter dizisinin `_` ile değiştirilmiş hali. Giriş/öğe silinince ya da yeniden adlandırılınca ilgili
+değişken `IVariableStore.Remove` ile kaldırılır — sonsuza kadar birikmez.
 
-Not: editörde bu aksiyonlar için henüz özel bir ayar formu (sahne/giriş adı seçici) yok — widget'ın
-aksiyon ayarları JSON'u elle düzenlenmeli, ya da editöre plugin-özel ayar paneli desteği eklenene kadar
-bu haliyle kullanılmalı.
+## Sağladığı aksiyonlar (~20)
+
+Hepsi editörün aksiyon seçicisinde "OBS" kategorisinde, kendi şema-tabanlı formlarıyla (sahne/ses
+kaynağı/öğe seçiciler OBS'e canlı bağlanmadan, önbellekten doldurulur):
+
+- Sahne: `obs.setScene`, `obs.setPreviewScene`, `obs.studioTransition`, `obs.toggleStudioMode`,
+  `obs.setTransition`, `obs.setProfile`.
+- Yayın/kayıt: `obs.startStream`/`stopStream`/`toggleStream`, `obs.startRecord`/`stopRecord`/`toggleRecord`,
+  `obs.pauseRecord` (duraklat/devam et/aç-kapat).
+- Çıkışlar: `obs.virtualCam`, `obs.replayBuffer` (başlat/durdur/aç-kapat), `obs.saveReplay`.
+- Ses: `obs.setMute` (mod: sustur/aç), `obs.toggleMute`, `obs.setVolume` (0-100%, slider/knob'un canlı
+  sürüklenen değeri varsa onu kullanır), `obs.adjustVolume` (±dB adım).
+- Sahne öğesi/metin: `obs.setItemVisibility` (gruplar dahil, göster/gizle/aç-kapat),
+  `obs.setText` (metin kaynağının içeriği, `{değişken}` şablonlarını destekler).
+
+Artık var olmayan bir hedefe (silinmiş bir sahne/ses girişi) yönlendirilmiş bir aksiyon çalıştırıldığında
+sessizce hiçbir şey yapmaz — açık bir hata fırlatır, sunucu logunda ve (ActionDispatcher üzerinden) hata
+olarak görünür.
+
+## Bağlantı katmanının dayanıklılığı
+
+Bağlantı, zaman aşımlı (5s) bir handshake ve isteklerle kurulur; koparsa 2s'den 30s'ye kadar (jitter'lı)
+artan bir bekleme ile yeniden dener. Yanlış şifre veya sürüm uyuşmazlığı (obs-websocket kapanış kodu
+4009/4010/4012) tespit edilirse sonsuz yeniden denemek yerine **ayarlar değişene kadar durur** — durum
+çubuğunda "şifre hatalı" gösterir, log spam yapmaz. OBS'in kendisi kapanırken (`ExitStarted` olayı)
+bağlantı TCP'nin zaman aşımına uğramasını beklemeden hemen kapatılır. Durum sorguları (yayın/kayıt/istatistik)
+tek bir `RequestBatch` çerçevesinde toplanır — OBS'in "gelen/giden mesaj" sayacı saniyede sabit ~1-2 çerçeve
+artar, önceki sürümdeki gibi saniyede 4 ayrı istek göndermez. Sahne/giriş/profil gibi her şey yalnızca
+olaylardan (event) güncellenir, hiçbir zaman polling ile sorgulanmaz.

@@ -1,12 +1,12 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
+using MacroStation.Plugin.Abstractions;
 
 namespace MacroStation.Plugin.Obs;
 
 /// <summary>
-/// OBS WebSocket (obs-websocket v5, built into OBS 28+) connection settings. This plugin has no editor
-/// settings UI yet (the host doesn't expose one to plugins — see plugin-authoring.md §5), so it persists
-/// its own `settings.json` in <see cref="Plugin.Abstractions.IPluginHost.DataDirectory"/>: the user edits
-/// that file by hand to set host/port/password and flip <see cref="Enabled"/> to true. The password is
+/// OBS WebSocket (obs-websocket v5, built into OBS 28+) connection settings, persisted as this plugin's
+/// own `settings.json` in <see cref="Plugin.Abstractions.IPluginHost.DataDirectory"/>. The password is
 /// stored in plain text, consistent with how the main program stores its own OBS/pairing secrets today.
 /// </summary>
 public sealed class ObsSettings
@@ -37,5 +37,51 @@ public sealed class ObsSettings
         {
             return new ObsSettings();
         }
+    }
+
+    public void Save(string dataDirectory)
+    {
+        Directory.CreateDirectory(dataDirectory);
+        File.WriteAllText(Path.Combine(dataDirectory, "settings.json"), JsonSerializer.Serialize(this, JsonOptions));
+    }
+}
+
+/// <summary>The schema-driven settings window (see obs-plugin-0.2-plan.md §4f) — replaces the raw-JSON
+/// passthrough form the editor used to hand-build for this plugin specifically. Saving signals
+/// <see cref="ObsConnection.NotifySettingsChanged"/> so a corrected host/port/password reconnects within
+/// moments instead of waiting for the current backoff to expire.</summary>
+public sealed class ObsSettingsPage(IPluginHost host, ObsConnection connection) : IPluginSettingsPage
+{
+    public IReadOnlyList<SettingField> Fields =>
+    [
+        new("enabled", "Etkin", SettingFieldKind.Bool) { Default = true },
+        new("host", "Sunucu", SettingFieldKind.Text) { Default = "127.0.0.1", Placeholder = "127.0.0.1" },
+        new("port", "Port", SettingFieldKind.Number) { Min = 1, Max = 65535, Step = 1, Default = 4455 },
+        new("password", "Şifre", SettingFieldKind.Password),
+    ];
+
+    public JsonObject Load()
+    {
+        var settings = ObsSettings.LoadOrCreate(host.DataDirectory);
+        return new JsonObject
+        {
+            ["enabled"] = settings.Enabled,
+            ["host"] = settings.Host,
+            ["port"] = settings.Port,
+            ["password"] = settings.Password,
+        };
+    }
+
+    public void Save(JsonObject values)
+    {
+        var settings = new ObsSettings
+        {
+            Enabled = values["enabled"]?.GetValue<bool>() ?? false,
+            Host = values["host"]?.GetValue<string>() ?? "127.0.0.1",
+            Port = values["port"]?.GetValue<int>() ?? 4455,
+            Password = values["password"]?.GetValue<string>() ?? "",
+        };
+        settings.Save(host.DataDirectory);
+        connection.NotifySettingsChanged();
     }
 }

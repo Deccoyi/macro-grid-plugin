@@ -34,7 +34,7 @@ başlatılması gerekir**; editör bunu kopyalama sonrası açıkça söyler.
   "id": "obs",
   "name": "OBS Kontrolü",
   "version": "0.1.0",
-  "sdkVersion": "^0.2.0",
+  "sdkVersion": "^0.3.0",
   "minServerVersion": "0.1.0",
   "entry": "MacroStation.Plugin.Obs.dll",
   "kind": "csharp",
@@ -95,12 +95,61 @@ Notlar:
   toplanıp built-in olanlarla aynı şekilde DI container'a eklenir — çalışma zamanında aksiyon/değişken
   tipleri arasında bir fark yoktur.
 - Plugin'inizin kendi ayarlarına (bağlantı bilgisi, API anahtarı, ...) ihtiyacı varsa `host.DataDirectory`
-  (plugin'in kendi kurulum klasörü, yazılabilir) altına kendi `settings.json`'ınızı okuyup/yazın. Host'un
-  plugin'e özel bir ayar **şeması** yok, ama editörden okuyup/yazabilmeniz için jenerik bir ham-JSON
-  köprüsü var: `GET`/`PUT /api/plugins/{id}/settings`, doğrudan bu dosyayı okur/üzerine yazar — editör
-  tarafında formu (alanlar, etiketler, doğrulama) siz kendi plugin'inize özel kodlarsınız (OBS örneği:
-  `macro-station/editor/src/windows/PluginsWindow.tsx`'teki `ObsSettingsInline`). Gerçek örnek:
-  `OBS/src/ObsSettings.cs` + `OBS/README.md`'deki "Ayarlar" bölümü.
+  (plugin'in kendi kurulum klasörü, yazılabilir) altına kendi `settings.json`'ınızı okuyup/yazın — ama
+  formu artık **elle yazmanıza gerek yok** (SDK 0.3.0): `IPluginSettingsPage` uygulayan bir sınıfı
+  `host.RegisterSettingsPage(page)` ile kaydedin, editör formu `page.Fields`'tan (bkz. aşağıdaki
+  `SettingField` bölümü) otomatik çizer, `page.Load()`/`page.Save(values)` diskle sizin aranızdaki köprü
+  olur. Kaydedilmiş bir sayfa yoksa host, eski jenerik ham-JSON köprüsüne düşer (`GET`/`PUT
+  /api/plugins/{id}/settings`, doğrudan `settings.json`'ı okur/üzerine yazar) — yeni plugin'ler için önerilmez,
+  yalnızca geriye dönük uyumluluk içindir. Gerçek örnek: `OBS/src/ObsSettings.cs`'teki `ObsSettingsPage`.
+
+### `SettingField` — şema-tabanlı formlar
+
+Bir `IActionHandler`, `IActionDescriptor`'ı da uygulayıp `Fields` alanında bir `SettingField[]` döndürürse
+(action'ın `Category`/`Description`/`Icon`'uyla birlikte), editör o action'ın ayar formunu elle React kodu
+yazmadan otomatik çizer (`SchemaForm.tsx`). Aynı `SettingField` tipi bir `IPluginSettingsPage.Fields` için
+de kullanılır — ikisi aynı form motorunu paylaşır.
+
+```csharp
+public IReadOnlyList<SettingField> Fields =>
+[
+    new("sceneName", "Sahne", SettingFieldKind.Select) { OptionsSource = "scenes" },
+    new("volume", "Ses seviyesi (%)", SettingFieldKind.Slider) { Min = 0, Max = 100, Default = 100 },
+    new("text", "Metin", SettingFieldKind.Text) { AllowVariables = true },
+];
+```
+
+`SettingFieldKind`: `Text`, `Password`, `Number`, `Slider`, `Bool`, `Select`, `Segmented`. `Options` sabit
+seçenekler içindir (`SettingOption[]`); `OptionsSource` + `DependsOn` dinamik bir liste içindir — bu
+durumda handler'ınız (ya da settings page'iniz) ayrıca `IOptionsSource`'u uygular:
+
+```csharp
+public Task<OptionsResult> GetOptionsAsync(string sourceId, JsonObject currentValues, CancellationToken ct)
+{
+    if (sourceId == "scenes") return Task.FromResult(new OptionsResult([.. myScenes.Select(s => new SettingOption(s, s))]));
+    return Task.FromResult(new OptionsResult([], "bilinmeyen kaynak"));
+}
+```
+
+`currentValues`, alanın `DependsOn` listesindeki anahtarların formdaki o anki değerleridir (ör. bir sahne
+öğesi dropdown'u seçili sahneye göre değişir). `OptionsResult.Error` set edilirse editör onu kullanıcıya
+gösterir (ör. "OBS'e bağlı değil") — dropdown boş kalır ama sessizce değil. Gerçek örnek: `OBS/src/ObsActions.cs`'teki
+`ObsOptionSources` ve her action'ın `GetOptionsAsync`'i.
+
+### Durum çubuğu
+
+`host.CreateStatusItem("connection")` ile aldığınız `IPluginStatusItem`'ı `Update(text, level, icon?,
+tooltip?)` ile güncelleyin (`StatusLevel`: `Idle`/`Ok`/`Busy`/`Warning`/`Error`) — editörün pencere-geneli
+durum çubuğunda (sağ taraf) görünür, tıklanınca plugin'inizin ayar penceresini açar. Bağlantı durumu olan
+her plugin (OBS gibi) bunu kullanmalı; her state değişiminde bir kez çağırmak yeterli, yüksek frekansta
+çağırmayın.
+
+### Kaybolan değişkenler: `IVariableStore.Remove`
+
+Bir OBS input'u silinir/yeniden adlandırılırsa, o input için ürettiğiniz `obs.input.<slug>.muted` gibi
+dinamik bir değişken sonsuza kadar `VariableStore`'da kalmamalı — `store.Remove(name)` ile açıkça silin
+(bir `Set` gibi `Changed` event'i tetikler, ama değeri ve varlığını kaldırır). Adı sabit olmayan (kullanıcı
+verisine göre üretilen) her değişken için geçerli.
 - Loglamak için `host.Log(string)` kullanın (host'un dosya loguna plugin id'nizle etiketlenerek yazılır) —
   yoğun/sık tekrarlayan durumlar için değil, bağlantı durumu/hata gibi seyrek olaylar için.
 - Bir sağlayıcı hem `IVariableProvider` hem `IVariableCatalogSource` uyguluyorsa (bkz. server repo'daki
