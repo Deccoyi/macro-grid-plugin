@@ -1,91 +1,93 @@
-# OBS Kontrolü
+# OBS plugin
 
-Macro Station için OBS Studio eklentisi. [obs-websocket v5](https://github.com/obsproject/obs-websocket)
-üzerinden bağlanır (OBS 28+'da yerleşik olarak gelir, ayrı kurulum gerekmez).
+Controls [OBS Studio](https://obsproject.com/) from Macro Station over obs-websocket v5, which is built into OBS 28 and newer. It adds
+22 actions (scenes, streaming, recording, audio, scene items, text sources) and about 45 live `obs.*` variables you can show on
+widgets. Kind: C# plugin. Id: `obs`.
 
-## Gereksinimler
+## Requirements
 
-- OBS Studio 28 veya üstü.
-- OBS içinde **Araçlar → WebSocket Server Ayarları**'ndan sunucu açık olmalı. Bir şifre belirlediyseniz
-  aşağıdaki ayar formuna aynen yazın.
+- OBS Studio 28 or newer.
+- In OBS, turn the WebSocket server on: **Tools → WebSocket Server Settings**. If you set a password there, enter the same one in the
+  plugin's settings.
 
-## Kurulum
+## Installation
 
-1. Bu klasörü derleyin: `src/` içinde `dotnet build` (Debug) veya `dotnet build -c Release`.
-2. Editördeki **Eklentiler** penceresinden **"Klasörden Yükle…"** ile `src/bin/Debug/net10.0/` (ya da
-   `Release/net10.0/`) klasörünü seçin — `plugin.json` derleme çıktısına otomatik kopyalanır, DLL ile
-   yan yana durur.
-3. Sunucuyu yeniden başlatın (yeni yüklenen bir plugin ancak açılışta taranır).
+1. Build: `dotnet build OBS\src\MacroStation.Plugin.Obs.csproj` (add `-c Release` for a release build). This needs the `macro-station`
+   repository next to this one, see the [top-level README](../README.md#building).
+2. In the Macro Station editor open **Plugins → Manage Plugins… → Install from Folder…** and pick `OBS\src\bin\Debug\net10.0\` (or
+   `Release\net10.0\`). The build copies `plugin.json` next to the DLL. The plugin is loaded immediately.
 
-## Ayarlar
+## Settings
 
-Editördeki **Eklentiler** penceresinde OBS satırının yanındaki dişli ikonuna tıklayın — **Etkin**,
-**Sunucu**, **Port**, **Şifre** alanları ve bir **Kaydet** düğmesi açılır (host'un genel schema-driven ayar
-penceresi, bkz. `../docs/plugin-authoring.md` §"`SettingField` — şema-tabanlı formlar" — bu eklenti kendi
-`ObsSettingsPage : IPluginSettingsPage`'ini kaydeder, editörde artık OBS'e özel kod yok). Kaydettikten
-sonra sunucuyu yeniden başlatmanıza gerek yok; ayar sayfası kaydedince bağlantı döngüsüne haber verir,
-birkaç saniye içinde yeni ayarlarla yeniden bağlanır. Ayarlar diskte
-`%AppData%/MacroStation/plugins/obs/settings.json`'da tutulur, ilk çalıştırmada yoksa şu varsayılanlarla
-kendisi oluşturulur:
+In the Plugins window click the gear button next to the OBS entry (or click the OBS item in the status bar). The fields are **Enabled**,
+**Server**, **Port** and **Password**. Saving applies immediately: the plugin reconnects within moments, no restart needed. The settings are
+stored in `%AppData%\MacroStation\plugins\obs\settings.json` (the password is stored in plain text). On first start the file is created
+with the plugin **disabled**:
 
 ```json
 { "enabled": false, "host": "127.0.0.1", "port": 4455, "password": "" }
 ```
 
-## Durum çubuğu
+Turn **Enabled** on to connect.
 
-Editörün pencere-geneli durum çubuğunda "OBS · bağlı" / "OBS · bağlanıyor…" / "OBS · şifre hatalı" / "OBS
-· Ns sonra tekrar denenecek" gibi bir metin görünür; bağlıyken FPS ve (yayın/kayıt açıksa) süre de eklenir.
-Tıklamak ayar penceresini açar.
+## Status bar
 
-## Sağladığı değişkenler (~45)
+The editor's status bar shows the connection state ("connected", "connecting", "wrong password", "OBS is not running", the time until the
+next retry, ...); while connected it adds the frame rate and, when streaming or recording, the elapsed time. Clicking it opens the settings.
+(The status text is currently in Turkish.)
 
-**Bağlantı:** `obs.connected`, `obs.status`, `obs.ws.in`, `obs.ws.out`.
-**Sahne/durum:** `obs.scene.current`, `obs.scene.preview`, `obs.studioMode`, `obs.transition.current`,
-`obs.profile.current`, `obs.sceneCollection.current`.
-**Yayın:** `obs.streaming`, `obs.stream.reconnecting`, `obs.stream.duration`, `obs.stream.timecode`,
-`obs.stream.congestion`, `obs.stream.bytes`, `obs.stream.kbps`, `obs.stream.frames.dropped/total/droppedPercent`.
-**Kayıt:** `obs.recording`, `obs.record.paused`, `obs.record.duration`, `obs.record.timecode`,
-`obs.record.bytes`, `obs.record.kbps`.
-**Çıkışlar:** `obs.virtualcam`, `obs.replayBuffer`.
-**İstatistik:** `obs.stats.fps`, `obs.stats.cpu`, `obs.stats.memory`, `obs.stats.disk`, `obs.stats.renderTime`,
-`obs.stats.render.skipped/total/skippedPercent`, `obs.stats.output.skipped/total/skippedPercent`.
-**Dinamik:** her ses girişi için `obs.input.<slug>.muted`/`obs.input.<slug>.volumeDb`; her sahne öğesi için
-`obs.item.<sahneSlug>.<kaynakSlug>.visible`. `<slug>`, adın küçük harfe çevrilip `[a-z0-9]` dışındaki her
-karakter dizisinin `_` ile değiştirilmiş hali. Giriş/öğe silinince ya da yeniden adlandırılınca ilgili
-değişken `IVariableStore.Remove` ile kaldırılır — sonsuza kadar birikmez.
+## Variables
 
-## Sağladığı aksiyonlar (~20)
+All names start with `obs.`; use them in widget text as `{obs.stream.duration}`.
 
-Hepsi editörün aksiyon seçicisinde "OBS" kategorisinde, kendi şema-tabanlı formlarıyla (sahne/ses
-kaynağı/öğe seçiciler OBS'e canlı bağlanmadan, önbellekten doldurulur):
+- **Connection:** `obs.connected`, `obs.status`, `obs.ws.in`, `obs.ws.out`
+- **Scenes and state:** `obs.scene.current`, `obs.scene.preview`, `obs.studioMode`, `obs.transition.current`, `obs.profile.current`,
+  `obs.sceneCollection.current`
+- **Stream:** `obs.streaming`, `obs.stream.reconnecting`, `obs.stream.duration`, `obs.stream.timecode`, `obs.stream.congestion`,
+  `obs.stream.bytes`, `obs.stream.kbps`, `obs.stream.frames.dropped`, `obs.stream.frames.total`, `obs.stream.frames.droppedPercent`
+- **Recording:** `obs.recording`, `obs.record.paused`, `obs.record.duration`, `obs.record.timecode`, `obs.record.bytes`, `obs.record.kbps`
+- **Outputs:** `obs.virtualcam`, `obs.replayBuffer`
+- **Statistics:** `obs.stats.fps`, `obs.stats.cpu`, `obs.stats.memory`, `obs.stats.disk`, `obs.stats.renderTime`,
+  `obs.stats.render.skipped` / `.total` / `.skippedPercent`, `obs.stats.output.skipped` / `.total` / `.skippedPercent`
+- **Per audio input and per scene item:** `obs.input.<slug>.muted`, `obs.input.<slug>.volumeDb`, and
+  `obs.item.<scene>.<source>.visible`. A slug is the name in lower case with every run of characters other than `a-z` and `0-9` replaced by
+  `_`. When an input or scene item is deleted or renamed its variable is removed.
 
-- Sahne: `obs.setScene`, `obs.setPreviewScene`, `obs.studioTransition`, `obs.toggleStudioMode`,
-  `obs.setTransition`, `obs.setProfile`.
-- Yayın/kayıt: `obs.startStream`/`stopStream`/`toggleStream`, `obs.startRecord`/`stopRecord`/`toggleRecord`,
-  `obs.pauseRecord` (duraklat/devam et/aç-kapat).
-- Çıkışlar: `obs.virtualCam`, `obs.replayBuffer` (başlat/durdur/aç-kapat), `obs.saveReplay`.
-- Ses: `obs.setMute` (mod: sustur/aç), `obs.toggleMute`, `obs.setVolume` (0-100%, slider/knob'un canlı
-  sürüklenen değeri varsa onu kullanır), `obs.adjustVolume` (±dB adım).
-- Sahne öğesi/metin: `obs.setItemVisibility` (gruplar dahil, göster/gizle/aç-kapat),
-  `obs.setText` (metin kaynağının içeriği, `{değişken}` şablonlarını destekler).
+## Actions
 
-Artık var olmayan bir hedefe (silinmiş bir sahne/ses girişi) yönlendirilmiş bir aksiyon çalıştırıldığında
-sessizce hiçbir şey yapmaz — açık bir hata fırlatır, sunucu logunda ve (ActionDispatcher üzerinden) hata
-olarak görünür.
+All are in the action picker under the "OBS" category, with forms whose scene, audio input and scene item lists are filled from a cache of
+what OBS reported (they do not wait for a live round trip).
 
-## Bağlantı katmanının dayanıklılığı
+- **Scenes:** `obs.setScene`, `obs.setPreviewScene`, `obs.studioTransition`, `obs.toggleStudioMode`, `obs.setTransition`, `obs.setProfile`
+- **Stream and recording:** `obs.startStream`, `obs.stopStream`, `obs.toggleStream`, `obs.startRecord`, `obs.stopRecord`, `obs.toggleRecord`,
+  `obs.pauseRecord` (pause, resume or toggle)
+- **Outputs:** `obs.virtualCam`, `obs.replayBuffer` (start, stop or toggle), `obs.saveReplay`
+- **Audio:** `obs.setMute` (mute or unmute), `obs.toggleMute`, `obs.setVolume` (0 to 100%; on a slider or knob it uses the live dragged
+  value), `obs.adjustVolume` (a step in dB)
+- **Scene items and text:** `obs.setItemVisibility` (including groups; show, hide or toggle), `obs.setText` (sets a text source; the text
+  may contain `{variables}`, which the server resolves before the action runs)
 
-Bağlantı, zaman aşımlı (5s) bir handshake ve isteklerle kurulur; koparsa 2s'den 30s'ye kadar (jitter'lı)
-artan bir bekleme ile yeniden dener. Yanlış şifre veya sürüm uyuşmazlığı (obs-websocket kapanış kodu
-4009/4010/4012) tespit edilirse sonsuz yeniden denemek yerine **ayarlar değişene kadar durur** — durum
-çubuğunda "şifre hatalı" gösterir, log spam yapmaz. OBS'in kendisi kapanırken (`ExitStarted` olayı)
-bağlantı TCP'nin zaman aşımına uğramasını beklemeden hemen kapatılır. Durum sorguları (yayın/kayıt/istatistik)
-tek bir `RequestBatch` çerçevesinde toplanır — OBS'in "gelen/giden mesaj" sayacı saniyede sabit ~1-2 çerçeve
-artar, önceki sürümdeki gibi saniyede 4 ayrı istek göndermez. Sahne/giriş/profil gibi her şey yalnızca
-olaylardan (event) güncellenir, hiçbir zaman polling ile sorgulanmaz.
+An action aimed at something that no longer exists (a deleted scene or audio input) fails with an explicit error instead of doing nothing;
+the message is shown on the phone and in the editor's status bar.
 
-Sunucu OBS ile aynı makinedeyse, 3 başarısız bağlantı denemesinden sonra soket denemeye ara verilir ve
-yalnızca `obs64`/`obs32`/`obs` sürecinin var olup olmadığına bakılır (5s'de bir) — OBS kapalıyken boşuna
-TCP bağlantı denemesi yapıp CPU/ağ harcamamak için. Süreç görülünce (veya sunucu başka bir makinedeyse
-normal backoff sırasında) hemen yeniden bağlanmayı dener.
+## How the connection behaves
+
+- The handshake and every request have timeouts. If the connection drops, the plugin retries with a growing, jittered wait from 2 up to
+  30 seconds.
+- A wrong password or a version mismatch (obs-websocket close codes 4009, 4010 and 4012) stops the retries until the settings change, and
+  shows "wrong password" instead of retrying forever and filling the log.
+- When OBS announces that it is closing, the connection is closed at once instead of waiting for a TCP timeout.
+- Stream, recording and statistics are polled with a single batched request (every second while streaming or recording, every five seconds
+  otherwise). Scenes, inputs, profiles and the rest are kept up to date from OBS events, never polled.
+- If OBS is expected on this computer (the server is `127.0.0.1`, `localhost` or this machine's own address), then after three failed
+  attempts the plugin stops trying to connect and only checks every five seconds whether an `obs64`, `obs32` or `obs` process exists, so it
+  does not keep opening sockets while OBS is closed. It connects as soon as OBS starts. For a remote OBS the normal retry continues.
+
+## Tests
+
+`dotnet test OBS\tests\MacroStation.Plugin.Obs.Tests\MacroStation.Plugin.Obs.Tests.csproj` runs the connection layer against a fake
+obs-websocket server (handshake, wrong password, timeouts, sudden disconnects, OBS shutting down, input removal).
+
+## Changelog
+
+[CHANGELOG.md](CHANGELOG.md) (short) and [CHANGELOG-developer.md](CHANGELOG-developer.md) (detailed).

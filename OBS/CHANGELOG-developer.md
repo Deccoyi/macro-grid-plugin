@@ -1,6 +1,6 @@
 # Changelog (developer) — OBS Control
 
-This file tracks the version of this plugin only (independent of the main program — see `../agent-and-repo-rules.md`, item 1). The short, public changelog is [CHANGELOG.md](CHANGELOG.md).
+This file tracks the version of this plugin only (independent of the main program — see the "Independent versions" section of `../CONTRIBUTING.md`). The short, public changelog is [CHANGELOG.md](CHANGELOG.md).
 
 ## [Unreleased]
 ### Added

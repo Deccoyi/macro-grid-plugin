@@ -1,32 +1,30 @@
-# PLC İkonları
+# PLC icons plugin
 
-Macro Station için statik bir ikon paketi eklentisi. Bağlantı, ayar ya da aksiyon içermez —
-`IPluginHost.RegisterIconPack` üzerinden 27 adet PLC/ladder-logic ikonunu (bobin, zamanlayıcılar,
-karşılaştırma ve aritmetik blokları) editörün ikon seçiciye ekler.
+A static icon pack for Macro Station: 29 ladder-logic (PLC) symbols (coil, timers, comparison and arithmetic blocks, branches) that appear
+in the editor's icon picker as their own category. It has no connection, no settings and no actions. Kind: C# plugin. Id: `plc-icons`.
+The category is named "PLC İkonları" in the picker.
 
-## Kurulum
+## Installation
 
-1. Bu klasörü derleyin: `src/` içinde `dotnet build` (Debug) veya `dotnet build -c Release`.
-2. Editördeki **Eklentiler** penceresinden **"Klasörden Yükle…"** ile `src/bin/Debug/net10.0/` (ya da
-   `Release/net10.0/`) klasörünü seçin — `plugin.json` derleme çıktısına otomatik kopyalanır, DLL ile
-   yan yana durur.
-3. Sunucuyu yeniden başlatın (yeni yüklenen bir plugin ancak açılışta taranır).
+1. Build: `dotnet build PLCIcons\src\MacroStation.Plugin.PlcIcons.csproj` (add `-c Release` for a release build). This needs the
+   `macro-station` repository next to this one, see the [top-level README](../README.md#building).
+2. In the Macro Station editor open **Plugins → Manage Plugins… → Install from Folder…** and pick `PLCIcons\src\bin\Debug\net10.0\` (or
+   `Release\net10.0\`). The build copies `plugin.json` next to the DLL. The pack is available immediately.
 
-## Sağladığı ikonlar
+## Icons
 
-İkonlar `src/icons/*.svg` altında, DLL içine gömülü olarak taşınır (ayrı dosya okuma yok). İkon seçicide
-**"PLC İkonları"** kategorisi olarak görünür:
+`add`, `calculate`, `close-branch`, `coil`, `convert`, `divide`, `empty-block`, `equal`, `f-trig`, `greater`, `greater-equal`, `lesser`,
+`lesser-equal`, `move`, `multiply`, `n`, `nc`, `no`, `not-equal`, `open-branch`, `p`, `r-trig`, `reset-coil`, `set-coil`, `subtract`,
+`timer-convert`, `tof-timer`, `ton-timer`, `tp-timer`.
 
-`add`, `calculate`, `close-branch`, `coil`, `convert`, `divide`, `empty-block`, `equal`, `f-trig`,
-`greater`, `greater-equal`, `lesser`, `lesser-equal`, `move`, `multiply`, `n`, `nc`, `no`,
-`not-equal`, `open-branch`, `p`, `r-trig`, `reset-coil`, `set-coil`, `subtract`, `timer-convert`,
-`tof-timer`, `ton-timer`, `tp-timer`.
+The SVG files are in `src/icons/` and are embedded in the DLL. Each one draws with `stroke="currentColor"`, so the editor can color it:
+when an icon is picked the editor adds the widget's color to the root `<svg>` tag.
 
-Her SVG `stroke="currentColor"` kullanır; editör, ikonu seçildiği rengi taşıyan bir `data:` URI'ye
-çevirirken kök `<svg>` etiketine `color="…"` ekleyerek bunu boyar (ayrı bir CSS bağlamı olmadığından
-`currentColor` aksi halde siyaha düşerdi).
+## Adding an icon
 
-## Yeni ikon eklemek
+Put a new `.svg` in `src/icons/` and add its file name (without the extension) to the `Names` array in `src/PlcIconsPlugin.cs`. The
+project embeds everything matching `icons\*.svg`. Keep the icon monochrome and use `currentColor` for every stroke and fill.
 
-`src/icons/` altına yeni bir `.svg` koyup `PlcIconPack.Names` dizisine dosya adını (uzantısız) eklemek
-yeterli — `.csproj`'daki `<EmbeddedResource Include="icons\*.svg" />` glob'u otomatik yakalar.
+## Changelog
+
+[CHANGELOG.md](CHANGELOG.md) (short) and [CHANGELOG-developer.md](CHANGELOG-developer.md) (detailed).

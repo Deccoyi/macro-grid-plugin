@@ -1,38 +1,41 @@
-# Plugin Yazma Rehberi
+# Writing a plugin
 
-Bu doküman, `macro-station` server repo'sunda **Aşama 6**'da kurulan gerçek plugin loader'ına göre
-yazılmıştır (bkz. `macro-station/src/MacroStation.Core/Plugins/` ve
-`macro-station/src/MacroStation.Plugin.Abstractions/`). Genel kurallar için önce
-[agent-and-repo-rules.md](../agent-and-repo-rules.md)'ye bakın — bu dosya onun "nasıl" kısmı.
+A plugin adds actions (things a widget can do), variables (live values a widget can show) and small extras (a settings
+page, status bar items, icon packs) to the Macro Station server. There are two kinds:
 
-> **Not:** Loader gerçek ve çalışıyor; ilk gerçek plugin ([OBS/](../OBS/)) de yazıldı. Bu doküman ve
-> `OBS/`'nin kendisi, yeni bir plugin yazarken referans olarak kullanılabilir.
+| | C# plugin | JavaScript plugin |
+|---|---|---|
+| `kind` in `plugin.json` | `"csharp"` | `"js"` |
+| Trust | Full trust. It runs inside the server process with full .NET access, isolated only so that it cannot break other plugins. | Sandboxed. No .NET access, only a small `host` object, and only the permissions the user approved. |
+| Good for | Real integrations (a websocket client, a device driver) | Small scripts (poll a local HTTP API, publish a variable, add an action) |
+| Needs a build | Yes (a DLL) | No (one script) |
 
-## 1. Klasör ve yükleme
+Only install C# plugins you trust: they can do anything the server can do.
 
-Server, `%AppData%/MacroStation/plugins/<klasör>/` altındaki her klasörü tarar (editördeki "Eklentiler"
-penceresi → "Klasörden Yükle…" bir kaynak klasörü buraya **kopyalar**, taşımaz). Bir klasör şu ikisini
-içeriyorsa plugin olarak tanınır:
+The working examples in this repository are [OBS/](../OBS/) (a full C# integration), [PLCIcons/](../PLCIcons/) (a C#
+icon pack) and [HelloJs/](../HelloJs/) (a small JavaScript plugin). Read [CONTRIBUTING.md](../CONTRIBUTING.md) for the
+rules that apply to every plugin in this repository (independent versioning, isolation, changelogs).
 
-```
-<klasör>/
-├── plugin.json       zorunlu manifesto (aşağıda)
-└── <entry dosyası>   plugin.json'daki "entry" alanında adı geçen DLL (csharp) ya da script (js)
-```
+## 1. Folder and installation
 
-Klasör adı önemli değil; kimlik `plugin.json`'daki `id` alanından gelir. Editördeki "Klasörden Yükle…"
-düğmesi seçilen kaynağı `plugins/<id>/` altına kopyalar (aynı id ikinci kez yüklenemez — host reddeder).
+The server looks for plugins in `%AppData%\MacroStation\plugins\<folder>\`. A folder is a plugin if it contains a
+`plugin.json`. The folder name does not matter; the identity is the `id` in the manifest.
 
-**Yükleme:** sunucu açılırken `PluginManager` klasörü tarar; ayrıca editörden kurulan/yeniden yüklenen/kaldırılan
-plugin'ler **sunucu yeniden başlatılmadan** devreye girer (bkz. "Hot loading, reload and unload" bölümü).
+Install from the editor: **Plugins → Manage Plugins… → Install from Folder…** and pick a folder that contains
+`plugin.json` (for a C# plugin, the build output folder such as `src\bin\Debug\net10.0\`). The folder is copied to
+`plugins\<id>\` and loaded immediately, with no restart. Installing a folder whose `id` is already installed replaces
+that plugin (files the plugin wrote into its own folder, such as `settings.json`, are kept). The same window can reload
+and remove a plugin.
 
-## 2. `plugin.json` şeması
+A plugin is loaded, reloaded and unloaded while the server runs. See [Lifecycle](#6-lifecycle).
+
+## 2. `plugin.json`
 
 ```json
 {
   "id": "obs",
-  "name": "OBS Kontrolü",
-  "version": "0.1.0",
+  "name": "OBS Control",
+  "version": "0.2.0",
   "sdkVersion": "^0.3.0",
   "minServerVersion": "0.1.0",
   "entry": "MacroStation.Plugin.Obs.dll",
@@ -41,155 +44,223 @@ plugin'ler **sunucu yeniden başlatılmadan** devreye girer (bkz. "Hot loading, 
 }
 ```
 
-(Gerçek örnek — bkz. [OBS/plugin.json](../OBS/plugin.json).)
-
-| Alan | Zorunlu | Açıklama |
+| Field | Required | Meaning |
 |---|---|---|
-| `id` | evet | Benzersiz, değişmez kimlik. Host aynı id'yi ikinci kez yüklemeyi reddeder. |
-| `name` | evet | Editördeki "Eklentiler" listesinde gösterilen ad. |
-| `version` | evet | Plugin'in kendi semver'i — sunucudan bağımsız (bkz. `macro-station/docs/versioning.md`). |
-| `sdkVersion` | evet | Plugin SDK'sına (`MacroStation.Plugin.Abstractions`) karşı npm tarzı caret aralığı, örn. `"^0.1.0"`. Sunucudaki gerçek SDK sürümü bu aralığı karşılamıyorsa plugin **yüklenmez**, "Uyumsuz" olarak listelenir. |
-| `minServerVersion` | evet | Gerekli asgari sunucu (Host) sürümü. Sunucu bundan eskiyse plugin **yüklenmez**. |
-| `entry` | evet | `kind: "csharp"` için giriş DLL'inin dosya adı (klasörün köküne göre). `kind: "js"` için giriş script (genelde `index.js`). |
-| `kind` | evet | `"csharp"` veya `"js"`. |
-| `permissions` | hayır | Yalnızca `kind: "js"` için: script'in ihtiyaç duyduğu izinler. Kullanıcı editörde onaylamadan script çalışmaz (bkz. "JavaScript plugins"). |
+| `id` | yes | Unique, stable id. Used in the folder name, in action types and variable names, and for approvals. The server refuses a second plugin with the same id. |
+| `name` | yes | Display name in the Plugins window. |
+| `version` | yes | The plugin's own semantic version, independent of the server's. |
+| `sdkVersion` | yes | The plugin SDK range the plugin was built against, a caret range such as `^0.3.0`. While the SDK is `0.x`, `^0.3.0` matches only `0.3.x`. If the server's SDK does not satisfy it the plugin is listed as *Incompatible* and not loaded. |
+| `minServerVersion` | yes | The oldest server version the plugin needs. A older server lists the plugin as *Incompatible*. |
+| `entry` | yes | C#: the entry DLL's file name. JavaScript: the script (usually `index.js`). |
+| `kind` | yes | `"csharp"` or `"js"`. |
+| `permissions` | no | JavaScript only: the permissions the script needs (see [JavaScript plugins](#7-javascript-plugins)). |
 
-Sürüm uyumluluk kuralları `macro-station/docs/versioning.md`'deki "Plugin uyumluluk beyanı" bölümüyle
-birebir aynı — iki dosya arasında tutarsızlık fark ederseniz `versioning.md` esas alınır, burası ona göre
-güncellenir.
+The SDK version is `PluginSdk.Version` in `MacroStation.Plugin.Abstractions`; see the server repository's
+`docs/versioning.md` for what counts as a breaking change.
 
-## 3. C# plugin'i yazmak
+## 3. Status of a plugin in the editor
 
-Plugin projeniz `MacroStation.Plugin.Abstractions`'a (NuGet paketlenene kadar proje referansı ya da DLL
-referansı olarak) referans verir ve `IPlugin`'i uygular:
+The Plugins window lists every folder that has a `plugin.json`:
+
+- **Loaded**: running, its actions and variables are available.
+- **Incompatible**: `sdkVersion` or `minServerVersion` is not satisfied by this server.
+- **Needs approval**: a JavaScript plugin whose declared permissions the user has not approved yet. It does not run until they do.
+- **Error**: `plugin.json` could not be parsed, the entry file is missing, the id is already used by another installed plugin, an action type is already registered, a permission is unknown, `Initialize` (or the script's first run) failed, or a JavaScript plugin was switched off after failing repeatedly. The message is shown under the name. **Reload** tries again.
+
+## 4. Writing a C# plugin
+
+### Project setup
+
+Reference the SDK project and copy `plugin.json` into the build output, so the output folder is directly installable.
+The SDK is not published as a package yet; the projects in this repository reference it by path, which assumes the
+`macro-station` and `macro-station-plugin` repositories are cloned next to each other:
+
+```xml
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>MyCompany.Plugin.Ping</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\macro-station\src\MacroStation.Plugin.Abstractions\MacroStation.Plugin.Abstractions.csproj">
+      <Private>false</Private>
+      <ExcludeAssets>runtime</ExcludeAssets>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\plugin.json" Link="plugin.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>
+```
+
+`Private=false` and `ExcludeAssets=runtime` keep a copy of the SDK out of your output: the server and every plugin must share
+the server's copy of `MacroStation.Plugin.Abstractions` (otherwise `is IActionHandler` checks fail because the same type from
+two copies is two different types). Never ship your own copy.
+
+### The entry point
+
+The server finds exactly one class implementing `IPlugin` in the entry assembly, creates it with a parameterless
+constructor and calls `Initialize` once. Everything you register there is applied when `Initialize` returns.
 
 ```csharp
 using System.Text.Json.Nodes;
 using MacroStation.Plugin.Abstractions;
 
-public sealed class AudioExtraPlugin : IPlugin
+public sealed class PingPlugin : IPlugin
 {
     public void Initialize(IPluginHost host)
     {
         host.RegisterAction(new PingAction());
-        // host.RegisterVariableProvider(new MyVariableProvider());
     }
 }
 
 public sealed class PingAction : IActionHandler
 {
-    public string Type => "audioextra.ping";
-    public string DisplayName => "Ping (örnek)";
+    public string Type => "ping.ping";            // unique: "<plugin id>.<name>" by convention
+    public string DisplayName => "Ping";
 
-    public Task ExecuteAsync(ActionContext context, JsonObject settings, CancellationToken ct)
+    public Task ExecuteAsync(ActionContext context, JsonObject settings, CancellationToken cancellationToken)
     {
-        // context.Device üzerinden built-in aksiyonların kullandığı IDeviceController'a erişilebilir.
+        // context.DeviceId / PageId / WidgetId say what was pressed; context.Value is the slider or knob value
+        // for a value-change event; context.Device navigates pages and profiles of that one phone.
         return Task.CompletedTask;
     }
 }
 ```
 
-Notlar:
-- `Initialize` içinde kaydettiğiniz her şey (`IActionHandler`, `IVariableProvider`) host tarafında
-  toplanıp built-in olanlarla aynı şekilde DI container'a eklenir — çalışma zamanında aksiyon/değişken
-  tipleri arasında bir fark yoktur.
-- Plugin'inizin kendi ayarlarına (bağlantı bilgisi, API anahtarı, ...) ihtiyacı varsa `host.DataDirectory`
-  (plugin'in kendi kurulum klasörü, yazılabilir) altına kendi `settings.json`'ınızı okuyup/yazın — ama
-  formu artık **elle yazmanıza gerek yok** (SDK 0.3.0): `IPluginSettingsPage` uygulayan bir sınıfı
-  `host.RegisterSettingsPage(page)` ile kaydedin, editör formu `page.Fields`'tan (bkz. aşağıdaki
-  `SettingField` bölümü) otomatik çizer, `page.Load()`/`page.Save(values)` diskle sizin aranızdaki köprü
-  olur. Kaydedilmiş bir sayfa yoksa host, eski jenerik ham-JSON köprüsüne düşer (`GET`/`PUT
-  /api/plugins/{id}/settings`, doğrudan `settings.json`'ı okur/üzerine yazar) — yeni plugin'ler için önerilmez,
-  yalnızca geriye dönük uyumluluk içindir. Gerçek örnek: `OBS/src/ObsSettings.cs`'teki `ObsSettingsPage`.
+`IPluginHost` gives you:
 
-### `SettingField` — şema-tabanlı formlar
+| Member | Purpose |
+|---|---|
+| `ServerVersion`, `SdkVersion` | The running server's and SDK's versions. |
+| `DataDirectory` | The plugin's own install folder (`%AppData%\MacroStation\plugins\<id>\`), writable. Keep your files here. |
+| `Log(message)` | Writes a line to the server's plugin log, prefixed with your id. Use it for rare events (connection changes, errors), not for polling. |
+| `RegisterAction(handler)` | Adds an action type. |
+| `RegisterVariableProvider(provider)` | Adds a background source of variables. If the same object implements `IVariableCatalogSource` it is also listed in the editor's variable picker. |
+| `RegisterSettingsPage(page)` | Adds a settings form to the Plugins window. |
+| `CreateStatusItem(id)` | Creates an entry you own in the editor's status bar. |
+| `RegisterIconPack(pack)` | Adds icons to the editor's icon picker. |
 
-Bir `IActionHandler`, `IActionDescriptor`'ı da uygulayıp `Fields` alanında bir `SettingField[]` döndürürse
-(action'ın `Category`/`Description`/`Icon`'uyla birlikte), editör o action'ın ayar formunu elle React kodu
-yazmadan otomatik çizer (`SchemaForm.tsx`). Aynı `SettingField` tipi bir `IPluginSettingsPage.Fields` için
-de kullanılır — ikisi aynı form motorunu paylaşır.
+If `Initialize` throws, the server catches it, shows the plugin as *Error* and keeps running.
 
-```csharp
-public IReadOnlyList<SettingField> Fields =>
-[
-    new("sceneName", "Sahne", SettingFieldKind.Select) { OptionsSource = "scenes" },
-    new("volume", "Ses seviyesi (%)", SettingFieldKind.Slider) { Min = 0, Max = 100, Default = 100 },
-    new("text", "Metin", SettingFieldKind.Text) { AllowVariables = true },
-];
-```
+An action's exceptions are caught by the server too: a failing action is logged and its message is shown on the phone and
+in the editor's status bar, so throw a clear message instead of failing silently. Actions of one phone run one after the
+other; a slow action delays that phone's next action, not other phones.
 
-`SettingFieldKind`: `Text`, `Password`, `Number`, `Slider`, `Bool`, `Select`, `Segmented`. `Options` sabit
-seçenekler içindir (`SettingOption[]`); `OptionsSource` + `DependsOn` dinamik bir liste içindir — bu
-durumda handler'ınız (ya da settings page'iniz) ayrıca `IOptionsSource`'u uygular:
+### Action forms (`IActionDescriptor`, `SettingField`)
+
+If the handler also implements `IActionDescriptor`, the editor lists it under `Category` with its `Description` and
+`Icon` (a Lucide icon name) and draws its settings form from `Fields`. No React code is needed:
 
 ```csharp
-public Task<OptionsResult> GetOptionsAsync(string sourceId, JsonObject currentValues, CancellationToken ct)
+public sealed class SetSceneAction : IActionHandler, IActionDescriptor, IOptionsSource
 {
-    if (sourceId == "scenes") return Task.FromResult(new OptionsResult([.. myScenes.Select(s => new SettingOption(s, s))]));
-    return Task.FromResult(new OptionsResult([], "bilinmeyen kaynak"));
+    public string Type => "myplugin.setScene";
+    public string DisplayName => "Set scene";
+    public string Category => "My plugin";
+    public string? Description => "Switches to a scene.";
+    public string? Icon => "clapperboard";
+
+    public IReadOnlyList<SettingField> Fields =>
+    [
+        new("scene", "Scene", SettingFieldKind.Select) { OptionsSource = "scenes" },
+        new("volume", "Volume (%)", SettingFieldKind.Slider) { Min = 0, Max = 100, Default = 100 },
+        new("text", "Label", SettingFieldKind.Text) { AllowVariables = true },
+    ];
+
+    public Task<OptionsResult> GetOptionsAsync(string sourceId, JsonObject currentValues, CancellationToken ct) =>
+        Task.FromResult(sourceId == "scenes"
+            ? new OptionsResult([new SettingOption("main", "Main"), new SettingOption("brb", "Be right back")])
+            : new OptionsResult([], "Unknown source"));
+
+    public Task ExecuteAsync(ActionContext context, JsonObject settings, CancellationToken ct) { /* ... */ return Task.CompletedTask; }
 }
 ```
 
-`currentValues`, alanın `DependsOn` listesindeki anahtarların formdaki o anki değerleridir (ör. bir sahne
-öğesi dropdown'u seçili sahneye göre değişir). `OptionsResult.Error` set edilirse editör onu kullanıcıya
-gösterir (ör. "OBS'e bağlı değil") — dropdown boş kalır ama sessizce değil. Gerçek örnek: `OBS/src/ObsActions.cs`'teki
-`ObsOptionSources` ve her action'ın `GetOptionsAsync`'i.
+`SettingFieldKind` is `Text`, `Password`, `Number`, `Slider`, `Bool`, `Select` or `Segmented`. Useful `SettingField` options:
+`Description`, `Placeholder`, `Default`, `Min`/`Max`/`Step`, `Options` (a fixed `SettingOption[]`), `OptionsSource` (a dynamic
+list served by `IOptionsSource`), `DependsOn` (keys whose current form values are passed to `GetOptionsAsync`),
+`AllowVariables` (lets the user insert `{variables}`; you receive the raw template and resolve it yourself),
+`VisibleWhen`. If `OptionsResult.Error` is set the editor shows that message and an empty list.
 
-### Durum çubuğu
+### Settings page
 
-`host.CreateStatusItem("connection")` ile aldığınız `IPluginStatusItem`'ı `Update(text, level, icon?,
-tooltip?)` ile güncelleyin (`StatusLevel`: `Idle`/`Ok`/`Busy`/`Warning`/`Error`) — editörün pencere-geneli
-durum çubuğunda (sağ taraf) görünür, tıklanınca plugin'inizin ayar penceresini açar. Bağlantı durumu olan
-her plugin (OBS gibi) bunu kullanmalı; her state değişiminde bir kez çağırmak yeterli, yüksek frekansta
-çağırmayın.
+Implement `IPluginSettingsPage` (`Fields`, `Load()`, `Save(values)`) and register it with `host.RegisterSettingsPage`.
+The editor draws the form from `Fields`; `Load` and `Save` are your bridge to disk (usually a `settings.json` in
+`DataDirectory`). A page that also implements `IOptionsSource` can serve dynamic dropdowns. A plugin with a settings page
+gets a gear button in the Plugins window and its status item opens the page. Example: `ObsSettingsPage` in `OBS/src/ObsSettings.cs`.
 
-### Kaybolan değişkenler: `IVariableStore.Remove`
+### Variables
 
-Bir OBS input'u silinir/yeniden adlandırılırsa, o input için ürettiğiniz `obs.input.<slug>.muted` gibi
-dinamik bir değişken sonsuza kadar `VariableStore`'da kalmamalı — `store.Remove(name)` ile açıkça silin
-(bir `Set` gibi `Changed` event'i tetikler, ama değeri ve varlığını kaldırır). Adı sabit olmayan (kullanıcı
-verisine göre üretilen) her değişken için geçerli.
+Implement `IVariableProvider.RunAsync(IVariableStore store, CancellationToken ct)`: it runs for as long as the plugin is
+loaded and should return only when `ct` is cancelled. Call `store.Set(name, value)` whenever a value changes (a value equal
+to the current one is ignored). If `RunAsync` throws, the server logs it and restarts the provider after 5 seconds; a provider
+that returns normally is not restarted.
 
-### İkon paketleri
+- Widgets read variables in text as `{obs.stream.duration}` and can format them: `{system.cpu|0}%`, `{system.time|HH:mm}`.
+- For a name that depends on user data (an OBS input that can be deleted or renamed) call `store.Remove(name)` when it disappears,
+  otherwise it stays in the store and the variable picker forever.
+- Implement `IVariableCatalogSource.Describe()` on the same object to list your variables (`VariableInfo`: name, description, example
+  and a category the picker groups by) in the editor's picker, so users do not have to guess names.
+- When the plugin is unloaded, every variable it set is removed automatically.
 
-Bir plugin editörün ikon seçicisine kendi ikonlarını ekleyebilir: `IIconPackSource`'u (`Id`, `DisplayName`,
-`IconNames`, `GetIconSvg(name)`) uygulayıp `host.RegisterIconPack(pack)` ile kaydedin. Seçicide paket ayrı bir
-kategori olarak görünür. SVG'lerde `stroke="currentColor"` kullanın, editör seçilen rengi kök `<svg>`'ye
-uygular. İkonları DLL'e `EmbeddedResource` olarak gömmek en basiti. Gerçek örnek: [PLCIcons/](../PLCIcons/).
-- Loglamak için `host.Log(string)` kullanın (host'un dosya loguna plugin id'nizle etiketlenerek yazılır) —
-  yoğun/sık tekrarlayan durumlar için değil, bağlantı durumu/hata gibi seyrek olaylar için.
-- Bir sağlayıcı hem `IVariableProvider` hem `IVariableCatalogSource` uyguluyorsa (bkz. server repo'daki
-  `SystemAudioProvider` örneği), `RegisterVariableProvider` ikisini de otomatik yakalar — ayrıca
-  kaydetmenize gerek yok.
-- Assembly'niz kendi izole `AssemblyLoadContext`'inde yüklenir (agent-and-repo-rules.md madde 4) — CLR'a
-  tam erişiminiz var (sandbox değil), ama başka bir plugin'in bağımlılık sürümüyle çakışmazsınız.
-  `MacroStation.Plugin.Abstractions` tek istisna: host ile plugin **aynı kopyayı** paylaşır (aksi halde
-  `IPlugin`/`IActionHandler` gibi arayüz kontrolleri tip kimliği uyuşmazlığından sessizce başarısız
-  olurdu) — bu paketi plugin'inizin çıktı klasörüne kendiniz kopyalamayın/farklı bir sürümünü taşımayın.
-- Plugin `Initialize` içinde exception fırlatırsa host bunu yakalar, plugin'i "Hata" durumunda listeler,
-  sunucuyu düşürmez.
+### Status bar item
 
-## 4. Editörde görünüm
+`var item = host.CreateStatusItem("connection"); item.Update("Connected", StatusLevel.Ok);` shows a colored entry on the right of
+the editor's status bar (`Idle`, `Ok`, `Busy`, `Warning`, `Error`, optionally an icon and a tooltip). Update it when the state
+changes, not at a high rate. Clicking it opens the plugin's settings page, if it has one.
 
-`GET /api/plugins` her klasörü şu durumlardan biriyle döner (editördeki "Eklentiler" → "Yüklü Eklentiler"
-sekmesinde renkli bir nokta + `detail` metniyle gösterilir):
+### Icon packs
 
-- **Loaded** — yüklendi, aksiyonları/değişkenleri devrede.
-- **Incompatible** — `sdkVersion`/`minServerVersion` uyuşmuyor, (JS plugin'lerde: bilinmeyen izin ya da script hatası `Error`'dır).
-- **NeedsApproval** — JS plugin'in istediği izinler henüz onaylanmadı; onaylanana kadar çalışmaz.
-- **Error** — `plugin.json` ayrıştırılamadı, `entry` dosyası bulunamadı, id çakışması, ya da `Initialize`
-  sırasında exception.
+Implement `IIconPackSource` (`Id`, `DisplayName`, `IconNames`, `GetIconSvg(name)`) and call `host.RegisterIconPack`. The pack
+appears as its own category in the icon picker. Use `stroke="currentColor"` in the SVGs: the editor colors the icon by setting
+`color` on the root `<svg>`. Embedding the SVGs in the DLL (`<EmbeddedResource Include="icons\*.svg" />`) is the simplest.
+Example: [PLCIcons/](../PLCIcons/).
 
-## JavaScript plugins
+### Talking to a phone
 
-A plugin with `"kind": "js"` is one script (`entry`, usually `index.js`) that runs in a sandbox inside the server. Use it
-for small integrations (poll a local HTTP API, publish a variable, add an action) without building a DLL. A complete
-example is [../HelloJs/](../HelloJs/).
+`ActionContext.Device` (`IDeviceController`) navigates the one phone that triggered the action: `ShowPageAsync`, `NextPageAsync`,
+`PreviousPageAsync`, `BackAsync`, `SwitchProfileAsync`.
+
+## 5. Actions, widgets and dynamic values in one picture
+
+A widget's events (press, release, long press, double tap, toggle on/off, value change) each run a list of actions in order.
+An action's settings are the values of its `Fields` form. Variables flow the other way: providers publish values, and widgets
+show them in text or use them in conditional rules (color, text, icon, animation). See the server repository's README for the
+user's side of this.
+
+## 6. Lifecycle
+
+Plugins are loaded when the server starts and can be installed, reloaded and removed at any time from the Plugins window,
+without restarting the server. What that means for your code:
+
+- **`Initialize` can run many times in one server run** (install, reload, replacing a plugin with a newer version), each time on
+  a fresh instance in a fresh assembly load context. Keep state in your objects, not in `static` fields that must survive.
+- **Stop everything you started.** On unload the server cancels the token given to your `IVariableProvider.RunAsync` and waits up
+  to 5 seconds, then calls `Dispose` / `DisposeAsync` on your plugin instance and on every action, provider, settings page and
+  icon pack you registered, if they implement `IDisposable` / `IAsyncDisposable`. Close sockets and stop timers and threads there.
+  Whatever keeps running keeps your assembly in memory until the server restarts (a warning is logged; the plugin is
+  deregistered either way).
+- **Your variables are removed on unload** for you, and your status items and registrations are dropped.
+- **Your assemblies are loaded from memory**, so your files are never locked and can be replaced while the plugin runs. The
+  price: `Assembly.Location` is empty inside a plugin. Use `IPluginHost.DataDirectory` to find your own files.
+- **Action types must be unique.** If one of yours is already registered (by the server or another plugin) the whole plugin fails
+  to load as *Error* and nothing of it stays registered.
+- Each plugin has its own assembly load context, so two plugins can use different versions of the same library. The one shared
+  assembly is `MacroStation.Plugin.Abstractions` (see project setup).
+
+## 7. JavaScript plugins
+
+A plugin with `"kind": "js"` is one script (`entry`, usually `index.js`) that runs in a sandbox inside the server. A complete
+example is [HelloJs/](../HelloJs/).
 
 ### Permissions
 
-Declare what the script needs in `plugin.json`; the user approves the list in the editor's Plugins window before the
-script runs (status `NeedsApproval`). An update that asks for more than was approved waits for approval again.
+Declare what the script needs in `plugin.json`. The user sees the list in the Plugins window and must approve it before the
+script runs (status *Needs approval*). The approval is for that exact set: an update that asks for more waits for approval again.
+Removing a plugin forgets its approval.
 
 | Permission | Lets the script |
 |---|---|
@@ -198,8 +269,8 @@ script runs (status `NeedsApproval`). An update that asks for more than was appr
 | `input` | press key combinations and type text on the PC |
 | `http:<host>:<port>` | send HTTP requests to exactly that host and port (one entry per target, e.g. `http:localhost:4455`) |
 
-Timers, settings pages, status items and logging need no permission. An unknown permission string makes the plugin an
-`Error`. A call without its permission throws an ordinary JavaScript `Error` that the script can catch.
+Timers, settings pages, status items and logging need no permission. An unknown permission string makes the plugin an *Error*.
+A call without its permission throws an ordinary JavaScript `Error` that the script can catch.
 
 ### The `host` object
 
@@ -208,74 +279,49 @@ Everything goes through the global, read-only `host`. There is no `require`, no 
 ```js
 host.log(message)
 
-host.variables.set(name, value)      // value: number, string, boolean or null
+host.variables.set(name, value)      // number, string, boolean or null
 host.variables.get(name)
 host.variables.remove(name)
-host.variables.describe([{ name, description, example, category }])   // lists them in the editor's variable picker
+host.variables.describe([{ name, description, example, category }])   // list them in the editor's variable picker
 
 host.registerAction({ type, name, category, description, icon, fields, run(context, settings) {} })
-// context: { deviceId, pageId, widgetId, value }   settings: the values of the action's fields
-// fields: the same shape as the C# SettingField: { key, label, kind: 'Text'|'Number'|'Bool'|'Select'|..., default, min, max, options }
+// context: { deviceId, pageId, widgetId, value }; settings: the values of the action's fields
+// fields: the same shape as the C# SettingField, e.g. { key, label, kind: 'Text' | 'Number' | 'Bool' | 'Select' | ..., default, min, max, options }
 
-host.settings.page(fields)           // adds a settings page to the plugin (stored in settings.json)
+host.settings.page(fields)           // adds a settings page (stored in settings.json in the plugin folder)
 host.settings.get()                  // the current values as an object
-host.status(id, text, level)         // a status bar item; level: 'Idle' | 'Ok' | 'Busy' | 'Warning' | 'Error'
+host.status(id, text, level)         // status bar item; level: 'Idle' | 'Ok' | 'Busy' | 'Warning' | 'Error'
 
 host.input.hotkey('ctrl+shift+m')    // needs 'input'
 host.input.type('hello')             // needs 'input'
 
-host.http.get(url, { headers })      // needs http:<host>:<port>; returns { status, body } (body is text), synchronous
-host.http.post(url, body, { headers })   // body is sent as JSON
+host.http.get(url, { headers })          // needs http:<host>:<port>; returns { status, body } (body is text), synchronous
+host.http.post(url, body, { headers })   // the body is sent as JSON
 
-const id = host.every(ms, fn)        // repeat, shortest 100 ms
+const id = host.every(ms, fn)        // repeat; the shortest interval is 100 ms
 host.after(ms, fn)                   // once
 host.cancel(id)
 host.permissions                     // what was granted
 ```
 
-Rules the host enforces:
+Rules the server enforces:
 
 - **Names are yours.** Variable names and action types must start with `<plugin id>.`, so a plugin can never overwrite
   `system.cpu` or another plugin's values.
-- **Register at the top level.** Actions, the settings page and variable descriptions must be registered while the script
-  first runs; registrations made later from a callback are ignored. Variables can be set at any time.
-- **Time and memory are limited per call** (start-up, each action, each timer tick): 2 seconds, 32 MB, 2 million statements,
-  recursion depth 100. A call that goes over fails with an error; the plugin keeps running. HTTP requests time out after 5 s
-  and responses are capped at 1 MB, redirects are not followed.
-- **One thing at a time.** The script runs on its own thread, one call at a time, so a slow plugin never blocks the server
-  or another plugin, but it also means `host.http` blocks the plugin's own other callbacks while it waits. At most 20
-  timers; ticks that pile up while the script is busy are dropped.
-- **A plugin that fails 5 times in a row is switched off** (status `Error` with the last message); Reload starts it again.
-- Uninstalling a plugin unloads it, removes its variables and forgets its approval.
+- **Register at the top level.** Actions, the settings page and variable descriptions must be registered while the script first
+  runs; registrations made later from a callback are ignored. Variables can be set at any time.
+- **Time and memory are limited per call** (start-up, each action, each timer tick): 2 seconds, 32 MB, 2 million statements and
+  a recursion depth of 100. A call that goes over fails with an error; the plugin keeps running. HTTP requests time out after
+  5 seconds, responses are capped at 1 MB and redirects are not followed.
+- **One thing at a time.** The script runs on its own thread, one call at a time, so a slow plugin never blocks the server or
+  another plugin. `host.http` blocks the plugin's own other callbacks while it waits. At most 20 timers per plugin; ticks that
+  pile up while the script is busy are dropped.
+- **A plugin that fails 5 times in a row is switched off** (status *Error* with the last message). Reload starts it again.
 
-There is no `async`/`await` host API yet and no bridge for a plugin to draw its own widget (`plugin-html`); both are planned.
+There is no `async`/`await` host API yet and no way for a plugin to draw its own widget (a `plugin-html` widget is planned).
 
-## Hot loading, reload and unload
+## 8. Limits of the current SDK
 
-A plugin is installed, reloaded and removed while the server runs (Plugins window in the editor); no restart is needed.
-What that means for plugin code:
-
-- **`Initialize` may run more than once per server run** (install, reload, replacing a plugin with a new version), each
-  time in a fresh instance and a fresh load context. Keep state in the plugin instance, not in `static` fields that must
-  survive.
-- **Stop everything you started.** On unload the host cancels the `CancellationToken` passed to your `IVariableProvider.RunAsync`
-  and waits a few seconds, then calls `Dispose` / `DisposeAsync` on the plugin instance and on every action, provider,
-  settings page and icon pack you registered, if they implement `IDisposable` / `IAsyncDisposable`. Close sockets and stop
-  timers and threads there. Anything still running keeps the plugin's assembly in memory until the server restarts.
-- **Variables you set are removed on unload** automatically; you do not have to call `Remove` for them.
-- **Your assemblies are loaded from memory,** so your files are never locked and can be replaced while the plugin runs, but
-  `Assembly.Location` is empty inside a plugin. Use `IPluginHost.DataDirectory` to find your own files.
-- **Action types must be unique.** If one of your action types is already registered (by the host or another plugin), the
-  whole plugin fails to load with an `Error` entry and nothing of it stays registered.
-- Installing a folder whose `plugin.json` has an id that is already installed replaces that plugin; files the plugin wrote
-  into its own folder (such as `settings.json`) are kept.
-
-## 5. Kapsam dışı (henüz yok)
-
-- **JS plugin `async` API'si ve `plugin-html` widget köprüsü:** JS plugin'ler çalışıyor (bkz. "JavaScript plugins") ama
-  script'ler senkron çalışır ve kendi widget'larını çizemez.
-- **Plugin keşif/katalog sayfası:** şu an tek yol editördeki "Klasörden Yükle…" ile elle seçmek; bir
-  online/merkezi katalog yok.
-- **Widget türü / `plugin-html` köprüsü kaydı:** `IPluginHost` aksiyon, değişken sağlayıcı, ayar sayfası,
-  durum öğesi ve ikon paketi kaydını destekliyor ama widget türü kaydı yok; `macro-station/docs/plan.md`'deki plugin'e özel widget türü
-  ve sandbox'lı `plugin-html` iframe köprüsü henüz eklenmedi.
+- The SDK is used by project reference; there is no NuGet package yet.
+- A plugin cannot add a widget type.
+- The server runs on Windows only, so plugins are Windows-only in practice.
