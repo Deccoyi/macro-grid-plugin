@@ -2,6 +2,10 @@
 
 Bu dosya yalnızca bu plugin'in sürümünü takip eder (ana programdan bağımsız — bkz. `../agent-and-repo-rules.md` madde 1).
 
+## [Unreleased]
+### Added
+- **Entegrasyon test paketi** (`OBS/tests/MacroStation.Plugin.Obs.Tests/`, xUnit): `docs/done/obs-plugin-0.2-plan.md`'nin öngördüğü, gerçek OBS yerine in-process bir sahte obs-websocket v5 sunucusuna (`FakeObsServer`, `HttpListener` tabanlı) karşı çalışan testler — şifresiz/şifreli handshake, 4009 (yanlış şifre) ayar değişene kadar yeniden denemeyi durdurup `NotifySettingsChanged` sonrası hemen tekrar deniyor, yanıt vermeyen sunucu zaman aşımıyla algılanıp yeniden bağlanıyor, ani bağlantı kopması backoff'la yeniden bağlanıyor, `ExitStarted` olayı bağlantıyı TCP zaman aşımını beklemeden hemen kapatıyor, bir giriş kaldırıldığında (`InputRemoved`) ona ait değişkenler (`obs.input.*.muted/volumeDb`) `IVariableStore.Remove` ile siliniyor. `dotnet test OBS/tests/MacroStation.Plugin.Obs.Tests/` ile ayrı çalıştırılıyor (repo'da ortak bir `.sln` yok, her proje tek başına derlenip test ediliyor).
+
 ## [0.2.0] - 2026-09-23
 ### Added
 - Bağlantı ayarları artık kendi `ObsSettingsPage : IPluginSettingsPage`'i ile schema-driven formda
