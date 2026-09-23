@@ -1,0 +1,10 @@
+{
+  "id": "obs",
+  "name": "OBS Kontrolü",
+  "version": "0.1.0",
+  "sdkVersion": "^0.2.0",
+  "minServerVersion": "0.1.0",
+  "entry": "MacroStation.Plugin.Obs.dll",
+  "kind": "csharp",
+  "permissions": null
+}

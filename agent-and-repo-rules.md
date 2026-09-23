@@ -2,7 +2,7 @@
 
 Bu repo (`macro-station-plugins`), Macro Station'ın **server** (`macro-station`) ve **client** (`macro-station-client`) repolarından ayrı, üçüncü bağımsız repo. Server/editör tarafındaki genel ürün planı için `macro-station/docs/plan.md` ve `agent-notes.md`'ye bakılabilir (Plugin sistemi bölümü) — ama bu repo kendi kurallarıyla, kendi başına yaşar.
 
-> **Not (2026-09-23):** `macro-station` repo'sunda gerçek plugin *yükleyicisi* artık kuruldu (`IPlugin`/`IPluginHost`, `AssemblyLoadContext` izolasyonu, `%AppData%/MacroStation/plugins/` klasör taraması, editörde "Klasörden Yükle…" akışı — bkz. `MacroStation.Core/Plugins/` ve [docs/plugin-authoring.md](docs/plugin-authoring.md)). Ama bu repoda hâlâ **hiçbir gerçek plugin yazılmadı** — sıradaki iş kullanıcının seçeceği ilk plugin (OBS, Soundboard, ...) olacak, bu turda değil.
+> **Not (2026-09-23):** `macro-station` repo'sunda gerçek plugin *yükleyicisi* kuruldu (`IPlugin`/`IPluginHost`, `AssemblyLoadContext` izolasyonu, `%AppData%/MacroStation/plugins/` klasör taraması, editörde "Klasörden Yükle…" akışı — bkz. `MacroStation.Core/Plugins/` ve [docs/plugin-authoring.md](docs/plugin-authoring.md)). Aynı gün, bu repoda **ilk gerçek plugin de yazıldı: [OBS/](OBS/)** — `_backup/obs-plugin-reference/`'daki taslak temel alınarak obs-websocket v5 bağlantısı, sahne/yayın/kayıt/ses aksiyonları ve `obs.*` değişkenleri. Bu, plugin'e özel ayar ihtiyacının (host/port/şifre) `IPluginHost`'a `DataDirectory`/`Log` eklenmesini gerektirdiğini ortaya çıkardı — Plugin SDK bu yüzden `0.1.0`'dan `0.2.0`'a çıktı (bkz. `OBS/README.md` ve `docs/plugin-authoring.md`). Soundboard/IconPacks/WebView-chat gibi diğer plugin'ler hâlâ yazılmadı.
 
 ## 1. Bağımsız versiyonlama
 
@@ -55,4 +55,4 @@ macro-station-plugins/
 
 ## 6. Ne zaman uygulanacak
 
-Server tarafındaki gerçek `IPlugin`/`IPluginHost`/`AssemblyLoadContext` yükleyicisi artık kuruldu (2026-09-23) — bkz. [docs/plugin-authoring.md](docs/plugin-authoring.md). Ama bu repoda hâlâ hiçbir plugin geliştirilmiyor: ilk gerçek plugin'in ne olacağı (OBS, Soundboard, ...) ve ne zaman başlanacağı ayrı, açık bir kullanıcı kararı — bu dosya ve `docs/plugin-authoring.md` o karar verilene kadar bir **sözleşme/hazırlık** olarak duruyor, kod yazımı için bir sinyal değil.
+Server tarafındaki gerçek `IPlugin`/`IPluginHost`/`AssemblyLoadContext` yükleyicisi kuruldu, ilk gerçek plugin de ([OBS/](OBS/)) yazıldı (2026-09-23) — bkz. [docs/plugin-authoring.md](docs/plugin-authoring.md). Soundboard, IconPacks, WebView/chat gibi diğer plugin'lerin ne zaman yazılacağı hâlâ ayrı, açık bir kullanıcı kararı.

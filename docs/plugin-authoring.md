@@ -5,8 +5,8 @@ yazılmıştır (bkz. `macro-station/src/MacroStation.Core/Plugins/` ve
 `macro-station/src/MacroStation.Plugin.Abstractions/`). Genel kurallar için önce
 [agent-and-repo-rules.md](../agent-and-repo-rules.md)'ye bakın — bu dosya onun "nasıl" kısmı.
 
-> **Not:** Loader artık gerçek ve çalışıyor, ama bu repoda henüz **hiçbir plugin yazılmadı**. Bu doküman
-> bir plugin yazmaya başladığınızda referans olsun diye şimdiden hazırlanıyor.
+> **Not:** Loader gerçek ve çalışıyor; ilk gerçek plugin ([OBS/](../OBS/)) de yazıldı. Bu doküman ve
+> `OBS/`'nin kendisi, yeni bir plugin yazarken referans olarak kullanılabilir.
 
 ## 1. Klasör ve yükleme
 
@@ -31,16 +31,18 @@ başlatılması gerekir**; editör bunu kopyalama sonrası açıkça söyler.
 
 ```json
 {
-  "id": "audio-extra",
-  "name": "Ekstra Ses Kontrolleri",
-  "version": "1.0.0",
-  "sdkVersion": "^0.1.0",
+  "id": "obs",
+  "name": "OBS Kontrolü",
+  "version": "0.1.0",
+  "sdkVersion": "^0.2.0",
   "minServerVersion": "0.1.0",
-  "entry": "AudioExtra.Plugin.dll",
+  "entry": "MacroStation.Plugin.Obs.dll",
   "kind": "csharp",
   "permissions": null
 }
 ```
+
+(Gerçek örnek — bkz. [OBS/plugin.json](../OBS/plugin.json).)
 
 | Alan | Zorunlu | Açıklama |
 |---|---|---|
@@ -92,6 +94,11 @@ Notlar:
 - `Initialize` içinde kaydettiğiniz her şey (`IActionHandler`, `IVariableProvider`) host tarafında
   toplanıp built-in olanlarla aynı şekilde DI container'a eklenir — çalışma zamanında aksiyon/değişken
   tipleri arasında bir fark yoktur.
+- Plugin'inizin kendi ayarlarına (bağlantı bilgisi, API anahtarı, ...) ihtiyacı varsa `host.DataDirectory`
+  (plugin'in kendi kurulum klasörü, yazılabilir) altına kendi JSON dosyanızı okuyup/yazın — host'un
+  plugin'lere özel bir ayar UI'ı/deposu henüz yok (madde 5). Gerçek örnek: `OBS/src/ObsSettings.cs`.
+- Loglamak için `host.Log(string)` kullanın (host'un dosya loguna plugin id'nizle etiketlenerek yazılır) —
+  yoğun/sık tekrarlayan durumlar için değil, bağlantı durumu/hata gibi seyrek olaylar için.
 - Bir sağlayıcı hem `IVariableProvider` hem `IVariableCatalogSource` uyguluyorsa (bkz. server repo'daki
   `SystemAudioProvider` örneği), `RegisterVariableProvider` ikisini de otomatik yakalar — ayrıca
   kaydetmenize gerek yok.
