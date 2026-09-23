@@ -19,6 +19,11 @@ Bu dosya yalnızca bu plugin'in sürümünü takip eder (ana programdan bağıms
 - Durum sorguları tek bir `RequestBatch` çerçevesinde (1s yayın/kayıt açıkken, yoksa 5s); sahne/giriş/
   profil/vb. yalnızca olaylardan güncelleniyor, hiç polling yok.
 - Editörün pencere-geneli durum çubuğunda canlı bağlantı durumu.
+- Sunucu bu makinedeyse, 3 başarısız bağlantı denemesinden sonra `obs64`/`obs32`/`obs` süreci aranıyor;
+  süreç yoksa denemeler durup 5s'de bir sessizce kontrol ediliyor, durum çubuğunda "OBS · çalışmıyor"
+  gösteriliyor. OBS açılınca hemen (backoff beklemeden) yeniden bağlanıyor. `ExitStarted` olayı gelirse
+  süreç kontrolü 3 başarısızlığı beklemeden yapılıyor. Sunucu başka bir makinedeyse normal backoff
+  devam ediyor. Amaç: OBS kapalıyken boşuna soket denemesi yapıp kaynak tüketmemek.
 
 ### Fixed
 - `ObsEventSubscription.Inputs` yanlış bit değerindeydi (aslında Transitions'tı) — `InputMuteStateChanged`

@@ -1,3 +1,6 @@
+using System.Diagnostics;
+using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.WebSockets;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
@@ -5,7 +8,7 @@ using MacroStation.Plugin.Abstractions;
 
 namespace MacroStation.Plugin.Obs;
 
-public enum ObsConnectionState { Disabled, Connecting, Connected, Reconnecting, AuthFailed, Error }
+public enum ObsConnectionState { Disabled, Connecting, Connected, Reconnecting, WaitingForObs, AuthFailed, Error }
 
 /// <summary>
 /// Owns the (re)connecting OBS WebSocket connection for the whole plugin lifetime: an
@@ -20,13 +23,23 @@ public sealed class ObsConnection(IPluginHost host) : IVariableProvider, IVariab
 {
     private const string Category = "OBS";
     private static readonly Regex SlugInvalid = new("[^a-z0-9]+", RegexOptions.Compiled);
+    private static readonly TimeSpan InitialBackoff = TimeSpan.FromSeconds(2);
+
+    /// <summary>After this many failed attempts in a row, a local OBS that isn't even running stops being
+    /// retried — the app is also used without OBS, and hammering a closed port forever is pointless.</summary>
+    private const int FailuresBeforeProcessCheck = 3;
+    private static readonly TimeSpan ProcessPollInterval = TimeSpan.FromSeconds(5);
+    private static readonly string[] ObsProcessNames = ["obs64", "obs32", "obs"];
 
     private readonly Lock _clientLock = new();
     private readonly ObsState _cache = new();
     private readonly SemaphoreSlim _settingsSignal = new(0, int.MaxValue);
     private ObsClient? _client;
+    private CancellationTokenSource? _sessionCts;
     private IPluginStatusItem? _statusItem;
     private ObsConnectionState _connState = ObsConnectionState.Disabled;
+    private string? _lastLoggedError;
+    private volatile bool _obsExitStarted;
 
     public ObsState Cache => _cache;
 
@@ -46,7 +59,12 @@ public sealed class ObsConnection(IPluginHost host) : IVariableProvider, IVariab
     /// <summary>Called by <see cref="ObsSettingsPage.Save"/> — cancels the current session (if any) and
     /// resets backoff so a corrected password/host takes effect within moments, not on the next scheduled
     /// retry; also what breaks the AuthFailed hold (bug #6) once the user fixes the password.</summary>
-    public void NotifySettingsChanged() => _settingsSignal.Release();
+    public void NotifySettingsChanged()
+    {
+        _settingsSignal.Release();
+        try { _sessionCts?.Cancel(); }
+        catch (ObjectDisposedException) { } // session ended between the read and the Cancel — nothing to cancel.
+    }
 
     public IEnumerable<VariableInfo> Describe()
     {
@@ -115,36 +133,56 @@ public sealed class ObsConnection(IPluginHost host) : IVariableProvider, IVariab
     {
         _statusItem = host.CreateStatusItem("connection");
         SetState(store, ObsConnectionState.Disabled);
-        var backoff = TimeSpan.FromSeconds(2);
+        var backoff = InitialBackoff;
+        var failures = 0;
 
         while (!cancellationToken.IsCancellationRequested)
         {
+            // Settings are re-read right below, so any save signal raised before this point is already covered.
+            while (_settingsSignal.Wait(0)) { }
             var settings = ObsSettings.LoadOrCreate(host.DataDirectory);
             if (!settings.Enabled)
             {
                 SetState(store, ObsConnectionState.Disabled);
-                if (!await WaitAsync(TimeSpan.FromSeconds(5), cancellationToken)) break;
+                if (await WaitOrSettingsChangedAsync(TimeSpan.FromSeconds(5), cancellationToken) is null) break;
+                continue;
+            }
+
+            if (failures >= FailuresBeforeProcessCheck && IsLocalHost(settings.Host) && !IsObsProcessRunning())
+            {
+                SetState(store, ObsConnectionState.WaitingForObs);
+                LogOnce("OBS çalışmıyor; açılana kadar bağlantı denemeleri duraklatıldı.");
+                if (!await WaitForObsProcessAsync(cancellationToken)) break;
+                backoff = InitialBackoff;
+                failures = 0;
                 continue;
             }
 
             SetState(store, ObsConnectionState.Connecting);
             ObsClient? client = null;
+            using var sessionCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            _sessionCts = sessionCts;
+            var settingsChanged = false;
             try
             {
-                client = await ObsClient.ConnectAsync(settings.Host, settings.Port, settings.Password, cancellationToken);
+                client = await ObsClient.ConnectAsync(settings.Host, settings.Port, settings.Password, sessionCts.Token);
                 lock (_clientLock) _client = client;
+                _lastLoggedError = null;
                 host.Log($"OBS'e bağlanıldı ({settings.Host}:{settings.Port})");
-                backoff = TimeSpan.FromSeconds(2);
+                backoff = InitialBackoff;
+                failures = 0;
 
                 client.EventReceived += (type, data) => HandleEvent(store, type, data);
-                await _cache.RefreshAllAsync(client, cancellationToken);
+                await _cache.RefreshAllAsync(client, sessionCts.Token);
                 PublishSceneAndInputVariables(store);
                 SetState(store, ObsConnectionState.Connected);
 
-                await RunTickLoopAsync(client, store, cancellationToken);
+                await RunTickLoopAsync(client, store, sessionCts.Token);
 
-                var failure = await client.Completion;
-                if (failure is not null) host.Log($"OBS bağlantısı koptu: {failure.Message}");
+                if (sessionCts.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
+                    settingsChanged = true;
+                else if (await client.Completion is { } failure)
+                    host.Log($"OBS bağlantısı koptu: {failure.Message}");
             }
             catch (ObsAuthException ex) when (IsHardAuthFailure(ex.CloseStatus))
             {
@@ -157,12 +195,18 @@ public sealed class ObsConnection(IPluginHost host) : IVariableProvider, IVariab
             {
                 break;
             }
+            catch (OperationCanceledException) when (sessionCts.IsCancellationRequested)
+            {
+                settingsChanged = true;
+            }
             catch (Exception ex)
             {
-                host.Log($"OBS'e bağlanılamadı, {backoff.TotalSeconds:0}s sonra tekrar denenecek: {ex.Message}");
+                failures++;
+                LogOnce($"OBS'e bağlanılamadı: {ex.Message}");
             }
             finally
             {
+                _sessionCts = null;
                 lock (_clientLock) _client = null;
                 if (client is not null) await client.DisposeAsync();
                 ResetAllVariables(store); // reads Describe() for the dynamic names to remove, so this runs before _cache.Reset()
@@ -170,9 +214,88 @@ public sealed class ObsConnection(IPluginHost host) : IVariableProvider, IVariab
                 SetState(store, cancellationToken.IsCancellationRequested ? ObsConnectionState.Disabled : ObsConnectionState.Reconnecting, backoff);
             }
 
-            if (!await WaitAsync(backoff, cancellationToken)) break;
+            if (_obsExitStarted)
+            {
+                // OBS announced its own shutdown — check for the process on the next pass instead of after 3 failures.
+                _obsExitStarted = false;
+                failures = FailuresBeforeProcessCheck;
+            }
+
+            if (settingsChanged)
+            {
+                host.Log("OBS ayarları değişti, yeniden bağlanılıyor.");
+                backoff = InitialBackoff;
+                failures = 0;
+                continue;
+            }
+
+            var woke = await WaitOrSettingsChangedAsync(backoff, cancellationToken);
+            if (woke is null) break;
+            if (woke == true)
+            {
+                backoff = InitialBackoff;
+                failures = 0;
+                continue;
+            }
             backoff = TimeSpan.FromSeconds(Math.Min(backoff.TotalSeconds * 2, 30) + Random.Shared.NextDouble());
         }
+    }
+
+    private void LogOnce(string message)
+    {
+        if (message == _lastLoggedError) return;
+        _lastLoggedError = message;
+        host.Log(message);
+    }
+
+    /// <summary>A process check only means something when OBS is expected on this machine; for a remote
+    /// host there's nothing to look at, so it keeps the normal backoff.</summary>
+    private static bool IsLocalHost(string host)
+    {
+        try
+        {
+            var addresses = IPAddress.TryParse(host, out var ip) ? [ip] : Dns.GetHostAddresses(host);
+            var local = NetworkInterface.GetAllNetworkInterfaces()
+                .SelectMany(n => n.GetIPProperties().UnicastAddresses)
+                .Select(u => u.Address)
+                .ToHashSet();
+            return addresses.Any(a => IPAddress.IsLoopback(a) || local.Contains(a));
+        }
+        catch (Exception ex) when (ex is System.Net.Sockets.SocketException or ArgumentException or NetworkInformationException)
+        {
+            return false;
+        }
+    }
+
+    private static bool IsObsProcessRunning()
+    {
+        foreach (var name in ObsProcessNames)
+        {
+            var processes = Process.GetProcessesByName(name);
+            foreach (var p in processes) p.Dispose();
+            if (processes.Length > 0) return true;
+        }
+        return false;
+    }
+
+    /// <summary>Polls for the OBS process instead of the port — cheap, silent, and returns as soon as OBS
+    /// starts (or the user changes settings, e.g. points to another host).</summary>
+    private async Task<bool> WaitForObsProcessAsync(CancellationToken cancellationToken)
+    {
+        while (!IsObsProcessRunning())
+        {
+            var woke = await WaitOrSettingsChangedAsync(ProcessPollInterval, cancellationToken);
+            if (woke is null) return false;
+            if (woke == true) return true;
+        }
+        return true;
+    }
+
+    /// <summary>null = cancelled, true = settings were saved, false = the delay simply elapsed.</summary>
+    private async Task<bool?> WaitOrSettingsChangedAsync(TimeSpan delay, CancellationToken cancellationToken)
+    {
+        try { return await _settingsSignal.WaitAsync(delay, cancellationToken); }
+        catch (OperationCanceledException) { return null; }
     }
 
     /// <summary>4009/4010/4012 — the obs-plugin-0.2-plan.md bug #6 codes for "wrong password"/"already
@@ -184,12 +307,6 @@ public sealed class ObsConnection(IPluginHost host) : IVariableProvider, IVariab
     private async Task<bool> WaitForSettingsChangeAsync(CancellationToken cancellationToken)
     {
         try { await _settingsSignal.WaitAsync(cancellationToken); return true; }
-        catch (OperationCanceledException) { return false; }
-    }
-
-    private static async Task<bool> WaitAsync(TimeSpan delay, CancellationToken cancellationToken)
-    {
-        try { await Task.Delay(delay, cancellationToken); return true; }
         catch (OperationCanceledException) { return false; }
     }
 
@@ -312,6 +429,7 @@ public sealed class ObsConnection(IPluginHost host) : IVariableProvider, IVariab
             case "ExitStarted":
                 // OBS itself is shutting down — close now instead of waiting for the OS to notice a dead
                 // TCP connection (bug #10). RunAsync's tick loop returns once client.Completion completes.
+                _obsExitStarted = true;
                 _ = CurrentClient?.DisposeAsync();
                 break;
 
@@ -454,6 +572,7 @@ public sealed class ObsConnection(IPluginHost host) : IVariableProvider, IVariab
             ObsConnectionState.Connecting => ("OBS · bağlanıyor…", StatusLevel.Busy),
             ObsConnectionState.Connected => ("OBS · bağlı", StatusLevel.Ok),
             ObsConnectionState.Reconnecting => ($"OBS · {retryIn?.TotalSeconds:0}s sonra tekrar denenecek", StatusLevel.Warning),
+            ObsConnectionState.WaitingForObs => ("OBS · çalışmıyor", StatusLevel.Idle),
             ObsConnectionState.AuthFailed => ("OBS · şifre hatalı", StatusLevel.Error),
             _ => ("OBS · hata", StatusLevel.Error),
         };

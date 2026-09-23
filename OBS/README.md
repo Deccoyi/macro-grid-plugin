@@ -84,3 +84,8 @@ bağlantı TCP'nin zaman aşımına uğramasını beklemeden hemen kapatılır. 
 tek bir `RequestBatch` çerçevesinde toplanır — OBS'in "gelen/giden mesaj" sayacı saniyede sabit ~1-2 çerçeve
 artar, önceki sürümdeki gibi saniyede 4 ayrı istek göndermez. Sahne/giriş/profil gibi her şey yalnızca
 olaylardan (event) güncellenir, hiçbir zaman polling ile sorgulanmaz.
+
+Sunucu OBS ile aynı makinedeyse, 3 başarısız bağlantı denemesinden sonra soket denemeye ara verilir ve
+yalnızca `obs64`/`obs32`/`obs` sürecinin var olup olmadığına bakılır (5s'de bir) — OBS kapalıyken boşuna
+TCP bağlantı denemesi yapıp CPU/ağ harcamamak için. Süreç görülünce (veya sunucu başka bir makinedeyse
+normal backoff sırasında) hemen yeniden bağlanmayı dener.
