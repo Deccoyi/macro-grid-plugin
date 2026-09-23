@@ -6,7 +6,7 @@ namespace MacroStation.Plugin.Obs.Tests;
 /// <summary>
 /// Integration tests for <see cref="ObsConnection"/> against a fake obs-websocket v5 server
 /// (<see cref="FakeObsServer"/>), covering the reconnect/handshake behavior described in
-/// docs/done/obs-plugin-0.2-plan.md's "Tests and verification" section. Each test drives ObsConnection's
+/// the connection layer's behavior. Each test drives ObsConnection's
 /// real <see cref="ObsConnection.RunAsync"/> loop against a script controlling what the fake server does,
 /// then asserts on the resulting <see cref="FakeVariableStore"/>/<see cref="FakePluginHost"/> state.
 /// </summary>
@@ -261,7 +261,7 @@ public sealed class ObsConnectionTests
             await conn.SendEventAsync("ExitStarted", ct: ct);
             // Deliberately do NOT close the socket — a real dead TCP connection can sit "open" for a long
             // time before the OS notices. ObsConnection is expected to close its own side immediately on
-            // seeing ExitStarted rather than waiting that out (bug #10 in the archived plan).
+            // seeing ExitStarted rather than waiting that out.
             serverDone.TrySetResult();
             await Task.Delay(Timeout.Infinite, ct);
         });

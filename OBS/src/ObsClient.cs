@@ -16,7 +16,7 @@ public sealed class ObsRequestException(string requestType, int statusCode, stri
 public sealed class ObsAuthException(string message, WebSocketCloseStatus? closeStatus = null) : Exception(message)
 {
     /// <summary>4009/4010/4012 mean "don't bother retrying until settings change" — see ObsConnection's
-    /// close-code handling (bug #6 in obs-plugin-0.2-plan.md). Null when the failure wasn't a clean close
+    /// close-code handling. Null when the failure wasn't a clean close
     /// (timeout, TCP drop) and should retry with normal backoff instead.</summary>
     public WebSocketCloseStatus? CloseStatus { get; } = closeStatus;
 }
@@ -49,7 +49,7 @@ public sealed class ObsClient : IAsyncDisposable
 
     /// <summary>Completes exactly once, when the receive loop exits for any reason (server closed, network
     /// error, ...). Safe to await at any time, unlike a plain event which can fire before a late subscriber
-    /// attaches (bug #4). The result is the failure exception, or null for a clean close.</summary>
+    /// attaches. The result is the failure exception, or null for a clean close.</summary>
     public Task<Exception?> Completion => _completion.Task;
 
     /// <summary>The WebSocket close status once the connection has ended, if the server sent one (e.g. 4009
@@ -152,8 +152,8 @@ public sealed class ObsClient : IAsyncDisposable
         var tcs = new TaskCompletionSource<JsonObject>(TaskCreationOptions.RunContinuationsAsynchronously);
         _pending[requestId] = tcs;
 
-        // A request registered after the receive loop already ended would otherwise wait forever
-        // (bug #3) — re-check _closed right after registering, since ReceiveLoopAsync's finally only
+        // A request registered after the receive loop already ended would otherwise wait forever.
+        // Re-check _closed right after registering, since ReceiveLoopAsync's finally only
         // fails requests that were already in _pending at the moment it ran.
         if (_closed)
         {
@@ -197,7 +197,7 @@ public sealed class ObsClient : IAsyncDisposable
     }
 
     /// <summary>Sends every request in one RequestBatch (op 8) frame — one frame in, one frame out,
-    /// regardless of how many requests it carries (see obs-plugin-0.2-plan.md §4b: this is what keeps
+    /// regardless of how many requests it carries (this is what keeps
     /// OBS's per-second message counter from climbing). <paramref name="haltOnFailure"/> false so one
     /// failing request (e.g. a stale scene name) doesn't cancel the rest of the batch.</summary>
     public async Task<IReadOnlyList<ObsBatchResult>> RequestBatchAsync(IReadOnlyList<(string Type, JsonObject? Data)> requests, CancellationToken cancellationToken)
@@ -276,7 +276,7 @@ public sealed class ObsClient : IAsyncDisposable
         }
     }
 
-    /// <summary>Reads exactly one JSON text frame, reusing the instance's own buffer (bug #8 — no more
+    /// <summary>Reads exactly one JSON text frame, reusing the instance's own buffer (no more
     /// allocating a fresh 16 KB buffer + MemoryStream per message).</summary>
     private async Task<JsonObject?> ReceiveOneAsync(CancellationToken cancellationToken)
     {
@@ -348,7 +348,7 @@ public sealed class ObsClient : IAsyncDisposable
     }
 
     /// <summary>Closes the socket right away instead of waiting for the OS to notice a dead TCP connection
-    /// (used both for a normal Dispose and for OBS's own `ExitStarted` event — bug #10).</summary>
+    /// (used both for a normal Dispose and for OBS's own `ExitStarted` event).</summary>
     public async ValueTask DisposeAsync()
     {
         _closed = true;
@@ -371,7 +371,7 @@ public sealed class ObsClient : IAsyncDisposable
 
 /// <summary>obs-websocket's EventSubscription bitmask — only the low bits (General..Ui) are ever
 /// requested; 1&lt;&lt;16 and up (InputVolumeMeters, ...) are deliberately never subscribed to, since
-/// they fire many times a second per input (bug #1: Inputs was wrongly `1&lt;&lt;4`, which is actually
+/// they fire many times a second per input (Inputs was wrongly `1&lt;&lt;4`, which is actually
 /// Transitions, so InputMuteStateChanged etc. never arrived).</summary>
 [Flags]
 public enum ObsEventSubscription

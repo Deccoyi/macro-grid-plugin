@@ -17,7 +17,7 @@ public enum ObsConnectionState { Disabled, Connecting, Connected, Reconnecting, 
 /// connection drops. Action handlers (<see cref="ObsActions"/>) share this same instance's
 /// <see cref="RequestAsync"/>/<see cref="Cache"/> to actually do things — there's exactly one connection
 /// to OBS. Settings are re-read once on (re)connect and whenever <see cref="NotifySettingsChanged"/> is
-/// called by the settings page (see obs-plugin-0.2-plan.md §4a bug #5), not on every loop tick.
+/// called by the settings page, not on every loop tick.
 /// </summary>
 public sealed class ObsConnection(IPluginHost host) : IVariableProvider, IVariableCatalogSource
 {
@@ -58,7 +58,7 @@ public sealed class ObsConnection(IPluginHost host) : IVariableProvider, IVariab
 
     /// <summary>Called by <see cref="ObsSettingsPage.Save"/> — cancels the current session (if any) and
     /// resets backoff so a corrected password/host takes effect within moments, not on the next scheduled
-    /// retry; also what breaks the AuthFailed hold (bug #6) once the user fixes the password.</summary>
+    /// retry; also what breaks the AuthFailed hold once the user fixes the password.</summary>
     public void NotifySettingsChanged()
     {
         _settingsSignal.Release();
@@ -298,7 +298,7 @@ public sealed class ObsConnection(IPluginHost host) : IVariableProvider, IVariab
         catch (OperationCanceledException) { return null; }
     }
 
-    /// <summary>4009/4010/4012 — the obs-plugin-0.2-plan.md bug #6 codes for "wrong password"/"already
+    /// <summary>4009/4010/4012 — the close codes for "wrong password"/"already
     /// identified"/"unsupported rpc version": none of these are fixed by retrying, only by the user
     /// changing settings, so retrying just floods the log.</summary>
     private static bool IsHardAuthFailure(WebSocketCloseStatus? closeStatus) =>
@@ -428,7 +428,7 @@ public sealed class ObsConnection(IPluginHost host) : IVariableProvider, IVariab
         {
             case "ExitStarted":
                 // OBS itself is shutting down — close now instead of waiting for the OS to notice a dead
-                // TCP connection (bug #10). RunAsync's tick loop returns once client.Completion completes.
+                // TCP connection. RunAsync's tick loop returns once client.Completion completes.
                 _obsExitStarted = true;
                 _ = CurrentClient?.DisposeAsync();
                 break;
@@ -553,7 +553,7 @@ public sealed class ObsConnection(IPluginHost host) : IVariableProvider, IVariab
         store.Remove($"obs.input.{slug}.volumeDb");
     }
 
-    /// <summary>On disconnect every obs.* value is reset (not just the three booleans — bug #11), and
+    /// <summary>On disconnect every obs.* value is reset (not just the three booleans ), and
     /// dynamic per-input/per-item variables are removed rather than left at a stale last-known value.</summary>
     private void ResetAllVariables(IVariableStore store)
     {

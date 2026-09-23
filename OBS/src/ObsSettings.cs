@@ -46,7 +46,7 @@ public sealed class ObsSettings
     }
 }
 
-/// <summary>The schema-driven settings window (see obs-plugin-0.2-plan.md §4f) — replaces the raw-JSON
+/// <summary>The schema-driven settings window — replaces the raw-JSON
 /// passthrough form the editor used to hand-build for this plugin specifically. Saving signals
 /// <see cref="ObsConnection.NotifySettingsChanged"/> so a corrected host/port/password reconnects within
 /// moments instead of waiting for the current backoff to expire.</summary>

@@ -5,7 +5,7 @@ namespace MacroStation.Plugin.Obs;
 
 /// <summary>Safe field readers for obs-websocket JSON payloads — a message with an unexpected shape (a
 /// string where a number was expected, a missing field) returns the fallback instead of throwing, so one
-/// malformed event never kills the receive loop (bug #9 in obs-plugin-0.2-plan.md).</summary>
+/// malformed event never kills the receive loop.</summary>
 public static class ObsJson
 {
     public static int TryGetInt(this JsonObject? obj, string key, int fallback = 0)

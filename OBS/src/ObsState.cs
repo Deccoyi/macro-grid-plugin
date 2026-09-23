@@ -12,7 +12,7 @@ public sealed record ObsInputInfo(string Name, string Kind, bool IsAudio);
 /// (groups flattened, with a depth limit so a pathological group cycle can't loop forever), profiles,
 /// transitions, and the handful of live booleans (mute, item visibility) actions and variables both read.
 /// Filled once with a handful of batched requests on connect (see <see cref="RefreshAllAsync"/>), then
-/// kept in sync incrementally from events — see obs-plugin-0.2-plan.md §4c. Every dropdown and every
+/// kept in sync incrementally from events. Every dropdown and every
 /// `obs.*` variable is served from here, so none of it waits on a live OBS round-trip.
 /// </summary>
 public sealed class ObsState

@@ -8,7 +8,7 @@ namespace MacroStation.Plugin.Obs.Tests;
 
 /// <summary>
 /// An in-process fake obs-websocket v5 server — an <see cref="HttpListener"/> WebSocket, exactly like
-/// docs/done/obs-plugin-0.2-plan.md's "Tests and verification" section calls for. Each test supplies its
+/// the connection layer needs. Each test supplies its
 /// own async script (<paramref name="handleConnection"/> below) describing what the fake server does when
 /// a client connects — send Hello, wait for Identify, answer/ignore/hang on requests, close with a
 /// specific code, drop the connection abruptly — so the scripts stay readable per-test instead of being
