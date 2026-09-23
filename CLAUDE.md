@@ -1,6 +1,6 @@
 # Project rules
 
-Read `agent-and-repo-rules.md` first: it covers plugin versioning, the manifest and the SDK compatibility rules.
+Read `CONTRIBUTING.md` first: it covers plugin versioning, isolation, the manifest and the SDK compatibility rules.
 
 ## Language
 - Everything in the project is written in **English**: code, identifiers (variables, functions, types, files), comments, documentation, changelogs, log messages and commit messages. Do not use Turkish in any of them.
