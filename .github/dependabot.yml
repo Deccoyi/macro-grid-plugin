@@ -3,34 +3,38 @@ version: 2
 updates:
   - package-ecosystem: nuget
     directory: "/OBS/src"
+    target-branch: dev
     schedule:
       interval: monthly
     open-pull-requests-limit: 2
     groups:
-      all-updates:
+      deps:
         patterns: ["*"]
   - package-ecosystem: nuget
     directory: "/OBS/tests/MacroGrid.Plugin.Obs.Tests"
+    target-branch: dev
     schedule:
       interval: monthly
     open-pull-requests-limit: 2
     groups:
-      all-updates:
+      deps:
         patterns: ["*"]
   - package-ecosystem: nuget
     directory: "/PLCIcons/src"
+    target-branch: dev
     schedule:
       interval: monthly
     open-pull-requests-limit: 2
     groups:
-      all-updates:
+      deps:
         patterns: ["*"]
   - package-ecosystem: github-actions
     directory: "/"
+    target-branch: dev
     schedule:
       interval: monthly
     open-pull-requests-limit: 2
     groups:
-      all-updates:
+      deps:
         patterns: ["*"]
   # No package.json exists yet; add an npm entry when the first one appears.
