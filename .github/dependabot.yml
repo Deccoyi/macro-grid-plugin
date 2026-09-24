@@ -1,19 +1,36 @@
+# Monthly, and all updates of one folder in a single pull request, to keep CI runs and mail down.
 version: 2
 updates:
   - package-ecosystem: nuget
     directory: "/OBS/src"
     schedule:
-      interval: weekly
+      interval: monthly
+    open-pull-requests-limit: 2
+    groups:
+      all-updates:
+        patterns: ["*"]
   - package-ecosystem: nuget
     directory: "/OBS/tests/MacroGrid.Plugin.Obs.Tests"
     schedule:
-      interval: weekly
+      interval: monthly
+    open-pull-requests-limit: 2
+    groups:
+      all-updates:
+        patterns: ["*"]
   - package-ecosystem: nuget
     directory: "/PLCIcons/src"
     schedule:
-      interval: weekly
+      interval: monthly
+    open-pull-requests-limit: 2
+    groups:
+      all-updates:
+        patterns: ["*"]
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
-      interval: weekly
+      interval: monthly
+    open-pull-requests-limit: 2
+    groups:
+      all-updates:
+        patterns: ["*"]
   # No package.json exists yet; add an npm entry when the first one appears.
