@@ -4,9 +4,9 @@ using System.Net.NetworkInformation;
 using System.Net.WebSockets;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
-using MacroStation.Plugin.Abstractions;
+using MacroGrid.Plugin.Abstractions;
 
-namespace MacroStation.Plugin.Obs;
+namespace MacroGrid.Plugin.Obs;
 
 public enum ObsConnectionState { Disabled, Connecting, Connected, Reconnecting, WaitingForObs, AuthFailed, Error }
 

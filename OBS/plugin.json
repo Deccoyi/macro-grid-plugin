@@ -4,7 +4,7 @@
   "version": "0.2.0",
   "sdkVersion": "^0.3.0",
   "minServerVersion": "0.1.0",
-  "entry": "MacroStation.Plugin.Obs.dll",
+  "entry": "MacroGrid.Plugin.Obs.dll",
   "kind": "csharp",
   "permissions": null
 }

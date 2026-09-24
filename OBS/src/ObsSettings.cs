@@ -1,8 +1,8 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using MacroStation.Plugin.Abstractions;
+using MacroGrid.Plugin.Abstractions;
 
-namespace MacroStation.Plugin.Obs;
+namespace MacroGrid.Plugin.Obs;
 
 /// <summary>
 /// OBS WebSocket (obs-websocket v5, built into OBS 28+) connection settings, persisted as this plugin's

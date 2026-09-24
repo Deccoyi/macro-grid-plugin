@@ -8,6 +8,6 @@ were compared against every icon of the Lucide library (versions 0.460.0 and 1.4
 data with a Lucide icon, so no Lucide artwork is included and no Lucide license notice is required. The text labels inside some icons
 (for example `ADD`, `TON`) are plain SVG text set in a generic font family; no font file is embedded.
 
-Third-party code: none. The plugin references the Macro Station plugin SDK (MIT) at build time only; it is not copied into the plugin.
+Third-party code: none. The plugin references the Macro Grid plugin SDK (MIT) at build time only; it is not copied into the plugin.
 
 The full list of components is in the repository: `THIRD_PARTY_NOTICES.md` and the `licenses/` folder.

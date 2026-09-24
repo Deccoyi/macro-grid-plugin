@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
-using MacroStation.Plugin.Abstractions;
+using MacroGrid.Plugin.Abstractions;
 
-namespace MacroStation.Plugin.Obs.Tests;
+namespace MacroGrid.Plugin.Obs.Tests;
 
 /// <summary>In-memory <see cref="IVariableStore"/> — records every Set/Remove so a test can assert on
 /// what ObsConnection published, in addition to reading current values.</summary>

@@ -1,7 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 
-namespace MacroStation.Plugin.Obs;
+namespace MacroGrid.Plugin.Obs;
 
 /// <summary>
 /// obs-websocket v5 authentication string: base64(sha256(base64(sha256(password + salt)) + challenge)).

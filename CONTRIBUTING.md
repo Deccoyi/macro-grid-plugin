@@ -6,7 +6,7 @@ Thanks for helping. This file is the set of rules every plugin in this repositor
 ## Layout
 
 ```
-macro-station-plugin/
+macro-grid-plugin/
 ├── README.md
 ├── CONTRIBUTING.md
 ├── docs/plugin-authoring.md

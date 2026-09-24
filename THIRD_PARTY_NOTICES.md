@@ -8,7 +8,7 @@ license texts are kept in [licenses/](licenses/). This file is an index, not a r
 
 | Name | Version | License (SPDX) | Copyright | URL | License text | Used by | Shipped |
 |---|---|---|---|---|---|---|---|
-| Macro Station plugin SDK (`MacroStation.Plugin.Abstractions`) | project reference | MIT | (c) 2026 Deccoyi | https://github.com/Deccoyi/macro-station | [licenses/macro-station-plugin-sdk/LICENSE](licenses/macro-station-plugin-sdk/LICENSE) | all C# plugins (build time) | no |
+| Macro Grid plugin SDK (`MacroGrid.Plugin.Abstractions`) | project reference | MIT | (c) 2026 Deccoyi | https://github.com/Deccoyi/macro-grid | [licenses/macro-grid-plugin-sdk/LICENSE](licenses/macro-grid-plugin-sdk/LICENSE) | all C# plugins (build time) | no |
 | xunit (`xunit`, `xunit.core`, `xunit.assert`, `xunit.abstractions`, `xunit.analyzers`) | 2.9.3 (abstractions 2.0.3, analyzers 1.18.0) | Apache-2.0 | (c) .NET Foundation and Contributors | https://github.com/xunit/xunit | [licenses/xunit/LICENSE.txt](licenses/xunit/LICENSE.txt) | OBS tests | no |
 | xunit.runner.visualstudio | 3.1.4 | Apache-2.0 | (c) .NET Foundation and Contributors | https://github.com/xunit/visualstudio.xunit | [licenses/xunit/LICENSE.txt](licenses/xunit/LICENSE.txt) | OBS tests | no |
 | Microsoft.NET.Test.Sdk, Microsoft.TestPlatform.TestHost, Microsoft.TestPlatform.ObjectModel, Microsoft.CodeCoverage | 17.14.1 | MIT | (c) Microsoft Corporation | https://github.com/microsoft/vstest | [licenses/microsoft-test-platform/LICENSE.txt](licenses/microsoft-test-platform/LICENSE.txt) | OBS tests | no |

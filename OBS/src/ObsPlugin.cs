@@ -1,6 +1,6 @@
-using MacroStation.Plugin.Abstractions;
+using MacroGrid.Plugin.Abstractions;
 
-namespace MacroStation.Plugin.Obs;
+namespace MacroGrid.Plugin.Obs;
 
 /// <summary>Entry point (plugin.json's "entry") — the host finds this type by reflection and instantiates it
 /// with a parameterless constructor, then calls <see cref="Initialize"/> once.</summary>

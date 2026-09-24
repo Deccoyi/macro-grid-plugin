@@ -1,14 +1,14 @@
 # PLC icons plugin
 
-A static icon pack for Macro Station: 29 ladder-logic (PLC) symbols (coil, timers, comparison and arithmetic blocks, branches) that appear
+A static icon pack for Macro Grid: 29 ladder-logic (PLC) symbols (coil, timers, comparison and arithmetic blocks, branches) that appear
 in the editor's icon picker as their own category. It has no connection, no settings and no actions. Kind: C# plugin. Id: `plc-icons`.
 The category is named "PLC İkonları" in the picker.
 
 ## Installation
 
-1. Build: `dotnet build PLCIcons\src\MacroStation.Plugin.PlcIcons.csproj` (add `-c Release` for a release build). This needs the
-   `macro-station` repository next to this one, see the [top-level README](../README.md#building).
-2. In the Macro Station editor open **Plugins → Manage Plugins… → Install from Folder…** and pick `PLCIcons\src\bin\Debug\net10.0\` (or
+1. Build: `dotnet build PLCIcons\src\MacroGrid.Plugin.PlcIcons.csproj` (add `-c Release` for a release build). This needs the
+   `macro-grid` repository next to this one, see the [top-level README](../README.md#building).
+2. In the Macro Grid editor open **Plugins → Manage Plugins… → Install from Folder…** and pick `PLCIcons\src\bin\Debug\net10.0\` (or
    `Release\net10.0\`). The build copies `plugin.json` next to the DLL. The pack is available immediately.
 
 ## Icons

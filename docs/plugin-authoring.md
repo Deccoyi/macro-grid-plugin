@@ -1,7 +1,7 @@
 # Writing a plugin
 
 A plugin adds actions (things a widget can do), variables (live values a widget can show) and small extras (a settings
-page, status bar items, icon packs) to the Macro Station server. There are two kinds:
+page, status bar items, icon packs) to the Macro Grid server. There are two kinds:
 
 | | C# plugin | JavaScript plugin |
 |---|---|---|
@@ -18,7 +18,7 @@ rules that apply to every plugin in this repository (independent versioning, iso
 
 ## 1. Folder and installation
 
-The server looks for plugins in `%AppData%\MacroStation\plugins\<folder>\`. A folder is a plugin if it contains a
+The server looks for plugins in `%AppData%\MacroGrid\plugins\<folder>\`. A folder is a plugin if it contains a
 `plugin.json`. The folder name does not matter; the identity is the `id` in the manifest.
 
 Install from the editor: **Plugins → Manage Plugins… → Install from Folder…** and pick a folder that contains
@@ -38,7 +38,7 @@ A plugin is loaded, reloaded and unloaded while the server runs. See [Lifecycle]
   "version": "0.2.0",
   "sdkVersion": "^0.3.0",
   "minServerVersion": "0.1.0",
-  "entry": "MacroStation.Plugin.Obs.dll",
+  "entry": "MacroGrid.Plugin.Obs.dll",
   "kind": "csharp",
   "permissions": null
 }
@@ -55,7 +55,7 @@ A plugin is loaded, reloaded and unloaded while the server runs. See [Lifecycle]
 | `kind` | yes | `"csharp"` or `"js"`. |
 | `permissions` | no | JavaScript only: the permissions the script needs (see [JavaScript plugins](#7-javascript-plugins)). |
 
-The SDK version is `PluginSdk.Version` in `MacroStation.Plugin.Abstractions`; see the server repository's
+The SDK version is `PluginSdk.Version` in `MacroGrid.Plugin.Abstractions`; see the server repository's
 `docs/versioning.md` for what counts as a breaking change.
 
 ## 3. Status of a plugin in the editor
@@ -73,7 +73,7 @@ The Plugins window lists every folder that has a `plugin.json`:
 
 Reference the SDK project and copy `plugin.json` into the build output, so the output folder is directly installable.
 The SDK is not published as a package yet; the projects in this repository reference it by path, which assumes the
-`macro-station` and `macro-station-plugin` repositories are cloned next to each other:
+`macro-grid` and `macro-grid-plugin` repositories are cloned next to each other:
 
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
@@ -84,7 +84,7 @@ The SDK is not published as a package yet; the projects in this repository refer
     <AssemblyName>MyCompany.Plugin.Ping</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\macro-station\src\MacroStation.Plugin.Abstractions\MacroStation.Plugin.Abstractions.csproj">
+    <ProjectReference Include="..\..\..\macro-grid\src\MacroGrid.Plugin.Abstractions\MacroGrid.Plugin.Abstractions.csproj">
       <Private>false</Private>
       <ExcludeAssets>runtime</ExcludeAssets>
     </ProjectReference>
@@ -96,7 +96,7 @@ The SDK is not published as a package yet; the projects in this repository refer
 ```
 
 `Private=false` and `ExcludeAssets=runtime` keep a copy of the SDK out of your output: the server and every plugin must share
-the server's copy of `MacroStation.Plugin.Abstractions` (otherwise `is IActionHandler` checks fail because the same type from
+the server's copy of `MacroGrid.Plugin.Abstractions` (otherwise `is IActionHandler` checks fail because the same type from
 two copies is two different types). Never ship your own copy.
 
 ### The entry point
@@ -106,7 +106,7 @@ constructor and calls `Initialize` once. Everything you register there is applie
 
 ```csharp
 using System.Text.Json.Nodes;
-using MacroStation.Plugin.Abstractions;
+using MacroGrid.Plugin.Abstractions;
 
 public sealed class PingPlugin : IPlugin
 {
@@ -135,7 +135,7 @@ public sealed class PingAction : IActionHandler
 | Member | Purpose |
 |---|---|
 | `ServerVersion`, `SdkVersion` | The running server's and SDK's versions. |
-| `DataDirectory` | The plugin's own install folder (`%AppData%\MacroStation\plugins\<id>\`), writable. Keep your files here. |
+| `DataDirectory` | The plugin's own install folder (`%AppData%\MacroGrid\plugins\<id>\`), writable. Keep your files here. |
 | `Log(message)` | Writes a line to the server's plugin log, prefixed with your id. Use it for rare events (connection changes, errors), not for polling. |
 | `RegisterAction(handler)` | Adds an action type. |
 | `RegisterVariableProvider(provider)` | Adds a background source of variables. If the same object implements `IVariableCatalogSource` it is also listed in the editor's variable picker. |
@@ -249,7 +249,7 @@ without restarting the server. What that means for your code:
 - **Action types must be unique.** If one of yours is already registered (by the server or another plugin) the whole plugin fails
   to load as *Error* and nothing of it stays registered.
 - Each plugin has its own assembly load context, so two plugins can use different versions of the same library. The one shared
-  assembly is `MacroStation.Plugin.Abstractions` (see project setup).
+  assembly is `MacroGrid.Plugin.Abstractions` (see project setup).
 
 ## 7. JavaScript plugins
 

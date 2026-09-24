@@ -3,7 +3,7 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json.Nodes;
 
-namespace MacroStation.Plugin.Obs;
+namespace MacroGrid.Plugin.Obs;
 
 /// <summary>Thrown when OBS accepts the connection but rejects a request (wrong scene name, no such input, ...).</summary>
 public sealed class ObsRequestException(string requestType, int statusCode, string? comment)

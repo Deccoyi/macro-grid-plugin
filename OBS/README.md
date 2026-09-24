@@ -1,6 +1,6 @@
 # OBS plugin
 
-Controls [OBS Studio](https://obsproject.com/) from Macro Station over obs-websocket v5, which is built into OBS 28 and newer. It adds
+Controls [OBS Studio](https://obsproject.com/) from Macro Grid over obs-websocket v5, which is built into OBS 28 and newer. It adds
 22 actions (scenes, streaming, recording, audio, scene items, text sources) and about 45 live `obs.*` variables you can show on
 widgets. Kind: C# plugin. Id: `obs`.
 
@@ -12,16 +12,16 @@ widgets. Kind: C# plugin. Id: `obs`.
 
 ## Installation
 
-1. Build: `dotnet build OBS\src\MacroStation.Plugin.Obs.csproj` (add `-c Release` for a release build). This needs the `macro-station`
+1. Build: `dotnet build OBS\src\MacroGrid.Plugin.Obs.csproj` (add `-c Release` for a release build). This needs the `macro-grid`
    repository next to this one, see the [top-level README](../README.md#building).
-2. In the Macro Station editor open **Plugins → Manage Plugins… → Install from Folder…** and pick `OBS\src\bin\Debug\net10.0\` (or
+2. In the Macro Grid editor open **Plugins → Manage Plugins… → Install from Folder…** and pick `OBS\src\bin\Debug\net10.0\` (or
    `Release\net10.0\`). The build copies `plugin.json` next to the DLL. The plugin is loaded immediately.
 
 ## Settings
 
 In the Plugins window click the gear button next to the OBS entry (or click the OBS item in the status bar). The fields are **Enabled**,
 **Server**, **Port** and **Password**. Saving applies immediately: the plugin reconnects within moments, no restart needed. The settings are
-stored in `%AppData%\MacroStation\plugins\obs\settings.json` (the password is stored in plain text). On first start the file is created
+stored in `%AppData%\MacroGrid\plugins\obs\settings.json` (the password is stored in plain text). On first start the file is created
 with the plugin **disabled**:
 
 ```json
@@ -85,7 +85,7 @@ the message is shown on the phone and in the editor's status bar.
 
 ## Tests
 
-`dotnet test OBS\tests\MacroStation.Plugin.Obs.Tests\MacroStation.Plugin.Obs.Tests.csproj` runs the connection layer against a fake
+`dotnet test OBS\tests\MacroGrid.Plugin.Obs.Tests\MacroGrid.Plugin.Obs.Tests.csproj` runs the connection layer against a fake
 obs-websocket server (handshake, wrong password, timeouts, sudden disconnects, OBS shutting down, input removal).
 
 ## License

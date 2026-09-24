@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
-namespace MacroStation.Plugin.Obs;
+namespace MacroGrid.Plugin.Obs;
 
 /// <summary>Safe field readers for obs-websocket JSON payloads — a message with an unexpected shape (a
 /// string where a number was expected, a missing field) returns the fallback instead of throwing, so one

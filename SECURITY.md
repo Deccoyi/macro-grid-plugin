@@ -2,7 +2,7 @@
 
 ## What to expect from these plugins
 
-A **C# plugin runs inside the Macro Station server process with full .NET access**: it can do anything the server can, including reading and writing your files and starting programs. Install
+A **C# plugin runs inside the Macro Grid server process with full .NET access**: it can do anything the server can, including reading and writing your files and starting programs. Install
 only C# plugins whose source you trust, including the ones in this repository. **JavaScript plugins** run in a sandbox with no .NET access and only the permissions you approve, with time and
 memory limits per call; the sandbox is described in [docs/plugin-authoring.md](docs/plugin-authoring.md#7-javascript-plugins). The software was written by an AI assistant and has not been
 independently audited (see the [README](README.md)).

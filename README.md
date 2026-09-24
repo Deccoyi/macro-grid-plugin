@@ -1,8 +1,8 @@
-# Macro Station plugins
+# Macro Grid plugins
 
-Plugins for [Macro Station](https://github.com/Deccoyi/macro-station), the Windows server that turns a phone or tablet on your
+Plugins for [Macro Grid](https://github.com/Deccoyi/macro-grid), the Windows server that turns a phone or tablet on your
 local network into a customizable macro deck. This repository holds the official plugins and the guide for writing your own.
-It is a separate repository from the server and from the phone app ([macro-station-client](https://github.com/Deccoyi/macro-station-client)),
+It is a separate repository from the server and from the phone app ([macro-grid-client](https://github.com/Deccoyi/macro-grid-client)),
 and every plugin here is versioned on its own.
 
 > **This project was written entirely by an AI assistant (Claude) at a user's direction.** It has not been independently audited,
@@ -20,27 +20,27 @@ and every plugin here is versioned on its own.
 ## Installing a plugin
 
 1. Build it (C# plugins) or use the folder as it is (JavaScript plugins).
-2. In the Macro Station editor open **Plugins → Manage Plugins…** and choose **Install from Folder…**. For a C# plugin pick its build
+2. In the Macro Grid editor open **Plugins → Manage Plugins…** and choose **Install from Folder…**. For a C# plugin pick its build
    output folder (for example `OBS\src\bin\Debug\net10.0\`); the build puts `plugin.json` next to the DLL.
 3. The plugin is loaded right away, with no restart. A JavaScript plugin asks you to approve the permissions it needs first.
 
-Each plugin's README lists its own requirements and settings. Plugins are installed to `%AppData%\MacroStation\plugins\<id>\`.
+Each plugin's README lists its own requirements and settings. Plugins are installed to `%AppData%\MacroGrid\plugins\<id>\`.
 
 ## Building
 
 You need the [.NET 10 SDK](https://dotnet.microsoft.com/download). The C# plugins reference the plugin SDK
-(`MacroStation.Plugin.Abstractions`) by path, so clone this repository **next to** the server repository:
+(`MacroGrid.Plugin.Abstractions`) by path, so clone this repository **next to** the server repository:
 
 ```
 some-folder/
-├── macro-station/          https://github.com/Deccoyi/macro-station
-└── macro-station-plugin/   this repository
+├── macro-grid/          https://github.com/Deccoyi/macro-grid
+└── macro-grid-plugin/   this repository
 ```
 
 ```powershell
-dotnet build OBS\src\MacroStation.Plugin.Obs.csproj
-dotnet test  OBS\tests\MacroStation.Plugin.Obs.Tests\MacroStation.Plugin.Obs.Tests.csproj
-dotnet build PLCIcons\src\MacroStation.Plugin.PlcIcons.csproj
+dotnet build OBS\src\MacroGrid.Plugin.Obs.csproj
+dotnet test  OBS\tests\MacroGrid.Plugin.Obs.Tests\MacroGrid.Plugin.Obs.Tests.csproj
+dotnet build PLCIcons\src\MacroGrid.Plugin.PlcIcons.csproj
 ```
 
 ## Writing your own

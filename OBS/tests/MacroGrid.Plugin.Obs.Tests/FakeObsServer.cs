@@ -4,7 +4,7 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json.Nodes;
 
-namespace MacroStation.Plugin.Obs.Tests;
+namespace MacroGrid.Plugin.Obs.Tests;
 
 /// <summary>
 /// An in-process fake obs-websocket v5 server — an <see cref="HttpListener"/> WebSocket, exactly like

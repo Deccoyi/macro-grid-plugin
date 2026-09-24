@@ -1,7 +1,7 @@
 using System.Net.WebSockets;
 using System.Text.Json.Nodes;
 
-namespace MacroStation.Plugin.Obs.Tests;
+namespace MacroGrid.Plugin.Obs.Tests;
 
 /// <summary>
 /// Integration tests for <see cref="ObsConnection"/> against a fake obs-websocket v5 server

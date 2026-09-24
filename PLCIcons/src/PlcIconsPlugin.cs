@@ -1,7 +1,7 @@
 using System.Reflection;
-using MacroStation.Plugin.Abstractions;
+using MacroGrid.Plugin.Abstractions;
 
-namespace MacroStation.Plugin.PlcIcons;
+namespace MacroGrid.Plugin.PlcIcons;
 
 /// <summary>Entry point (plugin.json's "entry") — the host finds this type by reflection and instantiates it
 /// with a parameterless constructor, then calls <see cref="Initialize"/> once.</summary>
@@ -35,7 +35,7 @@ public sealed class PlcIconPack : IIconPackSource
         if (Array.IndexOf(Names, name) < 0) return null;
 
         var assembly = typeof(PlcIconPack).Assembly;
-        using var stream = assembly.GetManifestResourceStream($"MacroStation.Plugin.PlcIcons.icons.{name}.svg");
+        using var stream = assembly.GetManifestResourceStream($"MacroGrid.Plugin.PlcIcons.icons.{name}.svg");
         if (stream is null) return null;
 
         using var reader = new StreamReader(stream);

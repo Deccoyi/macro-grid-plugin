@@ -1,7 +1,7 @@
 using System.Text.Json.Nodes;
-using MacroStation.Plugin.Abstractions;
+using MacroGrid.Plugin.Abstractions;
 
-namespace MacroStation.Plugin.Obs;
+namespace MacroGrid.Plugin.Obs;
 
 /// <summary>Shared dynamic-dropdown resolution for every OBS action's <c>OptionsSource</c> fields — one
 /// place instead of duplicating "query the cache, wrap into OptionsResult" in ten action classes. Reads

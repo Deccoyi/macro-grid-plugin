@@ -4,14 +4,14 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <RootNamespace>MacroStation.Plugin.PlcIcons</RootNamespace>
-    <AssemblyName>MacroStation.Plugin.PlcIcons</AssemblyName>
+    <RootNamespace>MacroGrid.Plugin.PlcIcons</RootNamespace>
+    <AssemblyName>MacroGrid.Plugin.PlcIcons</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Proje referansı, macro-station repo'suyla aynı makinede kardeş klasör olduğu için çalışıyor.
-         MacroStation.Plugin.Abstractions NuGet paketlenene kadar geçici çözüm (bkz. docs/plugin-authoring.md §3). -->
-    <ProjectReference Include="..\..\..\macro-station\src\MacroStation.Plugin.Abstractions\MacroStation.Plugin.Abstractions.csproj">
+    <!-- Proje referansı, macro-grid repo'suyla aynı makinede kardeş klasör olduğu için çalışıyor.
+         MacroGrid.Plugin.Abstractions NuGet paketlenene kadar geçici çözüm (bkz. docs/plugin-authoring.md §3). -->
+    <ProjectReference Include="..\..\..\macro-grid\src\MacroGrid.Plugin.Abstractions\MacroGrid.Plugin.Abstractions.csproj">
       <Private>false</Private>
       <ExcludeAssets>runtime</ExcludeAssets>
     </ProjectReference>

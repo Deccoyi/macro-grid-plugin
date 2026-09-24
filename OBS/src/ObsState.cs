@@ -1,7 +1,7 @@
 using System.Text.Json.Nodes;
-using MacroStation.Plugin.Abstractions;
+using MacroGrid.Plugin.Abstractions;
 
-namespace MacroStation.Plugin.Obs;
+namespace MacroGrid.Plugin.Obs;
 
 public sealed record ObsSceneItem(string SourceName, int SceneItemId, bool IsGroup, bool Enabled, string? ParentGroup);
 
