@@ -15,16 +15,28 @@ export default defineConfig({
   themeConfig: {
     search: { provider: 'local' },
     nav: [
-      { text: 'Introduction', link: '/introduction/' },
-      { text: 'Getting started', link: '/getting-started/' },
-      { text: 'Plugin basics', link: '/basics/' },
-      { text: 'Tutorials', link: '/tutorials/js-hello-world' },
-      { text: 'Guides', link: '/guides/settings-pages' },
-      { text: 'Reference', link: '/reference/manifest' },
       { text: 'Store', link: '/store/', activeMatch: '/store/' },
-      { text: 'Macro Grid (PC)', link: 'https://deccoyi.github.io/macro-grid/' },
-      { text: 'Phone app', link: 'https://deccoyi.github.io/macro-grid-client/' },
-      { text: 'Download', link: 'https://deccoyi.github.io/macro-grid/download' },
+      {
+        text: 'Docs',
+        activeMatch: '^/(introduction|getting-started|basics|tutorials|guides|reference)/',
+        items: [
+          { text: 'Introduction', link: '/introduction/' },
+          { text: 'Getting started', link: '/getting-started/' },
+          { text: 'Plugin basics', link: '/basics/' },
+          { text: 'Tutorials', link: '/tutorials/js-hello-world' },
+          { text: 'Guides', link: '/guides/settings-pages' },
+          { text: 'Reference', link: '/reference/manifest' },
+        ],
+      },
+      { text: 'Build a plugin', link: '/getting-started/', activeMatch: '^/getting-started/' },
+      {
+        text: 'Macro Grid',
+        items: [
+          { text: 'PC server site', link: 'https://deccoyi.github.io/macro-grid/' },
+          { text: 'Download Macro Grid', link: 'https://deccoyi.github.io/macro-grid/download' },
+          { text: 'Phone app', link: 'https://deccoyi.github.io/macro-grid-client/' },
+        ],
+      },
     ],
     sidebar: [
       {
