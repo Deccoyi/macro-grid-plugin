@@ -1,0 +1,114 @@
+name: Documentation site
+
+# Builds the VitePress site in website/ and deploys it to GitHub Pages (Settings, Pages, Source: GitHub Actions).
+# Pull requests only build; the deploy job runs for pushes to main and manual runs.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "website/**"
+      - "examples/**"
+      - "HelloJs/**"
+      - "OBS/src/ObsPlugin.cs"
+      - "PLCIcons/**"
+      - ".github/workflows/pages.yml"
+  pull_request:
+    paths:
+      - "website/**"
+      - "examples/**"
+      - "HelloJs/**"
+      - "OBS/src/ObsPlugin.cs"
+      - "PLCIcons/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One deployment at a time; a newer run replaces a queued one but never cancels a deployment in progress.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+
+      - name: Install dependencies
+        working-directory: website
+        run: npm ci
+
+      # VitePress fails the build on a dead internal link, and the code samples are imported from the real projects
+      # (examples/, HelloJs/, OBS/, PLCIcons/), so a missing file or region fails here too.
+      - name: Build the site
+        working-directory: website
+        run: npm run docs:build
+
+      - name: Set up Pages
+        if: github.event_name != 'pull_request'
+        uses: actions/configure-pages@v5
+
+      - name: Upload the site
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: website/.vitepress/dist
+
+  # The tutorial projects must keep compiling. This job does not block the deployment of the site.
+  examples:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # examples/hello-js is the tutorial copy of HelloJs/; they must not drift apart (region markers are ignored).
+      - name: Check that examples/hello-js matches HelloJs
+        run: |
+          diff --strip-trailing-cr HelloJs/plugin.json examples/hello-js/plugin.json
+          diff --strip-trailing-cr HelloJs/index.js <(grep -v '^// #' examples/hello-js/index.js)
+
+      - name: Validate the example manifests
+        run: |
+          node -e "for (const f of ['examples/hello-js/plugin.json','examples/hello-csharp/plugin.json']) { const m = JSON.parse(require('fs').readFileSync(f,'utf8')); for (const k of ['id','name','version','sdkVersion','minServerVersion','entry','kind']) if (!m[k]) throw new Error(f + ': missing ' + k); }"
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      # The SDK comes from NuGet (MacroGrid.Plugin.Abstractions, the version in MacroGridSdkVersion).
+      - name: Build examples/hello-csharp
+        run: dotnet build examples/hello-csharp/src/HelloCSharp.csproj -c Release
+
+      - name: Check the build output is installable
+        run: |
+          test -f examples/hello-csharp/src/bin/Release/net10.0/HelloCSharp.dll
+          test -f examples/hello-csharp/src/bin/Release/net10.0/plugin.json
+          if [ -f examples/hello-csharp/src/bin/Release/net10.0/MacroGrid.Plugin.Abstractions.dll ]; then
+            echo "The SDK dll must not be in the plugin output"; exit 1
+          fi
+
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

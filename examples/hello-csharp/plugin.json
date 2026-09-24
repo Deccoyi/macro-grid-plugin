@@ -1,0 +1,10 @@
+{
+  "id": "hellocsharp",
+  "name": "Hello (C# example)",
+  "version": "0.1.0",
+  "sdkVersion": "^0.3.0",
+  "minServerVersion": "0.2.0",
+  "entry": "HelloCSharp.dll",
+  "kind": "csharp",
+  "permissions": null
+}
