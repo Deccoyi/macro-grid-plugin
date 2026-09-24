@@ -6,6 +6,11 @@ Thanks for helping. This file is the set of rules every plugin in this repositor
 By taking part you agree to follow the [Code of Conduct](CODE_OF_CONDUCT.md). Security problems go through private vulnerability
 reporting, see [SECURITY.md](SECURITY.md); for anything else, open an issue.
 
+## This is a hobby project
+
+Macro Grid is maintained in spare time. Issues and pull requests are welcome, but replies and reviews can take a while, and there is no
+promise that a request will be accepted or a pull request merged. Please be patient, and don't expect support on a schedule.
+
 ## Branching model
 
 - `main` holds released code only. Releases are tagged on `main` (see [Releases and tags](#releases-and-tags)).
