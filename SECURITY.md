@@ -23,7 +23,11 @@ for a JavaScript plugin to get past its permissions or its limits is a vulnerabi
 
 For anything that is not a security report, open a normal issue.
 
-This is a small project maintained in spare time, so there is no guaranteed response time, but reports are taken seriously.
+## This is a hobby project
+
+Macro Grid is a hobby project maintained in spare time, not a full-time job or a commercial product. Security reports are read and the
+maintainer will try to fix real problems, but there is no guaranteed response time, no guaranteed fix, no support schedule and no bug
+bounty. Fixes land when there is time for them. If that is not acceptable for how you use the software, do not rely on it.
 
 ## Supported versions
 
