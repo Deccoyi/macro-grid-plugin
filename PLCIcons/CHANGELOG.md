@@ -3,6 +3,8 @@
 New features and fixes in the PLC Icons pack. For technical details, see [CHANGELOG-developer.md](CHANGELOG-developer.md).
 
 ## Unreleased
+
+## 0.1.2 - 2026-09-24
 ### New
 - **Languages:** The pack name is shown in Turkish or English, following the language of the app.
 
