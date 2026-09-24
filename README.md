@@ -7,7 +7,7 @@
 Plugins for [Macro Grid](https://github.com/Deccoyi/macro-grid), the Windows server that turns a phone or tablet on your
 local network into a customizable macro deck. This repository holds the official plugins and the guide for writing your own.
 It is a separate repository from the server and from the phone app ([macro-grid-client](https://github.com/Deccoyi/macro-grid-client)),
-and every plugin here is versioned on its own. Documentation site (coming soon): <https://deccoyi.github.io/macro-grid-plugin/>.
+and every plugin here is versioned on its own. Documentation site: <https://deccoyi.github.io/macro-grid-plugin/>. **Plugin store (downloads): <https://deccoyi.github.io/macro-grid-plugin/store/>.**
 
 > ## AI-generated software: you use it entirely at your own risk
 >
@@ -32,7 +32,7 @@ and every plugin here is versioned on its own. Documentation site (coming soon):
 
 Manually, a plugin is a folder placed in `%AppData%\MacroGrid\plugins\<id>\` (the folder that contains `plugin.json`). The easy way:
 
-1. Download a plugin archive from the Releases page and unzip it, build it yourself (C# plugins), or use the folder as it is
+1. Download a plugin archive from the [Plugin store](https://deccoyi.github.io/macro-grid-plugin/store/) (or the Releases page) and unzip it, build it yourself (C# plugins), or use the folder as it is
    (JavaScript plugins).
 2. In the Macro Grid editor open **Plugins → Manage Plugins…** and choose **Install from Folder…**. For a C# plugin pick its build
    output folder (for example `OBS\src\bin\Debug\net10.0\`); the build puts `plugin.json` next to the DLL.
