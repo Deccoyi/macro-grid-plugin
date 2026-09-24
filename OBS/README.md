@@ -34,7 +34,7 @@ Turn **Enabled** on to connect.
 
 The editor's status bar shows the connection state ("connected", "connecting", "wrong password", "OBS is not running", the time until the
 next retry, ...); while connected it adds the frame rate and, when streaming or recording, the elapsed time. Clicking it opens the settings.
-(The status text is currently in Turkish.)
+(The status text is translated to Turkish through `locales/tr.json`.)
 
 ## Variables
 

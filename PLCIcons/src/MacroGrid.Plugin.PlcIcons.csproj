@@ -19,12 +19,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Her build çıktısında plugin.json DLL'in yanında olsun — "Klasörden Yükle" doğrudan bin/Debug/net10.0'ı gösterebilsin. -->
+    <!-- plugin.json sits next to the DLL in every build output, so "Install from Folder" can point straight at bin/Debug/net10.0. -->
     <None Include="..\plugin.json" Link="plugin.json" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Translations (locales/<language>.json) travel with the plugin too. -->
+    <None Include="..\locales\*.json" Link="locales\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <!-- License files travel with the plugin: the build output is what gets installed and shared. -->
     <None Include="..\LICENSE" Link="LICENSE" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\NOTICE.md" Link="NOTICE.md" CopyToOutputDirectory="PreserveNewest" />
-    <!-- İkonlar DLL içine gömülür — çalışma zamanında ayrı dosya okumaya gerek yok. -->
+    <!-- The icons are embedded in the DLL, so no separate file has to be read at run time. -->
     <EmbeddedResource Include="icons\*.svg" />
   </ItemGroup>
 

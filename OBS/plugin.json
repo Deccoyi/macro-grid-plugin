@@ -1,6 +1,7 @@
 {
   "id": "obs",
-  "name": "OBS Kontrolü",
+  "name": "OBS Control",
+  "defaultLanguage": "en",
   "version": "0.2.0",
   "sdkVersion": "^0.3.0",
   "minServerVersion": "0.1.0",

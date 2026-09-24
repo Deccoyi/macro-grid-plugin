@@ -26,7 +26,7 @@ public sealed class PlcIconPack : IIconPackSource
 
     public string Id => "plc-icons";
 
-    public string DisplayName => "PLC İkonları";
+    public string DisplayName => "PLC Icons";
 
     public IReadOnlyList<string> IconNames => Names;
 

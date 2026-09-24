@@ -31,7 +31,7 @@ public sealed class ObsState
     private bool _hasData;
 
     /// <summary>True once <see cref="RefreshAllAsync"/> has completed at least once for the current
-    /// connection — dropdowns show "OBS'e bağlı değil" instead of a silently empty list until then.</summary>
+    /// connection — dropdowns show "Not connected to OBS" instead of a silently empty list until then.</summary>
     public bool HasData { get { lock (_lock) return _hasData; } }
 
     public string? CurrentScene { get; private set; }
@@ -258,7 +258,7 @@ public sealed class ObsState
     public void OnInputMuteStateChanged(string name, bool muted) { lock (_lock) _inputMuted[name] = muted; }
     public void OnInputVolumeChanged(string name, double volumeDb) { lock (_lock) _inputVolumeDb[name] = volumeDb; }
 
-    /// <summary>Called on disconnect so a dropdown shows "OBS'e bağlı değil" instead of a stale scene/
+    /// <summary>Called on disconnect so a dropdown shows "Not connected to OBS" instead of a stale scene/
     /// input list from the previous session (which may no longer be accurate once OBS is reachable again).</summary>
     public void Reset()
     {

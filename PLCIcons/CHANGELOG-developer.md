@@ -4,6 +4,7 @@ This file tracks the version of this plugin only (independent of the main progra
 
 ## [Unreleased]
 ### Added
+- **Plugin languages:** the pack name is English (`defaultLanguage: "en"`) and `locales/tr.json` translates it to Turkish; the file is copied into the build output.
 - `NOTICE.md` and `LICENSE` in the plugin folder, copied into the build output. `NOTICE.md` and the README record the provenance of the icons: all 29 are original AI-generated artwork under the repository's MIT license; none shares path data with the Lucide set (checked against 0.460.0 and 1.47.0). Documentation and packaging only, no behavior change, no version bump.
 
 ## [0.1.1] - 2026-09-23

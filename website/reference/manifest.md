@@ -15,6 +15,7 @@ Every plugin folder has a `plugin.json` at its root. This is the OBS plugin's:
 | `minServerVersion` | yes | The oldest server version the plugin needs. An older server lists the plugin as *Incompatible*. |
 | `entry` | yes | C#: the entry DLL's file name. JavaScript: the script (usually `index.js`). |
 | `kind` | yes | `"csharp"` or `"js"`. |
+| `defaultLanguage` | no | The language the plugin's own texts are written in, such as `"en"` (the default). Translations come from `locales/<language>.json` next to `plugin.json`; a missing language or text falls back to the text as written. |
 | `permissions` | no | JavaScript only: the permissions the script needs (see [Permissions](/reference/permissions)). Ignored for C# plugins. |
 
 ## JSON schema
@@ -35,6 +36,7 @@ editor:
     "minServerVersion": { "type": "string" },
     "entry": { "type": "string" },
     "kind": { "enum": ["csharp", "js"] },
+    "defaultLanguage": { "type": "string" },
     "permissions": { "type": ["array", "null"], "items": { "type": "string" } }
   },
   "additionalProperties": true
