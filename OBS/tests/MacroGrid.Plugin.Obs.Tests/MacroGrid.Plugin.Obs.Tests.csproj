@@ -18,6 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\MacroGrid.Plugin.Obs.csproj" />
     <ProjectReference Include="..\..\..\..\macro-grid\src\MacroGrid.Plugin.Abstractions\MacroGrid.Plugin.Abstractions.csproj" />
   </ItemGroup>
 
