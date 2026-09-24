@@ -2,7 +2,7 @@
   "id": "obs",
   "name": "OBS Control",
   "defaultLanguage": "en",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "sdkVersion": "^0.3.0",
   "minServerVersion": "0.1.0",
   "entry": "MacroGrid.Plugin.Obs.dll",

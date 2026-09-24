@@ -2,7 +2,7 @@
   "id": "plc-icons",
   "name": "PLC Icons",
   "defaultLanguage": "en",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "sdkVersion": "^0.3.0",
   "minServerVersion": "0.1.0",
   "entry": "MacroGrid.Plugin.PlcIcons.dll",
