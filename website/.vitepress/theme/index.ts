@@ -3,6 +3,7 @@ import type { Theme } from 'vitepress'
 import AiBanner from './AiBanner.vue'
 import HeroImage from './HeroImage.vue'
 import SiteSwitcher from './SiteSwitcher.vue'
+import LangSwitcher from './LangSwitcher.vue'
 import PluginStore from './PluginStore.vue'
 import PluginCard from './PluginCard.vue'
 import PluginDetail from './PluginDetail.vue'
@@ -18,6 +19,8 @@ export default {
       'layout-top': () => h(AiBanner),
       'nav-bar-content-before': () => h(SiteSwitcher, { placement: 'bar' }),
       'nav-screen-content-before': () => h(SiteSwitcher, { placement: 'screen' }),
+      'nav-bar-content-after': () => h(LangSwitcher, { placement: 'bar' }),
+      'nav-screen-content-after': () => h(LangSwitcher, { placement: 'screen' }),
       'home-hero-image': () => h(HeroImage),
     })
   },

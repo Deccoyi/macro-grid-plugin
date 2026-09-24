@@ -2,8 +2,11 @@
 import { computed } from 'vue'
 import { withBase } from 'vitepress'
 import type { StorePlugin } from '../store-lib'
+import { useStoreText } from './store-i18n'
 
 const props = defineProps<{ plugin?: StorePlugin }>()
+
+const { t, prefix, category } = useStoreText()
 
 const p = computed(() => props.plugin)
 const iconUrl = computed(() => (p.value?.icon ? withBase(`/store/icons/${p.value.icon}.svg`) : ''))
@@ -13,7 +16,7 @@ const RELEASES = 'https://github.com/Deccoyi/macro-grid-plugin/releases'
 
 <template>
   <div v-if="p" class="ps-detail">
-    <p class="ps-back"><a :href="withBase('/store/')">&larr; All plugins</a></p>
+    <p class="ps-back"><a :href="withBase(`${prefix}/store/`)">&larr; {{ t.allPlugins }}</a></p>
 
     <header class="ps-detail-head">
       <span class="ps-icon ps-icon-big" aria-hidden="true">
@@ -25,74 +28,74 @@ const RELEASES = 'https://github.com/Deccoyi/macro-grid-plugin/releases'
         <div class="ps-badges">
           <span class="ps-badge">v{{ p.version }}</span>
           <span class="ps-badge">{{ p.kind }}</span>
-          <span v-if="p.example" class="ps-badge ps-badge-example">Example</span>
-          <span v-if="p.prerelease" class="ps-badge ps-badge-alpha">alpha</span>
-          <span class="ps-badge">{{ p.category }}</span>
+          <span v-if="p.example" class="ps-badge ps-badge-example">{{ t.example }}</span>
+          <span v-if="p.prerelease" class="ps-badge ps-badge-alpha">{{ t.alpha }}</span>
+          <span class="ps-badge">{{ category(p.category) }}</span>
         </div>
         <p class="ps-desc">{{ p.description }}</p>
       </div>
       <div class="ps-detail-cta">
-        <a class="ps-btn ps-btn-primary ps-btn-big" :href="p.downloadUrl">{{ p.hasRelease ? `Download v${p.version}` : 'Get it on GitHub' }}</a>
-        <a class="ps-link-small" :href="p.sourceUrl">Source code</a>
+        <a class="ps-btn ps-btn-primary ps-btn-big" :href="p.downloadUrl">{{ p.hasRelease ? `${t.download} v${p.version}` : t.getOnGithub }}</a>
+        <a class="ps-link-small" :href="p.sourceUrl">{{ t.sourceCode }}</a>
       </div>
     </header>
 
     <section v-if="p.whatItDoes">
-      <h2>What it does</h2>
+      <h2>{{ t.whatItDoes }}</h2>
       <div class="vp-doc ps-rich" v-html="p.whatItDoes"></div>
     </section>
 
     <section>
-      <h2>Requirements</h2>
+      <h2>{{ t.requirements }}</h2>
       <dl class="ps-req">
-        <dt>Macro Grid server</dt>
-        <dd>{{ p.minServerVersion }} or newer</dd>
-        <dt>Plugin SDK</dt>
+        <dt>{{ t.server }}</dt>
+        <dd>{{ p.minServerVersion }} {{ t.orNewer }}</dd>
+        <dt>{{ t.sdk }}</dt>
         <dd>{{ p.sdkVersion }}</dd>
-        <dt>Kind</dt>
-        <dd>{{ p.kind === 'C#' ? 'C# plugin (runs inside the server, with full trust)' : 'JavaScript plugin (sandboxed, needs approval of its permissions)' }}</dd>
-        <dt>Permissions</dt>
+        <dt>{{ t.kind }}</dt>
+        <dd>{{ p.kind === 'C#' ? t.kindCs : t.kindJs }}</dd>
+        <dt>{{ t.permissions }}</dt>
         <dd>
           <template v-if="p.permissions.length"><code v-for="x in p.permissions" :key="x" class="ps-perm">{{ x }}</code></template>
-          <template v-else>None declared</template>
+          <template v-else>{{ t.noPermissions }}</template>
         </dd>
       </dl>
     </section>
 
     <section>
-      <h2>Install</h2>
+      <h2>{{ t.install }}</h2>
       <ol>
-        <li>Download the zip{{ p.hasRelease ? '' : ' from the GitHub Releases page' }} and unzip it into a folder. The folder must contain <code>plugin.json</code>.</li>
-        <li>In the Macro Grid editor open <strong>Plugins, Manage Plugins...</strong></li>
-        <li>Choose <strong>Install from Folder...</strong> and pick the unzipped folder. It is loaded immediately, no restart.</li>
-        <li v-if="p.kind !== 'C#'">The plugin asks for the permissions listed above and starts once you approve them.</li>
+        <li>{{ t.install1 }}{{ p.hasRelease ? '' : t.install1b }}{{ t.install1c }}<code>plugin.json</code>.</li>
+        <li>{{ t.install2a }}<strong>{{ t.install2b }}</strong></li>
+        <li>{{ t.install3a }}<strong>{{ t.install3b }}</strong>{{ t.install3c }}</li>
+        <li v-if="p.kind !== 'C#'">{{ t.install4 }}</li>
       </ol>
       <p>
-        More detail in <a :href="withBase('/basics/#install-a-plugin')">Install a plugin</a>.
-        <template v-if="p.kind === 'C#'">C# plugins have full access to your PC, so only install them from a source you trust.</template>
+        {{ t.moreDetail }} <a :href="withBase(`${prefix}/basics/#${t.installAnchor}`)">{{ t.installLink }}</a>.
+        <template v-if="p.kind === 'C#'">{{ t.csTrust }}</template>
       </p>
     </section>
 
     <section>
-      <h2>Versions</h2>
+      <h2>{{ t.versions }}</h2>
       <ul v-if="p.releases.length" class="ps-versions">
         <li v-for="(r, i) in p.releases" :key="r.version">
           <strong>v{{ r.version }}</strong>
-          <span v-if="i === 0" class="ps-badge">latest</span>
-          <span v-if="r.prerelease" class="ps-badge ps-badge-alpha">alpha</span>
+          <span v-if="i === 0" class="ps-badge">{{ t.latest }}</span>
+          <span v-if="r.prerelease" class="ps-badge ps-badge-alpha">{{ t.alpha }}</span>
           <span class="ps-date">{{ r.date }}</span>
-          <a v-if="r.downloadUrl" :href="r.downloadUrl">Download</a>
-          <a :href="r.notesUrl">Release notes</a>
+          <a v-if="r.downloadUrl" :href="r.downloadUrl">{{ t.download }}</a>
+          <a :href="r.notesUrl">{{ t.releaseNotes }}</a>
         </li>
       </ul>
-      <p v-else>Release information is not available right now.</p>
-      <p><a :href="RELEASES">Older versions on GitHub Releases</a></p>
+      <p v-else>{{ t.noReleaseInfo }}</p>
+      <p><a :href="RELEASES">{{ t.olderVersions }}</a></p>
     </section>
 
     <section v-if="p.changelog">
-      <h2>Changelog</h2>
+      <h2>{{ t.changelog }}</h2>
       <div class="vp-doc ps-rich ps-changelog" v-html="p.changelog"></div>
     </section>
   </div>
-  <p v-else class="ps-empty">Plugin not found. <a :href="withBase('/store/')">Back to the store</a>.</p>
+  <p v-else class="ps-empty">{{ t.notFound }} <a :href="withBase(`${prefix}/store/`)">{{ t.backToStore }}</a>.</p>
 </template>
