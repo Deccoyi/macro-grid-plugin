@@ -46,7 +46,7 @@
   cursor: pointer;
 }
 .ps-chip:hover { border-color: var(--vp-c-brand-1); color: var(--vp-c-text-1); }
-.ps-chip.active { color: var(--vp-c-white); background: var(--vp-c-brand-3); border-color: var(--vp-c-brand-3); }
+.ps-chip.active { color: var(--vp-button-brand-text); background: var(--vp-button-brand-bg); border-color: var(--vp-button-brand-bg); }
 .ps-chip:focus-visible { outline: 2px solid var(--vp-c-brand-1); outline-offset: 2px; }
 
 .ps-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
@@ -119,8 +119,8 @@
 }
 .ps-btn:hover { background: var(--vp-c-default-3); }
 .ps-btn:focus-visible { outline: 2px solid var(--vp-c-brand-1); outline-offset: 2px; }
-.ps-btn-primary { color: var(--vp-c-white); background: var(--vp-c-brand-3); }
-.ps-btn-primary:hover { background: var(--vp-c-brand-2); }
+.ps-btn-primary { color: var(--vp-button-brand-text); background: var(--vp-button-brand-bg); }
+.ps-btn-primary:hover { color: var(--vp-button-brand-hover-text); background: var(--vp-button-brand-hover-bg); }
 .ps-btn-big { padding: 11px 26px; font-size: 16px; }
 
 .ps-empty { color: var(--vp-c-text-2); padding: 32px 0; }

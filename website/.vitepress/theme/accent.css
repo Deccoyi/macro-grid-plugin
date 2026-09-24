@@ -1,0 +1,17 @@
+/* Accent of this site: violet (plugins). Only the accent tokens live here. */
+:root {
+  --vp-c-brand-1: #7c3aed;
+  --vp-c-brand-2: #6d28d9;
+  --vp-c-brand-3: #7c3aed;
+  --vp-c-brand-soft: rgba(124, 58, 237, 0.14);
+  --vp-button-brand-bg: #7c3aed;
+  --vp-button-brand-hover-bg: #6d28d9;
+  --vp-button-brand-active-bg: #5b21b6;
+  --vp-button-brand-text: #ffffff;
+  --vp-button-brand-hover-text: #ffffff;
+  --vp-button-brand-active-text: #ffffff;
+}
+.dark {
+  --vp-c-brand-1: #a78bfa;
+  --vp-c-brand-2: #7c3aed;
+}
