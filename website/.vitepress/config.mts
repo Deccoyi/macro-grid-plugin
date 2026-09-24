@@ -1,19 +1,17 @@
 import { defineConfig } from 'vitepress'
+import { sharedConfig } from './shared'
 
 const repo = 'https://github.com/Deccoyi/macro-grid-plugin'
+const shared = sharedConfig('/macro-grid-plugin/', '#7c3aed')
 
 export default defineConfig({
+  ...shared,
   title: 'Macro Grid Plugins',
   description: 'Documentation for writing plugins for Macro Grid, the phone-and-tablet macro deck for Windows.',
   base: '/macro-grid-plugin/',
-  lang: 'en-US',
-  cleanUrls: true,
-  lastUpdated: false,
-  appearance: true, // light/dark toggle, follows the system setting by default
-  head: [['meta', { name: 'theme-color', content: '#3c8772' }]],
 
   themeConfig: {
-    search: { provider: 'local' },
+    ...shared.themeConfig,
     nav: [
       { text: 'Store', link: '/store/', activeMatch: '/store/' },
       {
@@ -29,14 +27,6 @@ export default defineConfig({
         ],
       },
       { text: 'Build a plugin', link: '/getting-started/', activeMatch: '^/getting-started/' },
-      {
-        text: 'Macro Grid',
-        items: [
-          { text: 'PC server site', link: 'https://deccoyi.github.io/macro-grid/' },
-          { text: 'Download Macro Grid', link: 'https://deccoyi.github.io/macro-grid/download' },
-          { text: 'Phone app', link: 'https://deccoyi.github.io/macro-grid-client/' },
-        ],
-      },
     ],
     sidebar: [
       {
@@ -87,11 +77,6 @@ export default defineConfig({
     editLink: {
       pattern: `${repo}/edit/dev/website/:path`,
       text: 'Suggest a change on GitHub',
-    },
-    outline: { level: [2, 3] },
-    footer: {
-      message: 'Macro Grid: <a href="https://deccoyi.github.io/macro-grid/">PC app</a> · <a href="https://deccoyi.github.io/macro-grid-client/">Phone app</a> · <a href="https://deccoyi.github.io/macro-grid-plugin/">Plugins</a><br>Released under the MIT License. Alpha software, written entirely by an AI assistant, provided as is without warranty.',
-      copyright: 'Copyright (c) 2026 Deccoyi',
     },
   },
 })

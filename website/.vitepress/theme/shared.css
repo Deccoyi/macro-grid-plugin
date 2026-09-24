@@ -1,0 +1,48 @@
+/* Shared look of the three Macro Grid sites. Everything except the accent colors.
+   This file is copied byte-for-byte into each repo. Keep the copies identical.
+   The accent (brand and button colors) lives in accent.css. */
+:root {
+  --vp-layout-top-height: 44px;
+  --vp-home-hero-name-color: var(--vp-c-brand-1);
+}
+.dark {
+  --vp-c-bg: #1c1e22;
+  --vp-c-bg-alt: #16171a;
+  --vp-c-bg-elv: #232529;
+  --vp-c-bg-soft: #232529;
+}
+@media (max-width: 720px) {
+  :root { --vp-layout-top-height: 40px; }
+}
+
+/* Header: keep the logo and title on one line next to the product switcher. */
+.VPNavBarTitle .title { white-space: nowrap; }
+
+/* Header on tablets: search shrinks to its icon so the switcher and the menu fit. */
+@media (min-width: 768px) and (max-width: 1099px) {
+  .VPNavBarSearch .DocSearch-Button-Placeholder,
+  .VPNavBarSearch .DocSearch-Button-Keys { display: none; }
+  .VPNavBarSearch .DocSearch-Button { min-width: 0; padding: 0 12px; }
+}
+
+/* Footer: links in the accent color. */
+.VPFooter a { color: var(--vp-c-brand-1); text-decoration: none; }
+.VPFooter a:hover { text-decoration: underline; }
+
+/* Code blocks: same corner radius as the rest of the chrome. */
+.vp-doc div[class*='language-'] { border-radius: 10px; }
+
+/* Home: plain, no card chrome. */
+.VPHero .image-bg { display: none; }
+.VPHero .image-container { transform: none !important; }
+.VPFeature { background: transparent !important; border: 0 !important; padding: 8px 0 !important; }
+.VPFeature .icon { background: transparent !important; width: auto !important; height: auto !important; margin-bottom: 8px !important; justify-content: flex-start; }
+.VPFeature .icon img { width: 28px; height: 28px; }
+.VPFeature .title { font-size: 15px; }
+.VPFeature .details { font-size: 14px; }
+.VPHero .image { margin: 0 !important; }
+.VPHero .image-container { width: auto !important; height: auto !important; margin: 0 !important; }
+@media (max-width: 959px) {
+  .VPHero .image { margin-top: 24px !important; order: 2; }
+  .VPHero .image-container { display: flex; justify-content: center; }
+}
