@@ -1,0 +1,404 @@
+[
+  {
+    "Type": "obs.setScene",
+    "DisplayName": "OBS: Switch scene",
+    "Category": "OBS",
+    "Description": "Changes the program scene",
+    "Icon": "clapperboard",
+    "HasOptionsSource": true,
+    "Fields": [
+      {
+        "Key": "sceneName",
+        "Label": "Scene",
+        "Kind": "Select",
+        "OptionsSource": "scenes",
+        "AllowVariables": false
+      }
+    ]
+  },
+  {
+    "Type": "obs.setPreviewScene",
+    "DisplayName": "OBS: Preview scene",
+    "Category": "OBS",
+    "Description": "Changes the preview scene in studio mode",
+    "Icon": "monitor-play",
+    "HasOptionsSource": true,
+    "Fields": [
+      {
+        "Key": "sceneName",
+        "Label": "Scene",
+        "Kind": "Select",
+        "OptionsSource": "scenes",
+        "AllowVariables": false
+      }
+    ]
+  },
+  {
+    "Type": "obs.studioTransition",
+    "DisplayName": "OBS: Trigger studio transition",
+    "Category": "OBS",
+    "Description": "Sends the preview to the program (studio mode)",
+    "Icon": "arrow-left-right",
+    "HasOptionsSource": false,
+    "Fields": []
+  },
+  {
+    "Type": "obs.toggleStudioMode",
+    "DisplayName": "OBS: Toggle studio mode",
+    "Category": "OBS",
+    "Icon": "columns-2",
+    "HasOptionsSource": false,
+    "Fields": []
+  },
+  {
+    "Type": "obs.setTransition",
+    "DisplayName": "OBS: Transition type",
+    "Category": "OBS",
+    "Description": "Changes the active scene transition",
+    "Icon": "shuffle",
+    "HasOptionsSource": true,
+    "Fields": [
+      {
+        "Key": "transitionName",
+        "Label": "Transition",
+        "Kind": "Select",
+        "OptionsSource": "transitions",
+        "AllowVariables": false
+      }
+    ]
+  },
+  {
+    "Type": "obs.setProfile",
+    "DisplayName": "OBS: Switch profile",
+    "Category": "OBS",
+    "Description": "Changes the OBS profile",
+    "Icon": "user-cog",
+    "HasOptionsSource": true,
+    "Fields": [
+      {
+        "Key": "profileName",
+        "Label": "Profile",
+        "Kind": "Select",
+        "OptionsSource": "profiles",
+        "AllowVariables": false
+      }
+    ]
+  },
+  {
+    "Type": "obs.startStream",
+    "DisplayName": "OBS: Start streaming",
+    "Category": "OBS",
+    "Icon": "radio",
+    "HasOptionsSource": false,
+    "Fields": []
+  },
+  {
+    "Type": "obs.stopStream",
+    "DisplayName": "OBS: Stop streaming",
+    "Category": "OBS",
+    "Icon": "square",
+    "HasOptionsSource": false,
+    "Fields": []
+  },
+  {
+    "Type": "obs.toggleStream",
+    "DisplayName": "OBS: Toggle streaming",
+    "Category": "OBS",
+    "Icon": "radio",
+    "HasOptionsSource": false,
+    "Fields": []
+  },
+  {
+    "Type": "obs.startRecord",
+    "DisplayName": "OBS: Start recording",
+    "Category": "OBS",
+    "Icon": "circle",
+    "HasOptionsSource": false,
+    "Fields": []
+  },
+  {
+    "Type": "obs.stopRecord",
+    "DisplayName": "OBS: Stop recording",
+    "Category": "OBS",
+    "Icon": "square",
+    "HasOptionsSource": false,
+    "Fields": []
+  },
+  {
+    "Type": "obs.toggleRecord",
+    "DisplayName": "OBS: Toggle recording",
+    "Category": "OBS",
+    "Icon": "circle",
+    "HasOptionsSource": false,
+    "Fields": []
+  },
+  {
+    "Type": "obs.pauseRecord",
+    "DisplayName": "OBS: Pause recording",
+    "Category": "OBS",
+    "Icon": "pause",
+    "HasOptionsSource": false,
+    "Fields": [
+      {
+        "Key": "mode",
+        "Label": "Mode",
+        "Kind": "Segmented",
+        "Default": "toggle",
+        "Options": [
+          {
+            "Value": "pause",
+            "Label": "Pause"
+          },
+          {
+            "Value": "resume",
+            "Label": "Resume"
+          },
+          {
+            "Value": "toggle",
+            "Label": "Toggle"
+          }
+        ],
+        "AllowVariables": false
+      }
+    ]
+  },
+  {
+    "Type": "obs.virtualCam",
+    "DisplayName": "OBS: Virtual camera",
+    "Category": "OBS",
+    "Icon": "webcam",
+    "HasOptionsSource": false,
+    "Fields": [
+      {
+        "Key": "mode",
+        "Label": "Mode",
+        "Kind": "Segmented",
+        "Default": "toggle",
+        "Options": [
+          {
+            "Value": "start",
+            "Label": "Start"
+          },
+          {
+            "Value": "stop",
+            "Label": "Stop"
+          },
+          {
+            "Value": "toggle",
+            "Label": "Toggle"
+          }
+        ],
+        "AllowVariables": false
+      }
+    ]
+  },
+  {
+    "Type": "obs.replayBuffer",
+    "DisplayName": "OBS: Replay buffer",
+    "Category": "OBS",
+    "Icon": "rewind",
+    "HasOptionsSource": false,
+    "Fields": [
+      {
+        "Key": "mode",
+        "Label": "Mode",
+        "Kind": "Segmented",
+        "Default": "toggle",
+        "Options": [
+          {
+            "Value": "start",
+            "Label": "Start"
+          },
+          {
+            "Value": "stop",
+            "Label": "Stop"
+          },
+          {
+            "Value": "toggle",
+            "Label": "Toggle"
+          }
+        ],
+        "AllowVariables": false
+      }
+    ]
+  },
+  {
+    "Type": "obs.saveReplay",
+    "DisplayName": "OBS: Save replay",
+    "Category": "OBS",
+    "Description": "Saves the last few seconds of the replay buffer to disk",
+    "Icon": "save",
+    "HasOptionsSource": false,
+    "Fields": []
+  },
+  {
+    "Type": "obs.setMute",
+    "DisplayName": "OBS: Set mute",
+    "Category": "OBS",
+    "Icon": "volume-x",
+    "HasOptionsSource": true,
+    "Fields": [
+      {
+        "Key": "inputName",
+        "Label": "Audio source",
+        "Kind": "Select",
+        "OptionsSource": "audioInputs",
+        "AllowVariables": false
+      },
+      {
+        "Key": "mode",
+        "Label": "Mode",
+        "Kind": "Segmented",
+        "Default": "mute",
+        "Options": [
+          {
+            "Value": "mute",
+            "Label": "Mute"
+          },
+          {
+            "Value": "unmute",
+            "Label": "Unmute"
+          }
+        ],
+        "AllowVariables": false
+      }
+    ]
+  },
+  {
+    "Type": "obs.toggleMute",
+    "DisplayName": "OBS: Toggle mute",
+    "Category": "OBS",
+    "Icon": "volume-1",
+    "HasOptionsSource": true,
+    "Fields": [
+      {
+        "Key": "inputName",
+        "Label": "Audio source",
+        "Kind": "Select",
+        "OptionsSource": "audioInputs",
+        "AllowVariables": false
+      }
+    ]
+  },
+  {
+    "Type": "obs.setVolume",
+    "DisplayName": "OBS: Volume",
+    "Category": "OBS",
+    "Icon": "volume-2",
+    "HasOptionsSource": true,
+    "Fields": [
+      {
+        "Key": "inputName",
+        "Label": "Audio source",
+        "Kind": "Select",
+        "OptionsSource": "audioInputs",
+        "AllowVariables": false
+      },
+      {
+        "Key": "volume",
+        "Label": "Volume (%)",
+        "Kind": "Slider",
+        "Default": 100,
+        "Min": 0,
+        "Max": 100,
+        "Step": 1,
+        "AllowVariables": false
+      }
+    ]
+  },
+  {
+    "Type": "obs.adjustVolume",
+    "DisplayName": "OBS: Adjust volume (\u00B1dB)",
+    "Category": "OBS",
+    "Description": "Raises/lowers relative to the current level",
+    "Icon": "volume-2",
+    "HasOptionsSource": true,
+    "Fields": [
+      {
+        "Key": "inputName",
+        "Label": "Audio source",
+        "Kind": "Select",
+        "OptionsSource": "audioInputs",
+        "AllowVariables": false
+      },
+      {
+        "Key": "stepDb",
+        "Label": "Step (dB, negative = lower)",
+        "Kind": "Number",
+        "Default": 3,
+        "Step": 0.5,
+        "AllowVariables": false
+      }
+    ]
+  },
+  {
+    "Type": "obs.setItemVisibility",
+    "DisplayName": "OBS: Item visibility",
+    "Category": "OBS",
+    "Description": "Shows/hides a scene item (groups included)",
+    "Icon": "eye",
+    "HasOptionsSource": true,
+    "Fields": [
+      {
+        "Key": "sceneName",
+        "Label": "Scene",
+        "Kind": "Select",
+        "OptionsSource": "scenes",
+        "AllowVariables": false
+      },
+      {
+        "Key": "sourceName",
+        "Label": "Item",
+        "Kind": "Select",
+        "OptionsSource": "sceneItems",
+        "DependsOn": [
+          "sceneName"
+        ],
+        "AllowVariables": false
+      },
+      {
+        "Key": "mode",
+        "Label": "Mode",
+        "Kind": "Segmented",
+        "Default": "toggle",
+        "Options": [
+          {
+            "Value": "show",
+            "Label": "Show"
+          },
+          {
+            "Value": "hide",
+            "Label": "Hide"
+          },
+          {
+            "Value": "toggle",
+            "Label": "Toggle"
+          }
+        ],
+        "AllowVariables": false
+      }
+    ]
+  },
+  {
+    "Type": "obs.setText",
+    "DisplayName": "OBS: Set text source",
+    "Category": "OBS",
+    "Icon": "type",
+    "HasOptionsSource": true,
+    "Fields": [
+      {
+        "Key": "sourceName",
+        "Label": "Text source",
+        "Kind": "Select",
+        "OptionsSource": "textInputs",
+        "AllowVariables": false
+      },
+      {
+        "Key": "text",
+        "Label": "Text",
+        "Kind": "Text",
+        "AllowVariables": true
+      }
+    ]
+  }
+]

@@ -18,6 +18,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="ObsActionCatalog.golden.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\MacroGrid.Plugin.Obs.csproj" />
     <!-- Tests need the SDK at runtime (plugin types are loaded), so no ExcludeAssets here. -->
     <PackageReference Include="MacroGrid.Plugin.Abstractions" Version="$(MacroGridSdkVersion)" Condition="'$(UseLocalSdk)' != 'true'" />
