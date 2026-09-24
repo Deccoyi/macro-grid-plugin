@@ -1,0 +1,5 @@
+[
+  { "id": "obs", "dir": "OBS", "category": "Integrations", "icon": "video", "featured": true },
+  { "id": "plc-icons", "dir": "PLCIcons", "category": "Icon packs", "icon": "shapes" },
+  { "id": "hellojs", "dir": "HelloJs", "category": "Examples", "icon": "code" }
+]

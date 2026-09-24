@@ -1,6 +1,6 @@
 # Publishing your plugin
 
-Plugins are distributed as plain folders: there is no plugin store yet. Publishing means giving people a folder (usually a zip) they
+Plugins are distributed as plain folders. Publishing means giving people a folder (usually a zip) they
 can install from the editor.
 
 ## Checklist
@@ -37,6 +37,22 @@ plugin-<name>-v<version>
 for example `plugin-obs-v0.2.0`. The version must equal `version` in the plugin's `plugin.json`. A release workflow builds that
 plugin, zips the output with its licence files and creates a draft pre-release for review. The rules for contributing are in
 [Repository rules](/guides/repo-rules).
+
+## Getting your plugin into the Store
+
+The [Store](/store/) lists the plugins of this repository and builds itself from the repository and its GitHub releases, so listing a
+plugin takes three steps (for a contribution, follow the [Repository rules](/guides/repo-rules) first):
+
+1. **Add the folder** at the repository root (for example `MyPlugin/`) with `plugin.json`, a `README.md` (its first section becomes
+   "What it does" and its first paragraph the card text), a `CHANGELOG.md` and the licence files, as described above.
+2. **Add one line to `website/store/catalog.json`**: `{ "id": "my-plugin", "dir": "MyPlugin", "category": "Integrations", "icon": "code" }`.
+   `id` must equal the `id` in `plugin.json`. `icon` is the name of an SVG in `website/public/store/icons/`; without one the card shows
+   a letter. Set `"featured": true` to sort it first.
+3. **Tag a release** `plugin-<id>-vX.Y.Z` (for example `plugin-my-plugin-v0.1.0`) as described in [Releases](#releases-in-this-repository).
+   Once the release is published, the Store shows its zip as the download button. The site is rebuilt whenever a release is published,
+   edited or deleted.
+
+Draft releases are never shown. Until a plugin has a published release, its card links to the GitHub Releases page.
 
 ## Security notes for users
 
