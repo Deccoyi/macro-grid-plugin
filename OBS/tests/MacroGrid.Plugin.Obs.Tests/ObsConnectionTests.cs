@@ -271,7 +271,9 @@ public sealed class ObsConnectionTests
         using var cts = new CancellationTokenSource();
         var run = connection.RunAsync(store, cts.Token);
 
-        await WaitUntilAsync(() => store.Get("obs.connected") is true, TimeSpan.FromSeconds(5), "expected initial connect");
+        // ExitStarted follows the handshake immediately, so obs.connected can flip true -> false between two
+        // polls; check the recorded history instead of polling for the transient `true`.
+        await WaitUntilAsync(() => store.WasEverSet("obs.connected", true), TimeSpan.FromSeconds(5), "expected initial connect");
         await serverDone.Task.WaitAsync(TimeSpan.FromSeconds(5));
 
         // The session should end (obs.connected reset to false) well within a couple seconds of

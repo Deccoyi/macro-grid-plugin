@@ -9,9 +9,19 @@ public sealed class FakeVariableStore : IVariableStore
 {
     private readonly ConcurrentDictionary<string, object?> _values = new();
 
+    private readonly ConcurrentQueue<(string Name, object? Value)> _sets = new();
+
     public List<string> RemovedNames { get; } = [];
 
-    public void Set(string name, object? value) => _values[name] = value;
+    public void Set(string name, object? value)
+    {
+        _values[name] = value;
+        _sets.Enqueue((name, value));
+    }
+
+    /// <summary>True if <paramref name="name"/> was ever set to <paramref name="value"/>, even if it changed again
+    /// since. Lets a test check a brief state without racing a polling loop against it.</summary>
+    public bool WasEverSet(string name, object? value) => _sets.Any(s => s.Name == name && Equals(s.Value, value));
 
     public object? Get(string name) => _values.TryGetValue(name, out var v) ? v : null;
 
