@@ -14,13 +14,13 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Checkout this repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           path: macro-grid-plugin
 
       # Sibling checkout so the relative SDK project reference resolves; can be dropped once the SDK is on NuGet.
       - name: Checkout the server repository (SDK source)
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           repository: Deccoyi/macro-grid
           ref: dev
