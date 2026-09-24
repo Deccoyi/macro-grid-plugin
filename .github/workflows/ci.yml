@@ -29,12 +29,12 @@ jobs:
       #   $GITHUB_WORKSPACE/macro-grid          (the server repository, which holds the SDK)
       # Once the SDK package is published to NuGet, the sibling checkout below can be dropped.
       - name: Checkout this repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           path: macro-grid-plugin
 
       - name: Checkout the server repository (SDK source)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: Deccoyi/macro-grid
           ref: dev
@@ -43,7 +43,7 @@ jobs:
           token: ${{ secrets.SERVER_REPO_TOKEN || github.token }}
 
       - name: Set up .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: 10.0.x
 

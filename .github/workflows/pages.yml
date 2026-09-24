@@ -35,10 +35,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 24
           cache: npm
@@ -69,7 +69,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # examples/hello-js is the tutorial copy of HelloJs/; they must not drift apart (region markers are ignored).
       - name: Check that examples/hello-js matches HelloJs
@@ -82,7 +82,7 @@ jobs:
           node -e "for (const f of ['examples/hello-js/plugin.json','examples/hello-csharp/plugin.json']) { const m = JSON.parse(require('fs').readFileSync(f,'utf8')); for (const k of ['id','name','version','sdkVersion','minServerVersion','entry','kind']) if (!m[k]) throw new Error(f + ': missing ' + k); }"
 
       - name: Set up .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: 10.0.x
 
