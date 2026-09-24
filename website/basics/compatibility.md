@@ -5,7 +5,7 @@ Macro Grid has three independently versioned parts, and every plugin has its own
 | What | Where the version lives | Now |
 |---|---|---|
 | Server | `ClientHub.ServerVersion` in the server repository | `0.2.0` |
-| Plugin SDK (`MacroGrid.Plugin.Abstractions`) | `PluginSdk.Version` | `0.3.0` |
+| Plugin SDK (`MacroGrid.Plugin.Abstractions`) | `PluginSdk.Version` | `0.3.1` |
 | Each plugin | `version` in its own `plugin.json` | per plugin |
 
 ## What the server checks

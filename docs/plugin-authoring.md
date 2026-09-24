@@ -85,7 +85,7 @@ project instead, see [using-the-sdk-package.md](using-the-sdk-package.md).
     <AssemblyName>MyCompany.Plugin.Ping</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="MacroGrid.Plugin.Abstractions" Version="0.3.0"
+    <PackageReference Include="MacroGrid.Plugin.Abstractions" Version="0.3.1"
                       PrivateAssets="all" ExcludeAssets="runtime" />
   </ItemGroup>
   <ItemGroup>

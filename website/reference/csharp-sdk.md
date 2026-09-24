@@ -1,6 +1,6 @@
 # C# SDK interfaces
 
-The SDK is the NuGet package `MacroGrid.Plugin.Abstractions` (namespace `MacroGrid.Plugin.Abstractions`, version `0.3.0`, exposed at
+The SDK is the NuGet package `MacroGrid.Plugin.Abstractions` (namespace `MacroGrid.Plugin.Abstractions`, version `0.3.1`, exposed at
 run time as `PluginSdk.Version`). The signatures below are those of the SDK source in the
 [server repository](https://github.com/Deccoyi/macro-grid/tree/main/src/MacroGrid.Plugin.Abstractions). The SDK is `0.x`: a minor
 version may change them.

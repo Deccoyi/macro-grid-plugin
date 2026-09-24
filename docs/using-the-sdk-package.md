@@ -11,7 +11,7 @@ Nothing to set up. `dotnet build` restores `MacroGrid.Plugin.Abstractions` (vers
 In your own plugin project:
 
 ```xml
-<PackageReference Include="MacroGrid.Plugin.Abstractions" Version="0.3.0"
+<PackageReference Include="MacroGrid.Plugin.Abstractions" Version="0.3.1"
                   PrivateAssets="all" ExcludeAssets="runtime" />
 ```
 
