@@ -71,9 +71,10 @@ The Plugins window lists every folder that has a `plugin.json`:
 
 ### Project setup
 
-Reference the SDK project and copy `plugin.json` into the build output, so the output folder is directly installable.
-The SDK is not published as a package yet; the projects in this repository reference it by path, which assumes the
-`macro-grid` and `macro-grid-plugin` repositories are cloned next to each other:
+Reference the SDK package and copy `plugin.json` into the build output, so the output folder is directly installable.
+The SDK is published on NuGet as `MacroGrid.Plugin.Abstractions` (use the version that matches the server's SDK version,
+see the compatibility notes). Developers who work on the server and a plugin at the same time can switch to the sibling
+project instead, see [using-the-sdk-package.md](using-the-sdk-package.md).
 
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
@@ -84,10 +85,8 @@ The SDK is not published as a package yet; the projects in this repository refer
     <AssemblyName>MyCompany.Plugin.Ping</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\macro-grid\src\MacroGrid.Plugin.Abstractions\MacroGrid.Plugin.Abstractions.csproj">
-      <Private>false</Private>
-      <ExcludeAssets>runtime</ExcludeAssets>
-    </ProjectReference>
+    <PackageReference Include="MacroGrid.Plugin.Abstractions" Version="0.3.0"
+                      PrivateAssets="all" ExcludeAssets="runtime" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\plugin.json" Link="plugin.json" CopyToOutputDirectory="PreserveNewest" />
@@ -95,7 +94,7 @@ The SDK is not published as a package yet; the projects in this repository refer
 </Project>
 ```
 
-`Private=false` and `ExcludeAssets=runtime` keep a copy of the SDK out of your output: the server and every plugin must share
+`ExcludeAssets="runtime"` keeps a copy of the SDK out of your output: the server and every plugin must share
 the server's copy of `MacroGrid.Plugin.Abstractions` (otherwise `is IActionHandler` checks fail because the same type from
 two copies is two different types). Never ship your own copy.
 
@@ -322,6 +321,6 @@ There is no `async`/`await` host API yet and no way for a plugin to draw its own
 
 ## 8. Limits of the current SDK
 
-- The SDK is used by project reference; there is no NuGet package yet.
+- The SDK is a NuGet package (`MacroGrid.Plugin.Abstractions`); the server's copy is the one used at runtime.
 - A plugin cannot add a widget type.
 - The server runs on Windows only, so plugins are Windows-only in practice.
