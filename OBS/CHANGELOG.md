@@ -3,6 +3,8 @@
 New features and fixes in the OBS plugin. For technical details, see [CHANGELOG-developer.md](CHANGELOG-developer.md).
 
 ## Unreleased
+
+## 0.2.1 - 2026-09-24
 ### New
 - **Languages:** Action names, form labels, values and status texts are shown in Turkish or English, following the language of the app.
 
