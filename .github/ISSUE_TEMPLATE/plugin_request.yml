@@ -1,0 +1,37 @@
+name: Plugin request
+description: Ask for a new plugin (an integration you would like to control from Macro Grid)
+labels: [plugin-request]
+body:
+  - type: input
+    id: target
+    attributes:
+      label: What should the plugin control or show?
+      description: The app, device or service, for example "a smart-home hub".
+    validations:
+      required: true
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use case
+      description: Which buttons, actions or live values would you want?
+    validations:
+      required: true
+  - type: textarea
+    id: api
+    attributes:
+      label: How can it be controlled?
+      description: A public API, protocol or documentation link, if you know one (local network only, no credentials).
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind
+      options:
+        - Not sure
+        - C# plugin
+        - JavaScript plugin
+  - type: checkboxes
+    id: help
+    attributes:
+      label: Contribution
+      options:
+        - label: I would like to help build it

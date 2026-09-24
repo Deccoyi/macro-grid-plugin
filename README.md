@@ -1,9 +1,13 @@
 # Macro Grid plugins
 
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+![Status: alpha](https://img.shields.io/badge/status-alpha-orange.svg)
+[![CI](https://github.com/Deccoyi/macro-grid-plugin/actions/workflows/ci.yml/badge.svg)](https://github.com/Deccoyi/macro-grid-plugin/actions/workflows/ci.yml)
+
 Plugins for [Macro Grid](https://github.com/Deccoyi/macro-grid), the Windows server that turns a phone or tablet on your
 local network into a customizable macro deck. This repository holds the official plugins and the guide for writing your own.
 It is a separate repository from the server and from the phone app ([macro-grid-client](https://github.com/Deccoyi/macro-grid-client)),
-and every plugin here is versioned on its own.
+and every plugin here is versioned on its own. Documentation site (coming soon): <https://deccoyi.github.io/macro-grid-plugin/>.
 
 > **This project was written entirely by an AI assistant (Claude) at a user's direction.** It has not been independently audited,
 > security-reviewed or certified for production use. It is provided "as is", without warranty of any kind, and you use it at your own
@@ -19,7 +23,10 @@ and every plugin here is versioned on its own.
 
 ## Installing a plugin
 
-1. Build it (C# plugins) or use the folder as it is (JavaScript plugins).
+Manually, a plugin is a folder placed in `%AppData%\MacroGrid\plugins\<id>\` (the folder that contains `plugin.json`). The easy way:
+
+1. Download a plugin archive from the Releases page and unzip it, build it yourself (C# plugins), or use the folder as it is
+   (JavaScript plugins).
 2. In the Macro Grid editor open **Plugins → Manage Plugins…** and choose **Install from Folder…**. For a C# plugin pick its build
    output folder (for example `OBS\src\bin\Debug\net10.0\`); the build puts `plugin.json` next to the DLL.
 3. The plugin is loaded right away, with no restart. A JavaScript plugin asks you to approve the permissions it needs first.
@@ -47,7 +54,8 @@ dotnet build PLCIcons\src\MacroGrid.Plugin.PlcIcons.csproj
 
 [docs/plugin-authoring.md](docs/plugin-authoring.md) is the guide: the manifest, the C# SDK (actions, variables, settings forms, status
 items, icon packs), the lifecycle, and the JavaScript sandbox with its permissions. [CONTRIBUTING.md](CONTRIBUTING.md) describes the rules
-every plugin in this repository follows.
+every plugin in this repository follows. Releases are described in [docs/release.md](docs/release.md). Please read the
+[Code of Conduct](CODE_OF_CONDUCT.md) and the [security policy](SECURITY.md) before opening issues.
 
 ## Security
 

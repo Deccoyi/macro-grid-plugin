@@ -3,13 +3,39 @@
 Thanks for helping. This file is the set of rules every plugin in this repository follows. For how to write a plugin, read
 [docs/plugin-authoring.md](docs/plugin-authoring.md) first.
 
+By taking part you agree to follow the [Code of Conduct](CODE_OF_CONDUCT.md). Security problems go through private vulnerability
+reporting, see [SECURITY.md](SECURITY.md); any other contact: macrogrid.app@gmail.com.
+
+## Branching model
+
+- `main` holds released code only. Releases are tagged on `main` (see [Releases and tags](#releases-and-tags)).
+- `dev` is the integration branch: open pull requests against `dev`.
+- Keep pull requests small and about one thing. CI (build and OBS tests) must pass.
+
+## Building and testing
+
+You need the [.NET 10 SDK](https://dotnet.microsoft.com/download). Until the plugin SDK is published as a NuGet package, the C#
+plugins reference it by path, so clone this repository next to the server repository (`macro-grid/` and `macro-grid-plugin/` in the
+same folder). Then:
+
+```powershell
+dotnet build OBS\src\MacroGrid.Plugin.Obs.csproj
+dotnet test  OBS\tests\MacroGrid.Plugin.Obs.Tests\MacroGrid.Plugin.Obs.Tests.csproj
+dotnet build PLCIcons\src\MacroGrid.Plugin.PlcIcons.csproj
+```
+
 ## Layout
 
 ```
 macro-grid-plugin/
 ├── README.md
 ├── CONTRIBUTING.md
+├── SECURITY.md
+├── CODE_OF_CONDUCT.md
+├── LICENSE                      MIT; each plugin folder also has its own LICENSE and NOTICE.md
 ├── docs/plugin-authoring.md
+├── docs/release.md
+├── .github/                     CI, release workflow, issue and pull request templates
 └── <PluginName>/
     ├── plugin.json              the manifest
     ├── README.md                what it does, requirements, settings
@@ -67,6 +93,12 @@ Update both changelogs of the plugin you changed, under `[Unreleased]`, when a c
 
 [Conventional Commits](https://www.conventionalcommits.org/) in English: `type(scope): description`, with the plugin as the scope, for
 example `feat(obs): pause reconnecting while OBS is not running`. Group related changes into one commit and do not mix unrelated ones.
+
+## Releases and tags
+
+A plugin is released by pushing a tag named `plugin-<name>-v<version>` on `main`, for example `plugin-obs-v0.2.0`. The tag version must
+match `version` in the plugin's `plugin.json`. The release workflow builds the plugin and creates a draft release. Details and the
+checklist are in [docs/release.md](docs/release.md).
 
 ## Tests
 

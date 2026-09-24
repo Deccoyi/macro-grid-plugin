@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+    steps:
+      # The C# plugins reference the plugin SDK by a relative path (..\..\..\macro-grid\...), so the server repo has to sit next to
+      # this one. actions/checkout cannot write outside $GITHUB_WORKSPACE, so both repos are checked out into subfolders of it:
+      #   $GITHUB_WORKSPACE/macro-grid-plugin   (this repository)
+      #   $GITHUB_WORKSPACE/macro-grid          (the server repository, which holds the SDK)
+      # Once the SDK package is published to NuGet, the sibling checkout below can be dropped.
+      - name: Checkout this repository
+        uses: actions/checkout@v4
+        with:
+          path: macro-grid-plugin
+
+      - name: Checkout the server repository (SDK source)
+        uses: actions/checkout@v4
+        with:
+          repository: Deccoyi/macro-grid
+          ref: dev
+          path: macro-grid
+          # While the server repository is private, add a read-only token as the SERVER_REPO_TOKEN secret.
+          token: ${{ secrets.SERVER_REPO_TOKEN || github.token }}
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Build OBS plugin
+        working-directory: macro-grid-plugin
+        run: dotnet build OBS/src/MacroGrid.Plugin.Obs.csproj -c Release
+
+      - name: Build PLC Icons plugin
+        working-directory: macro-grid-plugin
+        run: dotnet build PLCIcons/src/MacroGrid.Plugin.PlcIcons.csproj -c Release
+
+      - name: Test OBS plugin
+        working-directory: macro-grid-plugin
+        run: dotnet test OBS/tests/MacroGrid.Plugin.Obs.Tests/MacroGrid.Plugin.Obs.Tests.csproj -c Release

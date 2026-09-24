@@ -1,0 +1,19 @@
+version: 2
+updates:
+  - package-ecosystem: nuget
+    directory: "/OBS/src"
+    schedule:
+      interval: weekly
+  - package-ecosystem: nuget
+    directory: "/OBS/tests/MacroGrid.Plugin.Obs.Tests"
+    schedule:
+      interval: weekly
+  - package-ecosystem: nuget
+    directory: "/PLCIcons/src"
+    schedule:
+      interval: weekly
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+  # No package.json exists yet; add an npm entry when the first one appears.

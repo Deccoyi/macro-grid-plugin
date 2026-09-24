@@ -2,21 +2,30 @@
 
 ## What to expect from these plugins
 
-A **C# plugin runs inside the Macro Grid server process with full .NET access**: it can do anything the server can, including reading and writing your files and starting programs. Install
-only C# plugins whose source you trust, including the ones in this repository. **JavaScript plugins** run in a sandbox with no .NET access and only the permissions you approve, with time and
-memory limits per call; the sandbox is described in [docs/plugin-authoring.md](docs/plugin-authoring.md#7-javascript-plugins). The software was written by an AI assistant and has not been
-independently audited (see the [README](README.md)).
+- **C# plugins run in-process with the server.** A C# plugin is loaded into the Macro Grid server process with full .NET access: it can
+  do anything the server can, including reading and writing your files and starting programs. It sits in its own assembly load context
+  so it cannot break other plugins, but that is not a security boundary. Install only C# plugins whose source you trust, including the
+  ones in this repository.
+- **JavaScript plugins are sandboxed.** They have no .NET access and only the permissions you approve, with time and memory limits per
+  call; the sandbox is described in [docs/plugin-authoring.md](docs/plugin-authoring.md#7-javascript-plugins).
+- **Local network only.** Macro Grid is designed for a trusted local network (your PC and your phone). It is not meant to be exposed to
+  the internet, and neither are the plugins that talk to it. Plugins that connect to other software (for example the OBS plugin
+  connecting to OBS Studio) do so with the settings and passwords you enter; keep those services on your local machine or network too.
+- **No warranty.** The software was written by an AI assistant and has not been independently audited (see the [README](README.md)). It
+  is provided "as is", without warranty of any kind, as stated in the [LICENSE](LICENSE).
 
 ## Reporting a vulnerability
 
-Please report security problems privately, not in a public issue: use GitHub's private vulnerability reporting (the **Security** tab of the repository, then **Report a vulnerability**). If that is not
-available, open an issue that says only that you have a security report and ask for a private channel, without any details of the problem.
+Please report security problems privately, not in a public issue: use GitHub's private vulnerability reporting (the **Security** tab of
+the repository, then **Report a vulnerability**).
 
-Helpful details: which plugin or SDK part is affected, the steps to reproduce, and what a plugin or a network attacker could do. A way for a JavaScript plugin to get past its permissions or its
-limits is a vulnerability.
+Helpful details: which plugin or SDK part is affected, the steps to reproduce, and what a plugin or a network attacker could do. A way
+for a JavaScript plugin to get past its permissions or its limits is a vulnerability.
+
+For anything that is not a security report, write to macrogrid.app@gmail.com or open a normal issue.
 
 This is a small project maintained in spare time, so there is no guaranteed response time, but reports are taken seriously.
 
 ## Supported versions
 
-Only the latest version of each plugin (or, before the first release, the `dev` branch) receives fixes.
+Only the latest released version of each plugin (or, before the first release, the `dev` branch) receives fixes.

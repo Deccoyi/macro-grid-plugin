@@ -1,0 +1,93 @@
+name: Release plugin
+
+# Tag naming: plugin-<name>-v<version>, for example plugin-obs-v0.2.0. See docs/release.md.
+on:
+  push:
+    tags:
+      - 'plugin-*-v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout this repository
+        uses: actions/checkout@v4
+        with:
+          path: macro-grid-plugin
+
+      # Sibling checkout so the relative SDK project reference resolves; can be dropped once the SDK is on NuGet.
+      - name: Checkout the server repository (SDK source)
+        uses: actions/checkout@v4
+        with:
+          repository: Deccoyi/macro-grid
+          ref: dev
+          path: macro-grid
+          token: ${{ secrets.SERVER_REPO_TOKEN || github.token }}
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Resolve plugin from tag
+        id: plugin
+        shell: pwsh
+        working-directory: macro-grid-plugin
+        run: |
+          $tag = '${{ github.ref_name }}'
+          if ($tag -notmatch '^plugin-(?<name>[a-z0-9-]+)-v(?<version>\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?)$') {
+            throw "Tag '$tag' does not match plugin-<name>-v<version>"
+          }
+          $name = $Matches.name
+          $version = $Matches.version
+          $map = @{
+            'obs'       = @{ dir = 'OBS';      proj = 'OBS/src/MacroGrid.Plugin.Obs.csproj' }
+            'plcicons'  = @{ dir = 'PLCIcons'; proj = 'PLCIcons/src/MacroGrid.Plugin.PlcIcons.csproj' }
+            'plc-icons' = @{ dir = 'PLCIcons'; proj = 'PLCIcons/src/MacroGrid.Plugin.PlcIcons.csproj' }
+            'hellojs'   = @{ dir = 'HelloJs';  proj = '' }
+          }
+          $entry = $map[$name]
+          if (-not $entry) { throw "Unknown plugin '$name'" }
+          $manifest = Get-Content (Join-Path $entry.dir 'plugin.json') -Raw | ConvertFrom-Json
+          if ($manifest.version -ne $version) {
+            throw "Tag version $version does not match plugin.json version $($manifest.version)"
+          }
+          "dir=$($entry.dir)" | Out-File -Append -Encoding utf8 $env:GITHUB_OUTPUT
+          "proj=$($entry.proj)" | Out-File -Append -Encoding utf8 $env:GITHUB_OUTPUT
+          "version=$version" | Out-File -Append -Encoding utf8 $env:GITHUB_OUTPUT
+          "zip=$($manifest.id)-$version.zip" | Out-File -Append -Encoding utf8 $env:GITHUB_OUTPUT
+
+      - name: Build and package
+        shell: pwsh
+        working-directory: macro-grid-plugin
+        run: |
+          $dir = '${{ steps.plugin.outputs.dir }}'
+          $proj = '${{ steps.plugin.outputs.proj }}'
+          $stage = Join-Path $PWD 'stage'
+          New-Item -ItemType Directory -Force $stage | Out-Null
+          if ($proj) {
+            dotnet build $proj -c Release -o $stage
+            if ($LASTEXITCODE -ne 0) { throw 'build failed' }
+            Get-ChildItem $stage -Filter *.pdb -Recurse | Remove-Item -Force
+          } else {
+            # JavaScript plugin: the folder is the plugin.
+            Copy-Item (Join-Path $dir '*') $stage -Recurse -Force
+          }
+          # Every archive carries the licence texts.
+          Copy-Item 'LICENSE' (Join-Path $stage 'LICENSE') -Force
+          Copy-Item (Join-Path $dir 'NOTICE.md') (Join-Path $stage 'NOTICE.md') -Force
+          Copy-Item 'THIRD_PARTY_NOTICES.md' $stage -Force
+          Compress-Archive -Path (Join-Path $stage '*') -DestinationPath '${{ steps.plugin.outputs.zip }}' -Force
+
+      - name: Create draft release
+        shell: pwsh
+        working-directory: macro-grid-plugin
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $dir = '${{ steps.plugin.outputs.dir }}'
+          $notes = "See $dir/CHANGELOG.md for what changed in this version."
+          gh release create '${{ github.ref_name }}' '${{ steps.plugin.outputs.zip }}' --draft --prerelease --title "$dir ${{ steps.plugin.outputs.version }}" --notes $notes

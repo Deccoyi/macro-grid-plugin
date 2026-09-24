@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/Deccoyi/macro-grid-plugin/security/advisories/new
+    about: Please report security problems privately here, not in a public issue.
+  - name: Macro Grid server and editor issues
+    url: https://github.com/Deccoyi/macro-grid/issues
+    about: Problems with the server or the editor itself belong in the server repository.
+  - name: Macro Grid phone app issues
+    url: https://github.com/Deccoyi/macro-grid-client/issues
+    about: Problems with the phone app belong in the client repository.
