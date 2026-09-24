@@ -25,6 +25,16 @@ when an icon is picked the editor adds the widget's color to the root `<svg>` ta
 Put a new `.svg` in `src/icons/` and add its file name (without the extension) to the `Names` array in `src/PlcIconsPlugin.cs`. The
 project embeds everything matching `icons\*.svg`. Keep the icon monochrome and use `currentColor` for every stroke and fill.
 
+## License and provenance
+
+The plugin and all 29 icons are licensed under the MIT License ([LICENSE](LICENSE), [NOTICE.md](NOTICE.md)) and are provided "as is",
+without warranty. Provenance, by evidence: all 29 icons are original ladder-logic symbols created for this project with an AI
+assistant: `add`, `calculate`, `close-branch`, `coil`, `convert`, `divide`, `empty-block`, `equal`, `f-trig`, `greater`,
+`greater-equal`, `lesser`, `lesser-equal`, `move`, `multiply`, `n`, `nc`, `no`, `not-equal`, `open-branch`, `p`, `r-trig`,
+`reset-coil`, `set-coil`, `subtract`, `timer-convert`, `tof-timer`, `ton-timer`, `tp-timer`. None of them was found to be copied or
+derived from the Lucide icon set (checked against Lucide 0.460.0 and 1.47.0: no icon shares path data with any Lucide icon), so no
+Lucide license applies. See [../THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
+
 ## Changelog
 
 [CHANGELOG.md](CHANGELOG.md) (short) and [CHANGELOG-developer.md](CHANGELOG-developer.md) (detailed).

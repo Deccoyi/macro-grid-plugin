@@ -88,6 +88,11 @@ the message is shown on the phone and in the editor's status bar.
 `dotnet test OBS\tests\MacroStation.Plugin.Obs.Tests\MacroStation.Plugin.Obs.Tests.csproj` runs the connection layer against a fake
 obs-websocket server (handshake, wrong password, timeouts, sudden disconnects, OBS shutting down, input removal).
 
+## License
+
+MIT, see [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md). The plugin includes no third-party code; the build output carries both files.
+Full details: [../THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
+
 ## Changelog
 
 [CHANGELOG.md](CHANGELOG.md) (short) and [CHANGELOG-developer.md](CHANGELOG-developer.md) (detailed).

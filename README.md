@@ -56,4 +56,13 @@ run in a sandbox with no .NET access and only the permissions you approve, with 
 
 ## License
 
-[MIT](LICENSE). See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for the components the plugins use.
+[MIT](LICENSE), copyright (c) 2026 Deccoyi. Each plugin folder carries its own `LICENSE` and `NOTICE.md`, and the C# plugins copy both
+into their build output.
+
+### Third-party licenses
+
+- [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md): index of every component (name, version, license, copyright, URL).
+- [licenses/](licenses/): the original license text of each component.
+
+No plugin ships third-party code or assets; the listed components are used only to build and test. The PLC icons are original
+AI-generated artwork under this repository's MIT license, not taken from an icon library (see [PLCIcons/NOTICE.md](PLCIcons/NOTICE.md)).

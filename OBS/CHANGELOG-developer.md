@@ -4,6 +4,7 @@ This file tracks the version of this plugin only (independent of the main progra
 
 ## [Unreleased]
 ### Added
+- License files: `LICENSE` and `NOTICE.md` are now copied into the build output next to `plugin.json` (documentation and packaging only, no behavior change, no version bump).
 - **Integration test suite** (`OBS/tests/MacroStation.Plugin.Obs.Tests/`, xUnit): tests envisioned by `docs/done/obs-plugin-0.2-plan.md`, run against an in-process fake obs-websocket v5 server (`FakeObsServer`, `HttpListener`-based) instead of a real OBS. They cover: handshake with and without a password; a 4009 (wrong password) close stops retrying until the settings change and retries immediately after `NotifySettingsChanged`; an unresponsive server is detected by timeout and reconnected; a sudden disconnect reconnects with backoff; an `ExitStarted` event closes the connection immediately without waiting for the TCP timeout; and when an input is removed (`InputRemoved`), its variables (`obs.input.*.muted/volumeDb`) are deleted with `IVariableStore.Remove`. Run separately with `dotnet test OBS/tests/MacroStation.Plugin.Obs.Tests/` (the repo has no shared `.sln`; each project is built and tested on its own).
 
 ## [0.2.0] - 2026-09-23

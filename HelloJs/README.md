@@ -4,5 +4,7 @@ The smallest useful JavaScript plugin: a counter variable, a settings page, one 
 folder and change it to start your own. The full reference is in [../docs/plugin-authoring.md](../docs/plugin-authoring.md),
 section "JavaScript plugins".
 
+License: MIT, see [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md). It contains no third-party code.
+
 Install it from the editor (Plugins, Install from Folder). It asks for two permissions (`variables`, `actions`) and
 starts once you allow them.
