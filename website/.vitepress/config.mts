@@ -21,6 +21,10 @@ export default defineConfig({
       { text: 'Tutorials', link: '/tutorials/js-hello-world' },
       { text: 'Guides', link: '/guides/settings-pages' },
       { text: 'Reference', link: '/reference/manifest' },
+      { text: 'Store', link: '/store/', activeMatch: '/store/' },
+      { text: 'Macro Grid (PC)', link: 'https://deccoyi.github.io/macro-grid/' },
+      { text: 'Phone app', link: 'https://deccoyi.github.io/macro-grid-client/' },
+      { text: 'Download', link: 'https://deccoyi.github.io/macro-grid/download' },
     ],
     sidebar: [
       {
@@ -74,7 +78,7 @@ export default defineConfig({
     },
     outline: { level: [2, 3] },
     footer: {
-      message: 'Released under the MIT License. Alpha software, written entirely by an AI assistant, provided as is without warranty.',
+      message: 'Macro Grid: <a href="https://deccoyi.github.io/macro-grid/">PC app</a> · <a href="https://deccoyi.github.io/macro-grid-client/">Phone app</a> · <a href="https://deccoyi.github.io/macro-grid-plugin/">Plugins</a><br>Released under the MIT License. Alpha software, written entirely by an AI assistant, provided as is without warranty.',
       copyright: 'Copyright (c) 2026 Deccoyi',
     },
   },

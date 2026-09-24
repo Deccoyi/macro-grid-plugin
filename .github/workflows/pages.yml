@@ -1,7 +1,7 @@
 name: Documentation site
 
 # Builds the VitePress site in website/ and deploys it to GitHub Pages (Settings, Pages, Source: GitHub Actions).
-# Pull requests only build; the deploy job runs for pushes to main and manual runs.
+# Pull requests only build; the deploy job runs for pushes to main, published releases and manual runs.
 on:
   push:
     branches: [main]
@@ -20,6 +20,9 @@ on:
       - "OBS/src/ObsPlugin.cs"
       - "PLCIcons/**"
       - ".github/workflows/pages.yml"
+  # The Store lists the published releases, so the site is rebuilt when one changes.
+  release:
+    types: [published, edited, deleted]
   workflow_dispatch:
 
 permissions:
@@ -52,6 +55,8 @@ jobs:
       # (examples/, HelloJs/, OBS/, PLCIcons/), so a missing file or region fails here too.
       - name: Build the site
         working-directory: website
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run docs:build
 
       - name: Set up Pages

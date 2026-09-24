@@ -7,6 +7,9 @@ hero:
   tagline: Write actions, live variables, settings pages and icon packs for Macro Grid, in JavaScript or C#. Alpha software.
   actions:
     - theme: brand
+      text: Browse plugins
+      link: /store/
+    - theme: alt
       text: Getting started
       link: /getting-started/
     - theme: alt
