@@ -90,7 +90,7 @@ obs-websocket server (handshake, wrong password, timeouts, sudden disconnects, O
 
 ## License
 
-MIT, see [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md). The plugin includes no third-party code; the build output carries both files.
+MIT, see [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md). The plugin includes no third-party code; the build output carries both files. This plugin was created by AI tools and is provided "as is", without warranty of any kind; the authors accept no responsibility or liability for it, and you use it at your own risk.
 Full details: [../THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
 
 ## Changelog

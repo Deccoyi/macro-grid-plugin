@@ -9,9 +9,16 @@ local network into a customizable macro deck. This repository holds the official
 It is a separate repository from the server and from the phone app ([macro-grid-client](https://github.com/Deccoyi/macro-grid-client)),
 and every plugin here is versioned on its own. Documentation site (coming soon): <https://deccoyi.github.io/macro-grid-plugin/>.
 
-> **This project was written entirely by an AI assistant (Claude) at a user's direction.** It has not been independently audited,
-> security-reviewed or certified for production use. It is provided "as is", without warranty of any kind, and you use it at your own
-> risk; see [LICENSE](LICENSE).
+> ## AI-generated software: you use it entirely at your own risk
+>
+> All code, design, documentation and artwork of this project were created by artificial intelligence (an AI assistant working at the
+> maintainer's direction). Nothing has been reviewed line by line by a human, security-audited or certified for any purpose.
+>
+> **No warranty, no liability.** The software is provided "as is", without warranty of any kind, express or implied. To the fullest
+> extent permitted by law, the authors and contributors accept no responsibility or liability of any kind for it, including for damage,
+> data loss, misuse, security problems or any other consequence of installing or using it. All risk is yours: which software you
+> install, which devices you pair, which plugins you run and which buttons you press. The installer and the app ask you to accept the
+> [user agreement](https://github.com/Deccoyi/macro-grid/blob/main/installer/license-agreement.txt). See also [LICENSE](LICENSE) (MIT).
 
 ## What is here
 

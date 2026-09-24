@@ -4,7 +4,7 @@ Thanks for helping. This file is the set of rules every plugin in this repositor
 [docs/plugin-authoring.md](docs/plugin-authoring.md) first.
 
 By taking part you agree to follow the [Code of Conduct](CODE_OF_CONDUCT.md). Security problems go through private vulnerability
-reporting, see [SECURITY.md](SECURITY.md); any other contact: macrogrid.app@gmail.com.
+reporting, see [SECURITY.md](SECURITY.md); for anything else, open an issue.
 
 ## Branching model
 

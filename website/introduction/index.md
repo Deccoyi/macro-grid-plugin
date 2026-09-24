@@ -5,11 +5,12 @@ macro keypad you design yourself. You lay out buttons, toggles, sliders and knob
 values from the PC (CPU, RAM, the time, an OBS stream duration, ...) and presses keys, types text, opens programs, changes the
 volume and controls other software through plugins.
 
-::: warning Alpha, and written by an AI assistant
-Macro Grid is in public alpha. **All code, design and documentation, including this site, were written by an AI assistant
-(Claude) at a user's direction.** They have not been reviewed line by line by a human, security-audited or certified for
-production use. Everything is provided "as is", without warranty of any kind, and you use it at your own risk. APIs and
-plugin manifests may still change; the plugin SDK is `0.x`, which means a minor version can break plugins.
+::: warning Alpha, AI-generated, at your own risk
+Macro Grid is in public alpha. **All code, design, documentation and artwork, including this site, were created by artificial intelligence
+(an AI assistant working at the maintainer's direction).** Nothing has been reviewed line by line by a human, security-audited or certified for any purpose.
+Everything is provided "as is", without warranty of any kind. The authors and contributors accept no responsibility or liability of any kind,
+including for damage, data loss, misuse or security problems. **All risk is yours**: which software you install, which devices you pair, which plugins
+you run and which buttons you press. APIs and plugin manifests may still change; the plugin SDK is `0.x`, which means a minor version can break plugins.
 :::
 
 ## Architecture

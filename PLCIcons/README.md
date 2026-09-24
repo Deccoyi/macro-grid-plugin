@@ -28,6 +28,8 @@ project embeds everything matching `icons\*.svg`. Keep the icon monochrome and u
 ## License and provenance
 
 The plugin and all 29 icons are licensed under the MIT License ([LICENSE](LICENSE), [NOTICE.md](NOTICE.md)) and are provided "as is",
+
+**AI-generated, no warranty, no liability.** The icons and the plugin were created by AI tools and are provided "as is". The authors accept no responsibility or liability for them; you use them at your own risk.
 without warranty. Provenance, by evidence: all 29 icons are original ladder-logic symbols created for this project with an AI
 assistant: `add`, `calculate`, `close-branch`, `coil`, `convert`, `divide`, `empty-block`, `equal`, `f-trig`, `greater`,
 `greater-equal`, `lesser`, `lesser-equal`, `move`, `multiply`, `n`, `nc`, `no`, `not-equal`, `open-branch`, `p`, `r-trig`,
