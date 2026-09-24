@@ -23,24 +23,10 @@ jobs:
   build-and-test:
     runs-on: windows-latest
     steps:
-      # The C# plugins reference the plugin SDK by a relative path (..\..\..\macro-grid\...), so the server repo has to sit next to
-      # this one. actions/checkout cannot write outside $GITHUB_WORKSPACE, so both repos are checked out into subfolders of it:
-      #   $GITHUB_WORKSPACE/macro-grid-plugin   (this repository)
-      #   $GITHUB_WORKSPACE/macro-grid          (the server repository, which holds the SDK)
-      # Once the SDK package is published to NuGet, the sibling checkout below can be dropped.
       - name: Checkout this repository
         uses: actions/checkout@v5
         with:
           path: macro-grid-plugin
-
-      - name: Checkout the server repository (SDK source)
-        uses: actions/checkout@v5
-        with:
-          repository: Deccoyi/macro-grid
-          ref: dev
-          path: macro-grid
-          # While the server repository is private, add a read-only token as the SERVER_REPO_TOKEN secret.
-          token: ${{ secrets.SERVER_REPO_TOKEN || github.token }}
 
       - name: Set up .NET
         uses: actions/setup-dotnet@v5

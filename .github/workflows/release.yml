@@ -18,15 +18,6 @@ jobs:
         with:
           path: macro-grid-plugin
 
-      # Sibling checkout so the relative SDK project reference resolves; can be dropped once the SDK is on NuGet.
-      - name: Checkout the server repository (SDK source)
-        uses: actions/checkout@v5
-        with:
-          repository: Deccoyi/macro-grid
-          ref: dev
-          path: macro-grid
-          token: ${{ secrets.SERVER_REPO_TOKEN || github.token }}
-
       - name: Set up .NET
         uses: actions/setup-dotnet@v5
         with:
