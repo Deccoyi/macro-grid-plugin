@@ -1,11 +1,15 @@
+<script setup>
+import { data as v } from '../.vitepress/versions.data'
+</script>
+
 # Compatibility and versioning
 
 Macro Grid has three independently versioned parts, and every plugin has its own version too.
 
 | What | Where the version lives | Now |
 |---|---|---|
-| Server | `ClientHub.ServerVersion` in the server repository | `0.2.0` |
-| Plugin SDK (`MacroGrid.Plugin.Abstractions`) | `PluginSdk.Version` | `0.3.1` |
+| Server | `ClientHub.ServerVersion` in the server repository | `{{ v.server ?? 'see the latest release' }}` |
+| Plugin SDK (`MacroGrid.Plugin.Abstractions`) | `PluginSdk.Version` | `{{ v.sdk ?? 'see NuGet' }}` |
 | Each plugin | `version` in its own `plugin.json` | per plugin |
 
 ## What the server checks
