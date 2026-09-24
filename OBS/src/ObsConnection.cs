@@ -14,7 +14,7 @@ public enum ObsConnectionState { Disabled, Connecting, Connected, Reconnecting, 
 /// Owns the (re)connecting OBS WebSocket connection for the whole plugin lifetime: an
 /// <see cref="IVariableProvider"/> that never returns while the process is alive, publishing "obs.*"
 /// variables and reconnecting with capped exponential backoff whenever OBS isn't running or the
-/// connection drops. Action handlers (<see cref="ObsActions"/>) share this same instance's
+/// connection drops. Action handlers (the OBS actions) share this same instance's
 /// <see cref="RequestAsync"/>/<see cref="Cache"/> to actually do things — there's exactly one connection
 /// to OBS. Settings are re-read once on (re)connect and whenever <see cref="NotifySettingsChanged"/> is
 /// called by the settings page, not on every loop tick.
@@ -45,7 +45,7 @@ public sealed class ObsConnection(IPluginHost host) : IVariableProvider, IVariab
 
     public static string Slug(string name) => SlugInvalid.Replace(name.ToLowerInvariant(), "_").Trim('_');
 
-    /// <summary>Used by <see cref="ObsActions"/>. Throws <see cref="InvalidOperationException"/> if not
+    /// <summary>Used by the OBS actions. Throws <see cref="InvalidOperationException"/> if not
     /// currently connected — actions don't queue or wait for a connection, a button press while OBS is
     /// closed should fail fast and visibly (ActionDispatcher logs it, it never silently no-ops).</summary>
     public Task<JsonObject> RequestAsync(string requestType, JsonObject? requestData, CancellationToken cancellationToken)
