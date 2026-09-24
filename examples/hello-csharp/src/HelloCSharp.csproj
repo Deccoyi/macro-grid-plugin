@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>HelloCSharp</AssemblyName>
+    <RootNamespace>HelloCSharp</RootNamespace>
+    <!-- Same convention as the plugins in this repository: the SDK comes from NuGet by default;
+         -p:UseLocalSdk=true builds against a sibling checkout of the server repository instead. -->
+    <UseLocalSdk Condition="'$(UseLocalSdk)' == ''">false</UseLocalSdk>
+    <MacroGridSdkVersion Condition="'$(MacroGridSdkVersion)' == ''">0.3.0</MacroGridSdkVersion>
+    <LocalSdkProject Condition="'$(LocalSdkProject)' == ''">$(MSBuildProjectDirectory)\..\..\..\..\macro-grid\src\MacroGrid.Plugin.Abstractions\MacroGrid.Plugin.Abstractions.csproj</LocalSdkProject>
+  </PropertyGroup>
+
+  <!-- #region sdk -->
+  <ItemGroup>
+    <PackageReference Include="MacroGrid.Plugin.Abstractions" Version="$(MacroGridSdkVersion)"
+                      PrivateAssets="all" ExcludeAssets="runtime" Condition="'$(UseLocalSdk)' != 'true'" />
+    <ProjectReference Include="$(LocalSdkProject)" Private="false" ExcludeAssets="runtime"
+                      Condition="'$(UseLocalSdk)' == 'true'" />
+  </ItemGroup>
+  <!-- #endregion sdk -->
+
+  <ItemGroup>
+    <!-- plugin.json lands next to the DLL, so the build output folder is directly installable. -->
+    <None Include="..\plugin.json" Link="plugin.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

@@ -9,12 +9,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Proje referansı, macro-grid repo'suyla aynı makinede kardeş klasör olduğu için çalışıyor.
-         MacroGrid.Plugin.Abstractions NuGet paketlenene kadar geçici çözüm (bkz. docs/plugin-authoring.md §3). -->
-    <ProjectReference Include="..\..\..\macro-grid\src\MacroGrid.Plugin.Abstractions\MacroGrid.Plugin.Abstractions.csproj">
-      <Private>false</Private>
-      <ExcludeAssets>runtime</ExcludeAssets>
-    </ProjectReference>
+    <!-- SDK: NuGet by default, sibling checkout with -p:UseLocalSdk=true (see Directory.Build.props and
+         docs/using-the-sdk-package.md). Either way the SDK dll stays out of the plugin output: the server
+         and every plugin must share the server's copy. -->
+    <PackageReference Include="MacroGrid.Plugin.Abstractions" Version="$(MacroGridSdkVersion)"
+                      PrivateAssets="all" ExcludeAssets="runtime" Condition="'$(UseLocalSdk)' != 'true'" />
+    <ProjectReference Include="$(LocalSdkProject)" Private="false" ExcludeAssets="runtime"
+                      Condition="'$(UseLocalSdk)' == 'true'" />
   </ItemGroup>
 
   <ItemGroup>
