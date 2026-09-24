@@ -50,7 +50,7 @@ public sealed class ObsConnection(IPluginHost host) : IVariableProvider, IVariab
     /// closed should fail fast and visibly (ActionDispatcher logs it, it never silently no-ops).</summary>
     public Task<JsonObject> RequestAsync(string requestType, JsonObject? requestData, CancellationToken cancellationToken)
     {
-        var client = CurrentClient ?? throw new InvalidOperationException("OBS'e bağlı değil.");
+        var client = CurrentClient ?? throw new InvalidOperationException("Not connected to OBS.");
         return client.RequestAsync(requestType, requestData, cancellationToken);
     }
 
@@ -68,63 +68,63 @@ public sealed class ObsConnection(IPluginHost host) : IVariableProvider, IVariab
 
     public IEnumerable<VariableInfo> Describe()
     {
-        yield return new("obs.connected", "OBS'e bağlı mı", "{obs.connected}", Category);
-        yield return new("obs.status", "Bağlantı durumu metni", "{obs.status}", Category);
-        yield return new("obs.ws.in", "Bu oturumda alınan mesaj sayısı", "{obs.ws.in}", Category);
-        yield return new("obs.ws.out", "Bu oturumda gönderilen mesaj sayısı", "{obs.ws.out}", Category);
+        yield return new("obs.connected", "Connected to OBS", "{obs.connected}", Category);
+        yield return new("obs.status", "Connection status text", "{obs.status}", Category);
+        yield return new("obs.ws.in", "Messages received this session", "{obs.ws.in}", Category);
+        yield return new("obs.ws.out", "Messages sent this session", "{obs.ws.out}", Category);
 
-        yield return new("obs.scene.current", "Aktif program sahnesi", "{obs.scene.current}", Category);
-        yield return new("obs.scene.preview", "Önizleme sahnesi (stüdyo modu)", "{obs.scene.preview}", Category);
-        yield return new("obs.studioMode", "Stüdyo modu açık mı", "{obs.studioMode}", Category);
-        yield return new("obs.transition.current", "Aktif geçiş", "{obs.transition.current}", Category);
-        yield return new("obs.profile.current", "Aktif profil", "{obs.profile.current}", Category);
-        yield return new("obs.sceneCollection.current", "Aktif sahne koleksiyonu", "{obs.sceneCollection.current}", Category);
+        yield return new("obs.scene.current", "Active program scene", "{obs.scene.current}", Category);
+        yield return new("obs.scene.preview", "Preview scene (studio mode)", "{obs.scene.preview}", Category);
+        yield return new("obs.studioMode", "Studio mode is on", "{obs.studioMode}", Category);
+        yield return new("obs.transition.current", "Active transition", "{obs.transition.current}", Category);
+        yield return new("obs.profile.current", "Active profile", "{obs.profile.current}", Category);
+        yield return new("obs.sceneCollection.current", "Active scene collection", "{obs.sceneCollection.current}", Category);
 
-        yield return new("obs.streaming", "Yayın açık mı", "{obs.streaming}", Category);
-        yield return new("obs.stream.reconnecting", "Yayın yeniden bağlanıyor mu", "{obs.stream.reconnecting}", Category);
-        yield return new("obs.stream.duration", "Yayın süresi", "{obs.stream.duration}", Category);
-        yield return new("obs.stream.timecode", "Yayın zaman kodu", "{obs.stream.timecode}", Category);
-        yield return new("obs.stream.congestion", "Yayın tıkanıklığı (%)", "{obs.stream.congestion|0}%", Category);
-        yield return new("obs.stream.bytes", "Gönderilen bayt", "{obs.stream.bytes}", Category);
-        yield return new("obs.stream.kbps", "Yayın hızı (kbps)", "{obs.stream.kbps|0}", Category);
-        yield return new("obs.stream.frames.dropped", "Düşen kare", "{obs.stream.frames.dropped}", Category);
-        yield return new("obs.stream.frames.total", "Toplam kare", "{obs.stream.frames.total}", Category);
-        yield return new("obs.stream.frames.droppedPercent", "Düşen kare (%)", "{obs.stream.frames.droppedPercent|1}%", Category);
+        yield return new("obs.streaming", "Streaming is on", "{obs.streaming}", Category);
+        yield return new("obs.stream.reconnecting", "Stream is reconnecting", "{obs.stream.reconnecting}", Category);
+        yield return new("obs.stream.duration", "Stream duration", "{obs.stream.duration}", Category);
+        yield return new("obs.stream.timecode", "Stream timecode", "{obs.stream.timecode}", Category);
+        yield return new("obs.stream.congestion", "Stream congestion (%)", "{obs.stream.congestion|0}%", Category);
+        yield return new("obs.stream.bytes", "Bytes sent", "{obs.stream.bytes}", Category);
+        yield return new("obs.stream.kbps", "Stream bitrate (kbps)", "{obs.stream.kbps|0}", Category);
+        yield return new("obs.stream.frames.dropped", "Dropped frames", "{obs.stream.frames.dropped}", Category);
+        yield return new("obs.stream.frames.total", "Total frames", "{obs.stream.frames.total}", Category);
+        yield return new("obs.stream.frames.droppedPercent", "Dropped frames (%)", "{obs.stream.frames.droppedPercent|1}%", Category);
 
-        yield return new("obs.recording", "Kayıt açık mı", "{obs.recording}", Category);
-        yield return new("obs.record.paused", "Kayıt duraklatıldı mı", "{obs.record.paused}", Category);
-        yield return new("obs.record.duration", "Kayıt süresi", "{obs.record.duration}", Category);
-        yield return new("obs.record.timecode", "Kayıt zaman kodu", "{obs.record.timecode}", Category);
-        yield return new("obs.record.bytes", "Kaydedilen bayt", "{obs.record.bytes}", Category);
-        yield return new("obs.record.kbps", "Kayıt hızı (kbps)", "{obs.record.kbps|0}", Category);
+        yield return new("obs.recording", "Recording is on", "{obs.recording}", Category);
+        yield return new("obs.record.paused", "Recording is paused", "{obs.record.paused}", Category);
+        yield return new("obs.record.duration", "Recording duration", "{obs.record.duration}", Category);
+        yield return new("obs.record.timecode", "Recording timecode", "{obs.record.timecode}", Category);
+        yield return new("obs.record.bytes", "Bytes recorded", "{obs.record.bytes}", Category);
+        yield return new("obs.record.kbps", "Recording bitrate (kbps)", "{obs.record.kbps|0}", Category);
 
-        yield return new("obs.virtualcam", "Sanal kamera açık mı", "{obs.virtualcam}", Category);
-        yield return new("obs.replayBuffer", "Tekrar arabelleği açık mı", "{obs.replayBuffer}", Category);
+        yield return new("obs.virtualcam", "Virtual camera is on", "{obs.virtualcam}", Category);
+        yield return new("obs.replayBuffer", "Replay buffer is on", "{obs.replayBuffer}", Category);
 
         yield return new("obs.stats.fps", "OBS render FPS", "{obs.stats.fps|0}", Category);
-        yield return new("obs.stats.cpu", "OBS CPU kullanımı (%)", "{obs.stats.cpu|0}%", Category);
-        yield return new("obs.stats.memory", "Bellek kullanımı (MB)", "{obs.stats.memory|0}", Category);
-        yield return new("obs.stats.disk", "Boş disk (MB)", "{obs.stats.disk|0}", Category);
-        yield return new("obs.stats.renderTime", "Ortalama render süresi (ms)", "{obs.stats.renderTime|1}", Category);
-        yield return new("obs.stats.render.skipped", "Atlanan render karesi", "{obs.stats.render.skipped}", Category);
-        yield return new("obs.stats.render.total", "Toplam render karesi", "{obs.stats.render.total}", Category);
-        yield return new("obs.stats.render.skippedPercent", "Atlanan render karesi (%)", "{obs.stats.render.skippedPercent|1}%", Category);
-        yield return new("obs.stats.output.skipped", "Atlanan çıkış karesi", "{obs.stats.output.skipped}", Category);
-        yield return new("obs.stats.output.total", "Toplam çıkış karesi", "{obs.stats.output.total}", Category);
-        yield return new("obs.stats.output.skippedPercent", "Atlanan çıkış karesi (%)", "{obs.stats.output.skippedPercent|1}%", Category);
+        yield return new("obs.stats.cpu", "OBS CPU usage (%)", "{obs.stats.cpu|0}%", Category);
+        yield return new("obs.stats.memory", "Memory usage (MB)", "{obs.stats.memory|0}", Category);
+        yield return new("obs.stats.disk", "Free disk (MB)", "{obs.stats.disk|0}", Category);
+        yield return new("obs.stats.renderTime", "Average render time (ms)", "{obs.stats.renderTime|1}", Category);
+        yield return new("obs.stats.render.skipped", "Skipped render frames", "{obs.stats.render.skipped}", Category);
+        yield return new("obs.stats.render.total", "Total render frames", "{obs.stats.render.total}", Category);
+        yield return new("obs.stats.render.skippedPercent", "Skipped render frames (%)", "{obs.stats.render.skippedPercent|1}%", Category);
+        yield return new("obs.stats.output.skipped", "Skipped output frames", "{obs.stats.output.skipped}", Category);
+        yield return new("obs.stats.output.total", "Total output frames", "{obs.stats.output.total}", Category);
+        yield return new("obs.stats.output.skippedPercent", "Skipped output frames (%)", "{obs.stats.output.skippedPercent|1}%", Category);
 
         foreach (var input in _cache.AudioInputNames)
         {
             var slug = Slug(input);
-            yield return new($"obs.input.{slug}.muted", $"{input} — sessiz mi", $"{{obs.input.{slug}.muted}}", Category);
-            yield return new($"obs.input.{slug}.volumeDb", $"{input} — ses seviyesi (dB)", $"{{obs.input.{slug}.volumeDb|1}}", Category);
+            yield return new($"obs.input.{slug}.muted", $"{input} — muted", $"{{obs.input.{slug}.muted}}", Category);
+            yield return new($"obs.input.{slug}.volumeDb", $"{input} — volume (dB)", $"{{obs.input.{slug}.volumeDb|1}}", Category);
         }
         foreach (var scene in _cache.Scenes)
         {
             foreach (var item in _cache.SceneItems(scene))
             {
                 var slug = $"{Slug(scene)}.{Slug(item.SourceName)}";
-                yield return new($"obs.item.{slug}.visible", $"{scene} › {item.SourceName} — görünür mü", $"{{obs.item.{slug}.visible}}", Category);
+                yield return new($"obs.item.{slug}.visible", $"{scene} › {item.SourceName} — visible", $"{{obs.item.{slug}.visible}}", Category);
             }
         }
     }
@@ -151,7 +151,7 @@ public sealed class ObsConnection(IPluginHost host) : IVariableProvider, IVariab
             if (failures >= FailuresBeforeProcessCheck && IsLocalHost(settings.Host) && !IsObsProcessRunning())
             {
                 SetState(store, ObsConnectionState.WaitingForObs);
-                LogOnce("OBS çalışmıyor; açılana kadar bağlantı denemeleri duraklatıldı.");
+                LogOnce("OBS is not running; connection attempts are paused until it starts.");
                 if (!await WaitForObsProcessAsync(cancellationToken)) break;
                 backoff = InitialBackoff;
                 failures = 0;
@@ -168,7 +168,7 @@ public sealed class ObsConnection(IPluginHost host) : IVariableProvider, IVariab
                 client = await ObsClient.ConnectAsync(settings.Host, settings.Port, settings.Password, sessionCts.Token);
                 lock (_clientLock) _client = client;
                 _lastLoggedError = null;
-                host.Log($"OBS'e bağlanıldı ({settings.Host}:{settings.Port})");
+                host.Log($"Connected to OBS ({settings.Host}:{settings.Port})");
                 backoff = InitialBackoff;
                 failures = 0;
 
@@ -182,11 +182,11 @@ public sealed class ObsConnection(IPluginHost host) : IVariableProvider, IVariab
                 if (sessionCts.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
                     settingsChanged = true;
                 else if (await client.Completion is { } failure)
-                    host.Log($"OBS bağlantısı koptu: {failure.Message}");
+                    host.Log($"OBS connection lost: {failure.Message}");
             }
             catch (ObsAuthException ex) when (IsHardAuthFailure(ex.CloseStatus))
             {
-                host.Log($"OBS kimlik doğrulaması başarısız, ayarlar değişene kadar tekrar denenmeyecek: {ex.Message}");
+                host.Log($"OBS authentication failed, not retrying until the settings change: {ex.Message}");
                 SetState(store, ObsConnectionState.AuthFailed);
                 if (!await WaitForSettingsChangeAsync(cancellationToken)) break;
                 continue; // skip the backoff delay below — retry immediately with the new settings.
@@ -202,7 +202,7 @@ public sealed class ObsConnection(IPluginHost host) : IVariableProvider, IVariab
             catch (Exception ex)
             {
                 failures++;
-                LogOnce($"OBS'e bağlanılamadı: {ex.Message}");
+                LogOnce($"Could not connect to OBS: {ex.Message}");
             }
             finally
             {
@@ -223,7 +223,7 @@ public sealed class ObsConnection(IPluginHost host) : IVariableProvider, IVariab
 
             if (settingsChanged)
             {
-                host.Log("OBS ayarları değişti, yeniden bağlanılıyor.");
+                host.Log("OBS settings changed, reconnecting.");
                 backoff = InitialBackoff;
                 failures = 0;
                 continue;
@@ -346,7 +346,7 @@ public sealed class ObsConnection(IPluginHost host) : IVariableProvider, IVariab
             }
             catch (Exception ex) when (ex is ObsRequestException or TimeoutException or IOException)
             {
-                host.Log($"OBS durum sorgusu başarısız (muhtemelen geçici): {ex.Message}");
+                host.Log($"OBS state query failed (probably temporary): {ex.Message}");
             }
         }
     }
@@ -534,7 +534,7 @@ public sealed class ObsConnection(IPluginHost host) : IVariableProvider, IVariab
         }
         catch (Exception ex) when (ex is ObsRequestException or TimeoutException or IOException)
         {
-            host.Log($"Sahne koleksiyonu değişikliğinden sonra yeniden senkronizasyon başarısız: {ex.Message}");
+            host.Log($"Resync after a scene collection change failed: {ex.Message}");
         }
     }
 
@@ -568,13 +568,13 @@ public sealed class ObsConnection(IPluginHost host) : IVariableProvider, IVariab
         store.Set("obs.connected", state == ObsConnectionState.Connected);
         var (text, level) = state switch
         {
-            ObsConnectionState.Disabled => ("OBS · kapalı", StatusLevel.Idle),
-            ObsConnectionState.Connecting => ("OBS · bağlanıyor…", StatusLevel.Busy),
-            ObsConnectionState.Connected => ("OBS · bağlı", StatusLevel.Ok),
-            ObsConnectionState.Reconnecting => ($"OBS · {retryIn?.TotalSeconds:0}s sonra tekrar denenecek", StatusLevel.Warning),
-            ObsConnectionState.WaitingForObs => ("OBS · çalışmıyor", StatusLevel.Idle),
-            ObsConnectionState.AuthFailed => ("OBS · şifre hatalı", StatusLevel.Error),
-            _ => ("OBS · hata", StatusLevel.Error),
+            ObsConnectionState.Disabled => ("OBS · off", StatusLevel.Idle),
+            ObsConnectionState.Connecting => ("OBS · connecting…", StatusLevel.Busy),
+            ObsConnectionState.Connected => ("OBS · connected", StatusLevel.Ok),
+            ObsConnectionState.Reconnecting => ($"OBS · retrying in {retryIn?.TotalSeconds:0}s", StatusLevel.Warning),
+            ObsConnectionState.WaitingForObs => ("OBS · not running", StatusLevel.Idle),
+            ObsConnectionState.AuthFailed => ("OBS · wrong password", StatusLevel.Error),
+            _ => ("OBS · error", StatusLevel.Error),
         };
         store.Set("obs.status", text);
         _statusItem?.Update(text, level, "video");

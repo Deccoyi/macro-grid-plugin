@@ -54,10 +54,10 @@ public sealed class ObsSettingsPage(IPluginHost host, ObsConnection connection) 
 {
     public IReadOnlyList<SettingField> Fields =>
     [
-        new("enabled", "Etkin", SettingFieldKind.Bool) { Default = true },
-        new("host", "Sunucu", SettingFieldKind.Text) { Default = "127.0.0.1", Placeholder = "127.0.0.1" },
+        new("enabled", "Enabled", SettingFieldKind.Bool) { Default = true },
+        new("host", "Host", SettingFieldKind.Text) { Default = "127.0.0.1", Placeholder = "127.0.0.1" },
         new("port", "Port", SettingFieldKind.Number) { Min = 1, Max = 65535, Step = 1, Default = 4455 },
-        new("password", "Şifre", SettingFieldKind.Password),
+        new("password", "Password", SettingFieldKind.Password),
     ];
 
     public JsonObject Load()

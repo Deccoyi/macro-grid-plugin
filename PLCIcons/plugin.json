@@ -1,6 +1,7 @@
 {
   "id": "plc-icons",
-  "name": "PLC İkonları",
+  "name": "PLC Icons",
+  "defaultLanguage": "en",
   "version": "0.1.1",
   "sdkVersion": "^0.3.0",
   "minServerVersion": "0.1.0",

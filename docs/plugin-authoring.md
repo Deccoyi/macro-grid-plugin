@@ -53,12 +53,14 @@ A plugin is loaded, reloaded and unloaded while the server runs. See [Lifecycle]
 | `minServerVersion` | yes | The oldest server version the plugin needs. A older server lists the plugin as *Incompatible*. |
 | `entry` | yes | C#: the entry DLL's file name. JavaScript: the script (usually `index.js`). |
 | `kind` | yes | `"csharp"` or `"js"`. |
+| `defaultLanguage` | no | The language the plugin's own texts are written in, such as `"en"` (the default). See [Languages](#languages-defaultlanguage-and-locales). |
 | `permissions` | no | JavaScript only: the permissions the script needs (see [JavaScript plugins](#7-javascript-plugins)). |
 
 The SDK version is `PluginSdk.Version` in `MacroGrid.Plugin.Abstractions`; see the server repository's
 `docs/versioning.md` for what counts as a breaking change.
 
 ## 3. Status of a plugin in the editor
+
 
 The Plugins window lists every folder that has a `plugin.json`:
 
@@ -204,6 +206,26 @@ that returns normally is not restarted.
 - Implement `IVariableCatalogSource.Describe()` on the same object to list your variables (`VariableInfo`: name, description, example
   and a category the picker groups by) in the editor's picker, so users do not have to guess names.
 - When the plugin is unloaded, every variable it set is removed automatically.
+
+### Languages (`defaultLanguage` and `locales/`)
+
+Write every text the user sees (action names and descriptions, category names, variable descriptions, form labels, option labels,
+status texts) in one language, the plugin's *default language*, and say which one it is with `"defaultLanguage": "en"` in `plugin.json`
+(when the field is missing the default language is English). To offer another language, put `locales/<language>.json` next to
+`plugin.json`, for example `locales/tr.json`: one JSON object that maps the default-language text to its translation.
+
+```json
+{
+  "Not connected to OBS": "OBS'e bağlı değil",
+  "Audio source": "Ses kaynağı"
+}
+```
+
+The server translates these texts when it hands them to the editor, using the language the person chose in Preferences (Turkish or English
+today). If the language has no file, or a text has no entry, the text is shown as the plugin wrote it, so a plugin never shows an empty label
+and works without any locale file. This works the same for C# and JavaScript plugins. Texts that are put together at run time (for example
+`$"{scene} - visible"`) cannot be looked up and stay in the default language. Make the locale files travel with the build output
+(`<None Include="..\locales\*.json" Link="locales\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />`).
 
 ### Status bar item
 

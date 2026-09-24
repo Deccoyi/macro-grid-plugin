@@ -2,7 +2,7 @@
 
 A static icon pack for Macro Grid: 29 ladder-logic (PLC) symbols (coil, timers, comparison and arithmetic blocks, branches) that appear
 in the editor's icon picker as their own category. It has no connection, no settings and no actions. Kind: C# plugin. Id: `plc-icons`.
-The category is named "PLC İkonları" in the picker.
+The category is named "PLC Icons" in the picker.
 
 ## Installation
 

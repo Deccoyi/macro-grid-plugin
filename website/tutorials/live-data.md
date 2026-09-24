@@ -42,8 +42,8 @@ Add a format after a `|`: `{system.cpu|0}`, `{system.time|HH:mm}`.
 - **Numbers** default to the format `0.##`. Use `{system.cpu|0}` for no decimals or `{system.cpu|0.0}` for one.
 - **Dates and times** default to `HH:mm`. Use standard .NET custom date formats, for example `{system.time|HH:mm:ss}`.
 - **Durations** default to `hh:mm:ss`.
-- **Booleans** render as the Turkish words `Açık` and `Kapalı` by default (making the default follow the language is a known
-  gap). Give a format to choose your own words: `{obs.streaming|ON/OFF}`.
+- **Booleans** render as `On` / `Off` by default (`Açık` / `Kapalı` when the app runs in Turkish). Give a format to choose your own words:
+  `{obs.streaming|ON/OFF}`.
 - A **missing variable** renders as an empty string.
 
 ## Built-in variables

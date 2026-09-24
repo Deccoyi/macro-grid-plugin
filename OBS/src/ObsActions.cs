@@ -11,7 +11,7 @@ internal static class ObsOptionSources
     public static Task<OptionsResult> GetAsync(ObsConnection obs, string sourceId, JsonObject currentValues)
     {
         if (!obs.Cache.HasData)
-            return Task.FromResult(new OptionsResult([], "OBS'e bağlı değil"));
+            return Task.FromResult(new OptionsResult([], "Not connected to OBS"));
 
         IReadOnlyList<SettingOption> options = sourceId switch
         {
@@ -35,20 +35,20 @@ internal static class ObsOptionSources
 }
 
 /// <summary>Throws when a scene/input/item the action was configured against no longer exists in OBS —
-/// e.g. a button set to "sahne X'i aç" when scene X has since been deleted. ActionDispatcher catches and
+/// e.g. a button set to "open scene X" when scene X has since been deleted. ActionDispatcher catches and
 /// logs it (never a silent no-op), so a stale binding is visibly wrong instead of quietly doing nothing.</summary>
 internal static class ObsTargetCheck
 {
     public static void RequireScene(ObsConnection obs, string sceneName)
     {
         if (!obs.Cache.Scenes.Contains(sceneName))
-            throw new InvalidOperationException($"'{sceneName}' adlı sahne artık OBS'te yok.");
+            throw new InvalidOperationException($"Scene '{sceneName}' no longer exists in OBS.");
     }
 
     public static void RequireAudioInput(ObsConnection obs, string inputName)
     {
         if (!obs.Cache.AudioInputNames.Contains(inputName))
-            throw new InvalidOperationException($"'{inputName}' adlı ses kaynağı artık OBS'te yok.");
+            throw new InvalidOperationException($"Audio source '{inputName}' no longer exists in OBS.");
     }
 }
 
@@ -58,11 +58,11 @@ public sealed class ObsSetSceneAction(ObsConnection obs) : IActionHandler, IActi
 {
     public const string TypeId = "obs.setScene";
     public string Type => TypeId;
-    public string DisplayName => "OBS: Sahne değiştir";
+    public string DisplayName => "OBS: Switch scene";
     public string Category => "OBS";
-    public string? Description => "Program sahnesini değiştirir";
+    public string? Description => "Changes the program scene";
     public string? Icon => "clapperboard";
-    public IReadOnlyList<SettingField> Fields => [new("sceneName", "Sahne", SettingFieldKind.Select) { OptionsSource = "scenes" }];
+    public IReadOnlyList<SettingField> Fields => [new("sceneName", "Scene", SettingFieldKind.Select) { OptionsSource = "scenes" }];
 
     public Task ExecuteAsync(ActionContext context, JsonObject settings, CancellationToken cancellationToken)
     {
@@ -82,11 +82,11 @@ public sealed class ObsSetPreviewSceneAction(ObsConnection obs) : IActionHandler
 {
     public const string TypeId = "obs.setPreviewScene";
     public string Type => TypeId;
-    public string DisplayName => "OBS: Önizleme sahnesi";
+    public string DisplayName => "OBS: Preview scene";
     public string Category => "OBS";
-    public string? Description => "Stüdyo modunda önizleme sahnesini değiştirir";
+    public string? Description => "Changes the preview scene in studio mode";
     public string? Icon => "monitor-play";
-    public IReadOnlyList<SettingField> Fields => [new("sceneName", "Sahne", SettingFieldKind.Select) { OptionsSource = "scenes" }];
+    public IReadOnlyList<SettingField> Fields => [new("sceneName", "Scene", SettingFieldKind.Select) { OptionsSource = "scenes" }];
 
     public Task ExecuteAsync(ActionContext context, JsonObject settings, CancellationToken cancellationToken)
     {
@@ -104,9 +104,9 @@ public sealed class ObsStudioTransitionAction(ObsConnection obs) : IActionHandle
 {
     public const string TypeId = "obs.studioTransition";
     public string Type => TypeId;
-    public string DisplayName => "OBS: Stüdyo geçişini tetikle";
+    public string DisplayName => "OBS: Trigger studio transition";
     public string Category => "OBS";
-    public string? Description => "Önizlemeyi programa geçirir (stüdyo modu)";
+    public string? Description => "Sends the preview to the program (studio mode)";
     public string? Icon => "arrow-left-right";
     public IReadOnlyList<SettingField> Fields => [];
     public Task ExecuteAsync(ActionContext context, JsonObject settings, CancellationToken cancellationToken) =>
@@ -117,7 +117,7 @@ public sealed class ObsToggleStudioModeAction(ObsConnection obs) : IActionHandle
 {
     public const string TypeId = "obs.toggleStudioMode";
     public string Type => TypeId;
-    public string DisplayName => "OBS: Stüdyo modunu aç/kapat";
+    public string DisplayName => "OBS: Toggle studio mode";
     public string Category => "OBS";
     public string? Description => null;
     public string? Icon => "columns-2";
@@ -130,11 +130,11 @@ public sealed class ObsSetTransitionAction(ObsConnection obs) : IActionHandler, 
 {
     public const string TypeId = "obs.setTransition";
     public string Type => TypeId;
-    public string DisplayName => "OBS: Geçiş türü";
+    public string DisplayName => "OBS: Transition type";
     public string Category => "OBS";
-    public string? Description => "Aktif sahne geçişini değiştirir";
+    public string? Description => "Changes the active scene transition";
     public string? Icon => "shuffle";
-    public IReadOnlyList<SettingField> Fields => [new("transitionName", "Geçiş", SettingFieldKind.Select) { OptionsSource = "transitions" }];
+    public IReadOnlyList<SettingField> Fields => [new("transitionName", "Transition", SettingFieldKind.Select) { OptionsSource = "transitions" }];
 
     public Task ExecuteAsync(ActionContext context, JsonObject settings, CancellationToken cancellationToken)
     {
@@ -150,11 +150,11 @@ public sealed class ObsSetProfileAction(ObsConnection obs) : IActionHandler, IAc
 {
     public const string TypeId = "obs.setProfile";
     public string Type => TypeId;
-    public string DisplayName => "OBS: Profil değiştir";
+    public string DisplayName => "OBS: Switch profile";
     public string Category => "OBS";
-    public string? Description => "OBS profilini değiştirir";
+    public string? Description => "Changes the OBS profile";
     public string? Icon => "user-cog";
-    public IReadOnlyList<SettingField> Fields => [new("profileName", "Profil", SettingFieldKind.Select) { OptionsSource = "profiles" }];
+    public IReadOnlyList<SettingField> Fields => [new("profileName", "Profile", SettingFieldKind.Select) { OptionsSource = "profiles" }];
 
     public Task ExecuteAsync(ActionContext context, JsonObject settings, CancellationToken cancellationToken)
     {
@@ -172,7 +172,7 @@ public sealed class ObsStartStreamAction(ObsConnection obs) : IActionHandler, IA
 {
     public const string TypeId = "obs.startStream";
     public string Type => TypeId;
-    public string DisplayName => "OBS: Yayını başlat";
+    public string DisplayName => "OBS: Start streaming";
     public string Category => "OBS";
     public string? Description => null;
     public string? Icon => "radio";
@@ -184,7 +184,7 @@ public sealed class ObsStopStreamAction(ObsConnection obs) : IActionHandler, IAc
 {
     public const string TypeId = "obs.stopStream";
     public string Type => TypeId;
-    public string DisplayName => "OBS: Yayını durdur";
+    public string DisplayName => "OBS: Stop streaming";
     public string Category => "OBS";
     public string? Description => null;
     public string? Icon => "square";
@@ -196,7 +196,7 @@ public sealed class ObsToggleStreamAction(ObsConnection obs) : IActionHandler, I
 {
     public const string TypeId = "obs.toggleStream";
     public string Type => TypeId;
-    public string DisplayName => "OBS: Yayını aç/kapat";
+    public string DisplayName => "OBS: Toggle streaming";
     public string Category => "OBS";
     public string? Description => null;
     public string? Icon => "radio";
@@ -208,7 +208,7 @@ public sealed class ObsStartRecordAction(ObsConnection obs) : IActionHandler, IA
 {
     public const string TypeId = "obs.startRecord";
     public string Type => TypeId;
-    public string DisplayName => "OBS: Kaydı başlat";
+    public string DisplayName => "OBS: Start recording";
     public string Category => "OBS";
     public string? Description => null;
     public string? Icon => "circle";
@@ -220,7 +220,7 @@ public sealed class ObsStopRecordAction(ObsConnection obs) : IActionHandler, IAc
 {
     public const string TypeId = "obs.stopRecord";
     public string Type => TypeId;
-    public string DisplayName => "OBS: Kaydı durdur";
+    public string DisplayName => "OBS: Stop recording";
     public string Category => "OBS";
     public string? Description => null;
     public string? Icon => "square";
@@ -232,7 +232,7 @@ public sealed class ObsToggleRecordAction(ObsConnection obs) : IActionHandler, I
 {
     public const string TypeId = "obs.toggleRecord";
     public string Type => TypeId;
-    public string DisplayName => "OBS: Kaydı aç/kapat";
+    public string DisplayName => "OBS: Toggle recording";
     public string Category => "OBS";
     public string? Description => null;
     public string? Icon => "circle";
@@ -245,15 +245,15 @@ public sealed class ObsPauseRecordAction(ObsConnection obs) : IActionHandler, IA
 {
     public const string TypeId = "obs.pauseRecord";
     public string Type => TypeId;
-    public string DisplayName => "OBS: Kaydı duraklat";
+    public string DisplayName => "OBS: Pause recording";
     public string Category => "OBS";
     public string? Description => null;
     public string? Icon => "pause";
     public IReadOnlyList<SettingField> Fields =>
     [
-        new("mode", "Mod", SettingFieldKind.Segmented)
+        new("mode", "Mode", SettingFieldKind.Segmented)
         {
-            Options = [new("pause", "Duraklat"), new("resume", "Devam et"), new("toggle", "Aç/kapat")],
+            Options = [new("pause", "Pause"), new("resume", "Resume"), new("toggle", "Toggle")],
             Default = "toggle",
         },
     ];
@@ -273,15 +273,15 @@ public sealed class ObsVirtualCamAction(ObsConnection obs) : IActionHandler, IAc
 {
     public const string TypeId = "obs.virtualCam";
     public string Type => TypeId;
-    public string DisplayName => "OBS: Sanal kamera";
+    public string DisplayName => "OBS: Virtual camera";
     public string Category => "OBS";
     public string? Description => null;
     public string? Icon => "webcam";
     public IReadOnlyList<SettingField> Fields =>
     [
-        new("mode", "Mod", SettingFieldKind.Segmented)
+        new("mode", "Mode", SettingFieldKind.Segmented)
         {
-            Options = [new("start", "Başlat"), new("stop", "Durdur"), new("toggle", "Aç/kapat")],
+            Options = [new("start", "Start"), new("stop", "Stop"), new("toggle", "Toggle")],
             Default = "toggle",
         },
     ];
@@ -301,15 +301,15 @@ public sealed class ObsReplayBufferAction(ObsConnection obs) : IActionHandler, I
 {
     public const string TypeId = "obs.replayBuffer";
     public string Type => TypeId;
-    public string DisplayName => "OBS: Tekrar arabelleği";
+    public string DisplayName => "OBS: Replay buffer";
     public string Category => "OBS";
     public string? Description => null;
     public string? Icon => "rewind";
     public IReadOnlyList<SettingField> Fields =>
     [
-        new("mode", "Mod", SettingFieldKind.Segmented)
+        new("mode", "Mode", SettingFieldKind.Segmented)
         {
-            Options = [new("start", "Başlat"), new("stop", "Durdur"), new("toggle", "Aç/kapat")],
+            Options = [new("start", "Start"), new("stop", "Stop"), new("toggle", "Toggle")],
             Default = "toggle",
         },
     ];
@@ -328,9 +328,9 @@ public sealed class ObsSaveReplayAction(ObsConnection obs) : IActionHandler, IAc
 {
     public const string TypeId = "obs.saveReplay";
     public string Type => TypeId;
-    public string DisplayName => "OBS: Tekrarı kaydet";
+    public string DisplayName => "OBS: Save replay";
     public string Category => "OBS";
-    public string? Description => "Tekrar arabelleğinin son birkaç saniyesini diske kaydeder";
+    public string? Description => "Saves the last few seconds of the replay buffer to disk";
     public string? Icon => "save";
     public IReadOnlyList<SettingField> Fields => [];
     public Task ExecuteAsync(ActionContext context, JsonObject settings, CancellationToken cancellationToken) => obs.RequestAsync("SaveReplayBuffer", null, cancellationToken);
@@ -342,14 +342,14 @@ public sealed class ObsSetMuteAction(ObsConnection obs) : IActionHandler, IActio
 {
     public const string TypeId = "obs.setMute";
     public string Type => TypeId;
-    public string DisplayName => "OBS: Sesi kapat/aç";
+    public string DisplayName => "OBS: Set mute";
     public string Category => "OBS";
     public string? Description => null;
     public string? Icon => "volume-x";
     public IReadOnlyList<SettingField> Fields =>
     [
-        new("inputName", "Ses kaynağı", SettingFieldKind.Select) { OptionsSource = "audioInputs" },
-        new("mode", "Mod", SettingFieldKind.Segmented) { Options = [new("mute", "Sustur"), new("unmute", "Aç")], Default = "mute" },
+        new("inputName", "Audio source", SettingFieldKind.Select) { OptionsSource = "audioInputs" },
+        new("mode", "Mode", SettingFieldKind.Segmented) { Options = [new("mute", "Mute"), new("unmute", "Unmute")], Default = "mute" },
     ];
 
     public Task ExecuteAsync(ActionContext context, JsonObject settings, CancellationToken cancellationToken)
@@ -372,11 +372,11 @@ public sealed class ObsToggleMuteAction(ObsConnection obs) : IActionHandler, IAc
 {
     public const string TypeId = "obs.toggleMute";
     public string Type => TypeId;
-    public string DisplayName => "OBS: Ses sessize al/aç";
+    public string DisplayName => "OBS: Toggle mute";
     public string Category => "OBS";
     public string? Description => null;
     public string? Icon => "volume-1";
-    public IReadOnlyList<SettingField> Fields => [new("inputName", "Ses kaynağı", SettingFieldKind.Select) { OptionsSource = "audioInputs" }];
+    public IReadOnlyList<SettingField> Fields => [new("inputName", "Audio source", SettingFieldKind.Select) { OptionsSource = "audioInputs" }];
 
     public Task ExecuteAsync(ActionContext context, JsonObject settings, CancellationToken cancellationToken)
     {
@@ -399,14 +399,14 @@ public sealed class ObsSetVolumeAction(ObsConnection obs) : IActionHandler, IAct
 {
     public const string TypeId = "obs.setVolume";
     public string Type => TypeId;
-    public string DisplayName => "OBS: Ses seviyesi";
+    public string DisplayName => "OBS: Volume";
     public string Category => "OBS";
     public string? Description => null;
     public string? Icon => "volume-2";
     public IReadOnlyList<SettingField> Fields =>
     [
-        new("inputName", "Ses kaynağı", SettingFieldKind.Select) { OptionsSource = "audioInputs" },
-        new("volume", "Ses seviyesi (%)", SettingFieldKind.Slider) { Min = 0, Max = 100, Step = 1, Default = 100 },
+        new("inputName", "Audio source", SettingFieldKind.Select) { OptionsSource = "audioInputs" },
+        new("volume", "Volume (%)", SettingFieldKind.Slider) { Min = 0, Max = 100, Step = 1, Default = 100 },
     ];
 
     public Task ExecuteAsync(ActionContext context, JsonObject settings, CancellationToken cancellationToken)
@@ -430,14 +430,14 @@ public sealed class ObsAdjustVolumeAction(ObsConnection obs) : IActionHandler, I
 {
     public const string TypeId = "obs.adjustVolume";
     public string Type => TypeId;
-    public string DisplayName => "OBS: Ses seviyesini ayarla (±dB)";
+    public string DisplayName => "OBS: Adjust volume (±dB)";
     public string Category => "OBS";
-    public string? Description => "Mevcut seviyeye göre artırır/azaltır";
+    public string? Description => "Raises/lowers relative to the current level";
     public string? Icon => "volume-2";
     public IReadOnlyList<SettingField> Fields =>
     [
-        new("inputName", "Ses kaynağı", SettingFieldKind.Select) { OptionsSource = "audioInputs" },
-        new("stepDb", "Adım (dB, negatif = kıs)", SettingFieldKind.Number) { Step = 0.5, Default = 3 },
+        new("inputName", "Audio source", SettingFieldKind.Select) { OptionsSource = "audioInputs" },
+        new("stepDb", "Step (dB, negative = lower)", SettingFieldKind.Number) { Step = 0.5, Default = 3 },
     ];
 
     public Task ExecuteAsync(ActionContext context, JsonObject settings, CancellationToken cancellationToken)
@@ -461,15 +461,15 @@ public sealed class ObsSetItemVisibilityAction(ObsConnection obs) : IActionHandl
 {
     public const string TypeId = "obs.setItemVisibility";
     public string Type => TypeId;
-    public string DisplayName => "OBS: Öğe görünürlüğü";
+    public string DisplayName => "OBS: Item visibility";
     public string Category => "OBS";
-    public string? Description => "Bir sahne öğesini gösterir/gizler (gruplar dahil)";
+    public string? Description => "Shows/hides a scene item (groups included)";
     public string? Icon => "eye";
     public IReadOnlyList<SettingField> Fields =>
     [
-        new("sceneName", "Sahne", SettingFieldKind.Select) { OptionsSource = "scenes" },
-        new("sourceName", "Öğe", SettingFieldKind.Select) { OptionsSource = "sceneItems", DependsOn = ["sceneName"] },
-        new("mode", "Mod", SettingFieldKind.Segmented) { Options = [new("show", "Göster"), new("hide", "Gizle"), new("toggle", "Aç/kapat")], Default = "toggle" },
+        new("sceneName", "Scene", SettingFieldKind.Select) { OptionsSource = "scenes" },
+        new("sourceName", "Item", SettingFieldKind.Select) { OptionsSource = "sceneItems", DependsOn = ["sceneName"] },
+        new("mode", "Mode", SettingFieldKind.Segmented) { Options = [new("show", "Show"), new("hide", "Hide"), new("toggle", "Toggle")], Default = "toggle" },
     ];
 
     public async Task ExecuteAsync(ActionContext context, JsonObject settings, CancellationToken cancellationToken)
@@ -479,7 +479,7 @@ public sealed class ObsSetItemVisibilityAction(ObsConnection obs) : IActionHandl
         if (string.IsNullOrEmpty(sceneName) || string.IsNullOrEmpty(sourceName)) return;
 
         var item = obs.Cache.SceneItems(sceneName).FirstOrDefault(i => i.SourceName == sourceName)
-            ?? throw new InvalidOperationException($"'{sourceName}' öğesi artık '{sceneName}' sahnesinde yok.");
+            ?? throw new InvalidOperationException($"Item '{sourceName}' is no longer in scene '{sceneName}'.");
 
         var container = item.ParentGroup ?? sceneName;
         var idResponse = await obs.RequestAsync("GetSceneItemId", new JsonObject { ["sceneName"] = container, ["sourceName"] = sourceName }, cancellationToken);
@@ -503,14 +503,14 @@ public sealed class ObsSetTextAction(ObsConnection obs) : IActionHandler, IActio
 {
     public const string TypeId = "obs.setText";
     public string Type => TypeId;
-    public string DisplayName => "OBS: Metin kaynağını ayarla";
+    public string DisplayName => "OBS: Set text source";
     public string Category => "OBS";
     public string? Description => null;
     public string? Icon => "type";
     public IReadOnlyList<SettingField> Fields =>
     [
-        new("sourceName", "Metin kaynağı", SettingFieldKind.Select) { OptionsSource = "textInputs" },
-        new("text", "Metin", SettingFieldKind.Text) { AllowVariables = true },
+        new("sourceName", "Text source", SettingFieldKind.Select) { OptionsSource = "textInputs" },
+        new("text", "Text", SettingFieldKind.Text) { AllowVariables = true },
     ];
 
     public Task ExecuteAsync(ActionContext context, JsonObject settings, CancellationToken cancellationToken)

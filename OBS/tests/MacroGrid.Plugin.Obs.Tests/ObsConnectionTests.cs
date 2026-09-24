@@ -161,7 +161,7 @@ public sealed class ObsConnectionTests
         using var cts = new CancellationTokenSource();
         var run = connection.RunAsync(store, cts.Token);
 
-        await WaitUntilAsync(() => (string?)store.Get("obs.status") == "OBS · şifre hatalı", TimeSpan.FromSeconds(5),
+        await WaitUntilAsync(() => (string?)store.Get("obs.status") == "OBS · wrong password", TimeSpan.FromSeconds(5),
             "expected AuthFailed status after a 4009 close");
 
         await Task.Delay(800); // normal backoff would have retried at least once by now if it were still active
