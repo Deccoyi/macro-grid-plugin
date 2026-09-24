@@ -1,5 +1,10 @@
 # Contributing to the plugins repository
 
+> **AI-generated software.** All code, design and documentation of this project, including this file, were created by artificial
+> intelligence at the maintainer's direction. It is alpha-stage, has not been reviewed line by line by a human or security-audited, and is
+> provided "as is", without warranty of any kind. You use it entirely at your own risk (see the [README](README.md) and the
+> [MIT license](LICENSE)).
+
 Thanks for helping. This file is the set of rules every plugin in this repository follows. For how to write a plugin, read
 [docs/plugin-authoring.md](docs/plugin-authoring.md) first.
 
