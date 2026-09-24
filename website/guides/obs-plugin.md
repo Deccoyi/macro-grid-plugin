@@ -47,8 +47,8 @@ every action.
 - **Tests without OBS.** `OBS/tests` drives the plugin against a fake obs-websocket server (`FakeObsServer.cs`). Run `dotnet test` on
   `OBS/tests/MacroGrid.Plugin.Obs.Tests`.
 
-The plugin's user-visible strings (action names, form labels, status text) are currently in Turkish; the code, comments and docs
-are in English, which is the rule for every plugin in the repository.
+The plugin's user-visible strings (action names, form labels, status text) are written in English and translated to Turkish through
+`OBS/locales/tr.json`; the code, comments and docs are in English, which is the rule for every plugin in the repository.
 
 ## Using it in a layout
 

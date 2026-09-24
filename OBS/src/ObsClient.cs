@@ -79,7 +79,7 @@ public sealed class ObsClient : IAsyncDisposable
             }
             catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
             {
-                throw new ObsAuthException($"OBS'e {ConnectTimeoutMs / 1000}s içinde bağlanılamadı.");
+                throw new ObsAuthException($"Could not connect to OBS within {ConnectTimeoutMs / 1000}s.");
             }
 
             await client.HandshakeAsync(password, cancellationToken);
@@ -104,10 +104,10 @@ public sealed class ObsClient : IAsyncDisposable
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
-            throw new ObsAuthException("OBS Hello mesajı zaman aşımına uğradı.");
+            throw new ObsAuthException("The OBS Hello message timed out.");
         }
-        if (hello is null) throw new ObsAuthException("Sunucu bağlantıyı Hello mesajı göndermeden kapattı.", _socket.CloseStatus);
-        if (hello.TryGetInt("op") != 0) throw new ObsAuthException("Beklenmeyen ilk mesaj (Hello değil).");
+        if (hello is null) throw new ObsAuthException("The server closed the connection without sending a Hello message.", _socket.CloseStatus);
+        if (hello.TryGetInt("op") != 0) throw new ObsAuthException("Unexpected first message (not Hello).");
 
         var data = hello.TryGetObject("d") ?? [];
         var identify = new JsonObject
@@ -134,19 +134,19 @@ public sealed class ObsClient : IAsyncDisposable
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
-            throw new ObsAuthException("OBS Identify yanıtı zaman aşımına uğradı.");
+            throw new ObsAuthException("The OBS Identify response timed out.");
         }
         if (identified is null)
-            throw new ObsAuthException("Identify sonrası bağlantı kapandı (yanlış şifre olabilir).", _socket.CloseStatus);
+            throw new ObsAuthException("The connection closed after Identify (possibly a wrong password).", _socket.CloseStatus);
         if (identified.TryGetInt("op") != 2)
-            throw new ObsAuthException("Kimlik doğrulama başarısız (yanlış şifre olabilir).", _socket.CloseStatus);
+            throw new ObsAuthException("Authentication failed (possibly a wrong password).", _socket.CloseStatus);
     }
 
     /// <summary>Sends a Request and awaits its matching RequestResponse, with a per-request timeout. Throws
     /// <see cref="ObsRequestException"/> if OBS reports failure.</summary>
     public async Task<JsonObject> RequestAsync(string requestType, JsonObject? requestData, CancellationToken cancellationToken)
     {
-        if (_closed) throw new IOException("OBS bağlantısı kapalı.");
+        if (_closed) throw new IOException("The OBS connection is closed.");
 
         var requestId = Guid.NewGuid().ToString("N");
         var tcs = new TaskCompletionSource<JsonObject>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -158,7 +158,7 @@ public sealed class ObsClient : IAsyncDisposable
         if (_closed)
         {
             _pending.TryRemove(requestId, out _);
-            throw new IOException("OBS bağlantısı kapalı.");
+            throw new IOException("The OBS connection is closed.");
         }
 
         try
@@ -177,7 +177,7 @@ public sealed class ObsClient : IAsyncDisposable
             }
             catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
             {
-                throw new TimeoutException($"OBS isteği '{requestType}' {RequestTimeoutMs / 1000}s içinde yanıtlanmadı.");
+                throw new TimeoutException($"The OBS request '{requestType}' was not answered within {RequestTimeoutMs / 1000}s.");
             }
 
             var status = response.TryGetObject("requestStatus");
@@ -203,7 +203,7 @@ public sealed class ObsClient : IAsyncDisposable
     public async Task<IReadOnlyList<ObsBatchResult>> RequestBatchAsync(IReadOnlyList<(string Type, JsonObject? Data)> requests, CancellationToken cancellationToken)
     {
         if (requests.Count == 0) return [];
-        if (_closed) throw new IOException("OBS bağlantısı kapalı.");
+        if (_closed) throw new IOException("The OBS connection is closed.");
 
         var requestId = Guid.NewGuid().ToString("N");
         var tcs = new TaskCompletionSource<JsonArray>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -211,7 +211,7 @@ public sealed class ObsClient : IAsyncDisposable
         if (_closed)
         {
             _pendingBatches.TryRemove(requestId, out _);
-            throw new IOException("OBS bağlantısı kapalı.");
+            throw new IOException("The OBS connection is closed.");
         }
 
         try
@@ -237,7 +237,7 @@ public sealed class ObsClient : IAsyncDisposable
             }
             catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
             {
-                throw new TimeoutException($"OBS batch isteği {RequestTimeoutMs / 1000}s içinde yanıtlanmadı.");
+                throw new TimeoutException($"The OBS batch request was not answered within {RequestTimeoutMs / 1000}s.");
             }
 
             var parsed = new List<ObsBatchResult>(results.Count);
@@ -322,7 +322,7 @@ public sealed class ObsClient : IAsyncDisposable
             _closed = true;
             CloseStatus = _socket.CloseStatus;
             // Any request still awaiting a response when the socket dies would otherwise hang forever.
-            var lost = failure ?? new IOException("OBS bağlantısı koptu.");
+            var lost = failure ?? new IOException("The OBS connection was lost.");
             foreach (var (_, tcs) in _pending) tcs.TrySetException(lost);
             foreach (var (_, tcs) in _pendingBatches) tcs.TrySetException(lost);
             _completion.TrySetResult(failure);

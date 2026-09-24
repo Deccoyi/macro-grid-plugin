@@ -23,8 +23,7 @@ Implement `IIconPackSource` and register it in `Initialize` with `host.RegisterI
 - The names are sorted so the picker's ordering does not depend on the file system.
 - The SVGs are read from resources embedded in the assembly, so there are no loose files at run time.
 
-The display name in this listing is Turkish because the plugin's user-visible strings are; that is the one place where non-English
-text is allowed in this project.
+The display name is written in English (the plugin's default language); the Turkish name "PLC İkonları" comes from `locales/tr.json`.
 
 ## The project
 

@@ -2,6 +2,10 @@
 
 New features and fixes in the PLC Icons pack. For technical details, see [CHANGELOG-developer.md](CHANGELOG-developer.md).
 
+## Unreleased
+### New
+- **Languages:** The pack name is shown in Turkish or English, following the language of the app.
+
 ## 0.1.1 - 2026-09-23
 ### New
 - Two new icons for opening and closing a branch.
