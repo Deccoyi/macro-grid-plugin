@@ -1,0 +1,30 @@
+<Project>
+  <!-- Shared build settings for the two plugins in this repository (OBS, PLCIcons). Each plugin csproj imports
+       this file explicitly; examples/hello-csharp stays standalone on purpose, it is the tutorial project.
+       Expects the csproj to live in <plugin>/src with plugin.json, locales, LICENSE and NOTICE.md one level up. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- SDK: NuGet by default, sibling checkout with -p:UseLocalSdk=true (see Directory.Build.props and
+         docs/using-the-sdk-package.md). Either way the SDK dll stays out of the plugin output: the server
+         and every plugin must share the server's copy. -->
+    <PackageReference Include="MacroGrid.Plugin.Abstractions" Version="$(MacroGridSdkVersion)"
+                      PrivateAssets="all" ExcludeAssets="runtime" Condition="'$(UseLocalSdk)' != 'true'" />
+    <ProjectReference Include="$(LocalSdkProject)" Private="false" ExcludeAssets="runtime"
+                      Condition="'$(UseLocalSdk)' == 'true'" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- plugin.json sits next to the DLL in every build output, so "Install from Folder" can point straight at bin/Debug/net10.0. -->
+    <None Include="$(MSBuildProjectDirectory)\..\plugin.json" Link="plugin.json" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Translations (locales/<language>.json) travel with the plugin too. -->
+    <None Include="$(MSBuildProjectDirectory)\..\locales\*.json" Link="locales\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <!-- License files travel with the plugin: the build output is what gets installed and shared. -->
+    <None Include="$(MSBuildProjectDirectory)\..\LICENSE" Link="LICENSE" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="$(MSBuildProjectDirectory)\..\NOTICE.md" Link="NOTICE.md" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>
