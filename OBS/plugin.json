@@ -1,6 +1,9 @@
 {
   "id": "obs",
   "name": "OBS Control",
+  "description": "Controls OBS Studio over obs-websocket: scenes, streaming, recording, audio, sources and live variables.",
+  "author": "Deccoyi",
+  "homepage": "https://github.com/Deccoyi/macro-grid-plugin/tree/main/OBS",
   "defaultLanguage": "en",
   "version": "0.2.1",
   "sdkVersion": "^0.3.0",

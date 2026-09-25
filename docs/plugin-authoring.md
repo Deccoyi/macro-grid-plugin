@@ -55,6 +55,9 @@ A plugin is loaded, reloaded and unloaded while the server runs. See [Lifecycle]
 | `kind` | yes | `"csharp"` or `"js"`. |
 | `defaultLanguage` | no | The language the plugin's own texts are written in, such as `"en"` (the default). See [Languages](#languages-defaultlanguage-and-locales). |
 | `permissions` | no | JavaScript only: the permissions the script needs (see [JavaScript plugins](#7-javascript-plugins)). |
+| `description` | no | A one-line summary shown in Discover and the Store. Additive; older hosts ignore it. |
+| `author` | no | The plugin's author, shown next to `description`. Additive. |
+| `homepage` | no | A URL to the plugin's page or source, shown as a link. Additive. |
 
 The SDK version is `PluginSdk.Version` in `MacroGrid.Plugin.Abstractions`; see the server repository's
 `docs/versioning.md` for what counts as a breaking change.

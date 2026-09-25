@@ -17,6 +17,9 @@ Her eklenti klasörünün kökünde bir `plugin.json` bulunur. Aşağıdaki, OBS
 | `kind` | evet | `"csharp"` veya `"js"`. |
 | `defaultLanguage` | hayır | Eklentinin kendi metinlerinin yazıldığı dil, örneğin `"en"` (varsayılan). Çeviriler `plugin.json` yanındaki `locales/<language>.json` dosyasından gelir; eksik bir dil veya metin, yazıldığı haline döner. |
 | `permissions` | hayır | Yalnızca JavaScript: betiğin ihtiyaç duyduğu izinler (bkz. [İzinler](/tr/reference/permissions)). C# eklentilerinde yok sayılır. |
+| `description` | hayır | Keşfet ve Mağaza'da gösterilen tek satırlık özet. Eklentiseldir; eski sunucular yok sayar. |
+| `author` | hayır | Eklentinin yazarı, `description` yanında gösterilir. Eklentiseldir. |
+| `homepage` | hayır | Eklentinin sayfasına veya kaynağına bir bağlantı olarak gösterilir. Eklentiseldir. |
 
 ## JSON şeması
 
@@ -36,7 +39,10 @@ Manifest, SDK'daki `PluginManifest` kaydına karşılık gelir (dosyada özellik
     "entry": { "type": "string" },
     "kind": { "enum": ["csharp", "js"] },
     "defaultLanguage": { "type": "string" },
-    "permissions": { "type": ["array", "null"], "items": { "type": "string" } }
+    "permissions": { "type": ["array", "null"], "items": { "type": "string" } },
+    "description": { "type": "string" },
+    "author": { "type": "string" },
+    "homepage": { "type": "string" }
   },
   "additionalProperties": true
 }
