@@ -76,8 +76,12 @@ public sealed class SoundSettingsData
 /// (<see cref="ISettingsCommandHandler"/>).</summary>
 public sealed class SoundSettingsPage(IPluginHost host, SoundEngine engine) : IPluginSettingsPage, IOptionsSource, ISettingsCommandHandler
 {
+    /// <summary>Only formats AudioFileReader decodes reliably on a stock Windows install: .wav/.mp3/.aiff
+    /// natively, the rest through Media Foundation, which ships a FLAC decoder since Windows 10 1709 but has
+    /// no Vorbis (.ogg) or Opus decoder out of the box — so .ogg is deliberately left out here (it would show
+    /// up in the picker and then fail to play).</summary>
     private const string AudioFileFilter =
-        "Audio files (*.wav;*.mp3;*.aac;*.m4a;*.wma;*.flac;*.aiff;*.ogg)|*.wav;*.mp3;*.aac;*.m4a;*.wma;*.flac;*.aiff;*.ogg";
+        "Audio files (*.wav;*.mp3;*.aac;*.m4a;*.mp4;*.wma;*.flac;*.aiff;*.aif)|*.wav;*.mp3;*.aac;*.m4a;*.mp4;*.wma;*.flac;*.aiff;*.aif";
 
     public IReadOnlyList<SettingField> Fields =>
     [
