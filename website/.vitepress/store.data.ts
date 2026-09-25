@@ -6,7 +6,7 @@ declare const data: StorePlugin[]
 export { data }
 
 export default defineLoader({
-  watch: ['../store/catalog.json'],
+  watch: ['../store/catalog.json', '../../*/plugin.json'],
   async load(): Promise<StorePlugin[]> {
     return loadStore()
   },
