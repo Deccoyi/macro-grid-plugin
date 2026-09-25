@@ -45,7 +45,9 @@ public sealed class FakePluginHost(string dataDirectory) : IPluginHost
 
     public void Log(string message) => Logs.Add(message);
 
-    public void RegisterAction(IActionHandler handler) { }
+    public List<IActionHandler> Actions { get; } = [];
+
+    public void RegisterAction(IActionHandler handler) => Actions.Add(handler);
     public void RegisterVariableProvider(IVariableProvider provider) { }
     public void RegisterSettingsPage(IPluginSettingsPage page) { }
     public IPluginStatusItem CreateStatusItem(string id) => new FakeStatusItem();

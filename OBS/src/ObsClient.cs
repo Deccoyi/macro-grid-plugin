@@ -198,7 +198,7 @@ public sealed class ObsClient : IAsyncDisposable
 
     /// <summary>Sends every request in one RequestBatch (op 8) frame — one frame in, one frame out,
     /// regardless of how many requests it carries (this is what keeps
-    /// OBS's per-second message counter from climbing). <paramref name="haltOnFailure"/> false so one
+    /// OBS's per-second message counter from climbing). The request's <c>haltOnFailure</c> is false so one
     /// failing request (e.g. a stale scene name) doesn't cancel the rest of the batch.</summary>
     public async Task<IReadOnlyList<ObsBatchResult>> RequestBatchAsync(IReadOnlyList<(string Type, JsonObject? Data)> requests, CancellationToken cancellationToken)
     {

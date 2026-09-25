@@ -1,4 +1,3 @@
-using System.Reflection;
 using MacroGrid.Plugin.Abstractions;
 
 namespace MacroGrid.Plugin.PlcIcons;

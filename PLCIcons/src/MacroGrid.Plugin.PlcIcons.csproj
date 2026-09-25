@@ -1,31 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <!-- Target framework, SDK reference and the files that travel with the plugin: see build/Plugin.props. -->
+  <Import Project="$(MSBuildThisFileDirectory)..\..\build\Plugin.props" />
+
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>MacroGrid.Plugin.PlcIcons</RootNamespace>
     <AssemblyName>MacroGrid.Plugin.PlcIcons</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- SDK: NuGet by default, sibling checkout with -p:UseLocalSdk=true (see Directory.Build.props and
-         docs/using-the-sdk-package.md). Either way the SDK dll stays out of the plugin output: the server
-         and every plugin must share the server's copy. -->
-    <PackageReference Include="MacroGrid.Plugin.Abstractions" Version="$(MacroGridSdkVersion)"
-                      PrivateAssets="all" ExcludeAssets="runtime" Condition="'$(UseLocalSdk)' != 'true'" />
-    <ProjectReference Include="$(LocalSdkProject)" Private="false" ExcludeAssets="runtime"
-                      Condition="'$(UseLocalSdk)' == 'true'" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <!-- plugin.json sits next to the DLL in every build output, so "Install from Folder" can point straight at bin/Debug/net10.0. -->
-    <None Include="..\plugin.json" Link="plugin.json" CopyToOutputDirectory="PreserveNewest" />
-    <!-- Translations (locales/<language>.json) travel with the plugin too. -->
-    <None Include="..\locales\*.json" Link="locales\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <!-- License files travel with the plugin: the build output is what gets installed and shared. -->
-    <None Include="..\LICENSE" Link="LICENSE" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="..\NOTICE.md" Link="NOTICE.md" CopyToOutputDirectory="PreserveNewest" />
     <!-- The icons are embedded in the DLL, so no separate file has to be read at run time. -->
     <EmbeddedResource Include="icons\*.svg" />
   </ItemGroup>
