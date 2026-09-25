@@ -25,10 +25,10 @@ every action.
 | File | Role |
 |---|---|
 | `ObsPlugin.cs` | `IPlugin`: creates the connection and registers everything (above). |
-| `ObsConnection.cs` | `IVariableProvider` and `IVariableCatalogSource`. Runs for the plugin's lifetime: connects, keeps the variables up to date, updates the status item and reconnects with capped exponential backoff. |
+| `ObsConnection.cs`, `ObsConnection.*.cs` | `IVariableProvider` and `IVariableCatalogSource`. Runs for the plugin's lifetime: connects, keeps the variables up to date, updates the status item and reconnects with capped exponential backoff. One partial class, split by concern (loop, polling, events, variables, status). |
 | `ObsClient.cs`, `ObsAuth.cs`, `ObsJson.cs` | A small obs-websocket v5 client: handshake, authentication, requests and events. |
 | `ObsState.cs` | A cache of what OBS reported (scenes, inputs, scene items). |
-| `ObsActions.cs` | The actions. Each implements `IActionHandler`, `IActionDescriptor` and, for dropdowns, `IOptionsSource`. |
+| `Actions/*.cs` | The actions, grouped by scenes, outputs, audio and sources. They share small base classes (`ObsActionBase`, `ObsOptionsAction`, `ObsRequestAction`, `ObsModeAction`) and implement `IActionHandler`, `IActionDescriptor` and, for dropdowns, `IOptionsSource`. |
 | `ObsSettings.cs` | `ObsSettings` (persisted as `settings.json` in `DataDirectory`) and `ObsSettingsPage : IPluginSettingsPage`. |
 
 ## Patterns worth copying

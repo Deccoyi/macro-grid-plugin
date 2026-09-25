@@ -1,5 +1,4 @@
 using System.Text.Json.Nodes;
-using MacroGrid.Plugin.Abstractions;
 
 namespace MacroGrid.Plugin.Obs;
 
@@ -24,7 +23,6 @@ public sealed class ObsState
     private Dictionary<string, ObsInputInfo> _inputs = new(StringComparer.Ordinal);
     private Dictionary<string, List<ObsSceneItem>> _sceneItems = new(StringComparer.Ordinal);
     private List<string> _profiles = [];
-    private List<string> _sceneCollections = [];
     private List<string> _transitions = [];
     private Dictionary<string, bool> _inputMuted = new(StringComparer.Ordinal);
     private Dictionary<string, double> _inputVolumeDb = new(StringComparer.Ordinal);
@@ -43,7 +41,6 @@ public sealed class ObsState
 
     public IReadOnlyList<string> Scenes { get { lock (_lock) return [.. _scenes]; } }
     public IReadOnlyList<string> AudioInputNames { get { lock (_lock) return [.. _inputs.Values.Where(i => i.IsAudio).Select(i => i.Name)]; } }
-    public IReadOnlyList<string> AllInputNames { get { lock (_lock) return [.. _inputs.Keys]; } }
     public IReadOnlyList<string> TextInputNames { get { lock (_lock) return [.. _inputs.Values.Where(i => i.Kind.Contains("text", StringComparison.OrdinalIgnoreCase)).Select(i => i.Name)]; } }
     public IReadOnlyList<string> Profiles { get { lock (_lock) return [.. _profiles]; } }
     public IReadOnlyList<string> Transitions { get { lock (_lock) return [.. _transitions]; } }
@@ -112,14 +109,9 @@ public sealed class ObsState
         var profiles = (byType["GetProfileList"].FirstOrDefault().ResponseData?.TryGetArray("profiles"))
             ?.Select(n => n?.GetValue<string>()).Where(s => s is not null).Select(s => s!).ToList() ?? [];
 
-        var sceneCollections = new List<string>();
         if (byType["GetSceneCollectionList"].FirstOrDefault() is { Success: true } sccList)
         {
             CurrentSceneCollection = sccList.ResponseData.TryGetString("currentSceneCollectionName");
-            foreach (var node in sccList.ResponseData.TryGetArray("sceneCollections") ?? [])
-            {
-                if (node?.GetValue<string>() is { } name) sceneCollections.Add(name);
-            }
         }
 
         if (byType["GetStudioModeEnabled"].FirstOrDefault() is { Success: true } studio)
@@ -174,7 +166,6 @@ public sealed class ObsState
             _inputs = inputs;
             _sceneItems = sceneItems;
             _profiles = profiles;
-            _sceneCollections = sceneCollections;
             _transitions = transitions;
             _inputMuted = muted;
             _inputVolumeDb = volumeDb;
@@ -268,7 +259,6 @@ public sealed class ObsState
             _inputs.Clear();
             _sceneItems.Clear();
             _profiles = [];
-            _sceneCollections = [];
             _transitions = [];
             _inputMuted.Clear();
             _inputVolumeDb.Clear();

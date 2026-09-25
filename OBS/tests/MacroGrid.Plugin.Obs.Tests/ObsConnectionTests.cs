@@ -1,4 +1,3 @@
-using System.Net.WebSockets;
 using System.Text.Json.Nodes;
 
 namespace MacroGrid.Plugin.Obs.Tests;
