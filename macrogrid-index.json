@@ -1,0 +1,30 @@
+{
+    "formatVersion":  1,
+    "name":  "Macro Grid Plugins",
+    "author":  "Deccoyi",
+    "plugins":  [
+                    {
+                        "id":  "hellojs",
+                        "name":  "Hello (JavaScript example)",
+                        "description":  "A minimal JavaScript plugin: a counter variable, a settings page, one action and a status item.",
+                        "author":  "Deccoyi",
+                        "homepage":  "https://github.com/Deccoyi/macro-grid-plugin/tree/main/HelloJs",
+                        "kind":  "js",
+                        "versions":  [
+                                         {
+                                             "version":  "0.1.1",
+                                             "sdkVersion":  "^0.4.0",
+                                             "minServerVersion":  "0.3.2",
+                                             "url":  "https://github.com/Deccoyi/macro-grid-plugin/releases/download/plugin-hellojs-v0.1.1/hellojs-0.1.1.zip",
+                                             "sha256":  "2380bfe7a58c2309d49b064f5b60e7cf98efaeb36d59964458b224baa8c6c49a",
+                                             "size":  4521,
+                                             "permissions":  [
+                                                                 "variables",
+                                                                 "actions"
+                                                             ],
+                                             "signature":  "aItwe6Eh8xTM0Va6t3naKO6z72eynrfFe4Uaf4n0XLlCQYKGZZKf78eG4VE8Zmt1ierU71itZS4qZF30ssbErQ=="
+                                         }
+                                     ]
+                    }
+                ]
+}
