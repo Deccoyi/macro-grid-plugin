@@ -1,18 +1,18 @@
 using System.Text.Json.Nodes;
 
-namespace MacroGrid.Plugin.Sound.Tests;
+namespace MacroGrid.Plugin.SoundBoard.Tests;
 
-public sealed class SoundSettingsTests : IDisposable
+public sealed class SoundBoardSettingsTests : IDisposable
 {
     private readonly string _dataDir = Path.Combine(Path.GetTempPath(), "sound-tests-" + Guid.NewGuid().ToString("N"));
-    private readonly SoundEngine _engine;
-    private readonly SoundSettingsPage _page;
+    private readonly SoundBoardEngine _engine;
+    private readonly SoundBoardSettingsPage _page;
 
-    public SoundSettingsTests()
+    public SoundBoardSettingsTests()
     {
         Directory.CreateDirectory(_dataDir);
-        _engine = new SoundEngine(new FakePluginHost(_dataDir));
-        _page = new SoundSettingsPage(new FakePluginHost(_dataDir), _engine);
+        _engine = new SoundBoardEngine(new FakePluginHost(_dataDir));
+        _page = new SoundBoardSettingsPage(new FakePluginHost(_dataDir), _engine);
     }
 
     public void Dispose()
@@ -131,7 +131,7 @@ public sealed class SoundSettingsTests : IDisposable
     {
         _page.Save(new JsonObject { ["sounds"] = new JsonArray { Row(null, "a.wav", "Alarm") }, ["masterVolume"] = 33.0 });
 
-        using var reloaded = new SoundEngine(new FakePluginHost(_dataDir));
+        using var reloaded = new SoundBoardEngine(new FakePluginHost(_dataDir));
         Assert.Equal(33, reloaded.Settings.MasterVolume);
         Assert.Equal("Alarm", reloaded.Settings.Sounds.Single().Name);
     }
