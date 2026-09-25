@@ -8,6 +8,11 @@
     <AssemblyName>MacroGrid.Plugin.Sound</AssemblyName>
     <!-- WasapiOut and the CoreAudio device enumeration are Windows-only APIs. -->
     <TargetFramework>net10.0-windows</TargetFramework>
+    <!-- A plugin is loaded by PluginLoadContext (AssemblyDependencyResolver), not launched via `dotnet exec`,
+         so NAudio's DLLs must sit physically next to the plugin's own DLL — its .deps.json alone resolves
+         fine on the machine that built it (NuGet's global cache still has the path), but not once the plugin
+         folder is copied anywhere else, which is exactly what "Install from Folder" and every release zip do. -->
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
   <ItemGroup>
