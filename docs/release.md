@@ -13,6 +13,7 @@ plugin-<name>-v<version>
 | `OBS/` | `obs` | `plugin-obs-v0.2.0` |
 | `PLCIcons/` | `plcicons` | `plugin-plcicons-v0.1.1` |
 | `HelloJs/` | `hellojs` | `plugin-hellojs-v0.1.0` |
+| `SoundBoard/` | `soundboard` | `plugin-soundboard-v0.1.0` |
 
 `<version>` is the plugin's own semantic version and must equal `version` in that plugin's `plugin.json`; the release script takes the
 version from `plugin.json` and refuses a tag that already exists. The server and the phone app use their own tag schemes (`server-v...`, `client-v...`) in their own repositories.
@@ -28,7 +29,7 @@ version from `plugin.json` and refuses a tag that already exists. The server and
    ./scripts/release-plugin.ps1 -Name obs
    ./scripts/release-plugin.ps1 -Name obs -Publish
    ```
-   `-Name` is `obs`, `plc-icons` or `hellojs`. The key defaults to `%USERPROFILE%\signing\plugin-signing\plugin-signing-private.pem`
+   `-Name` is `obs`, `plc-icons`, `hellojs` or `soundboard`. The key defaults to `%USERPROFILE%\signing\plugin-signing\plugin-signing-private.pem`
    (`-KeyPath` overrides it). C# plugins need the SDK version they reference to exist on nuget.org first.
 5. The script builds that plugin, zips the output together with `LICENSE`, `NOTICE.md` and `THIRD_PARTY_NOTICES.md`, hashes the zip
    (`<zip>.sha256`) and signs it with the plugin-signing key (`<zip>.sig`, `scripts/sign-package.cs`), then publishes the release with

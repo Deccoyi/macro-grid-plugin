@@ -1,8 +1,8 @@
 {
-  "Sound: Play": "Ses: Çal",
+  "SoundBoard: Play": "SoundBoard: Çal",
   "Plays, or for \"hold\"/\"toggle\", also stops a sound": "Bir sesi çalar; \"basılı tut\"/\"aç-kapat\" modunda durdurur da",
-  "Sound: Stop": "Ses: Durdur",
-  "Sound: Master volume": "Ses: Ana ses seviyesi",
+  "SoundBoard: Stop": "SoundBoard: Durdur",
+  "SoundBoard: Master volume": "SoundBoard: Ana ses seviyesi",
   "Sound": "Ses",
   "Play mode": "Çalma modu",
   "Full": "Tam",

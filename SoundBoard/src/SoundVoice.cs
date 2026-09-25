@@ -1,11 +1,11 @@
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
 
-namespace MacroGrid.Plugin.Sound;
+namespace MacroGrid.Plugin.SoundBoard;
 
 /// <summary>Rewinds the underlying reader instead of ending, while <see cref="Loop"/> is on. A natural end
 /// with <see cref="Loop"/> off returns 0, same as any other finished ISampleProvider — that is what lets
-/// <see cref="SoundEngine"/>'s mixer (<c>ReadFully</c>) notice and drop the voice on its own.</summary>
+/// <see cref="SoundBoardEngine"/>'s mixer (<c>ReadFully</c>) notice and drop the voice on its own.</summary>
 internal sealed class LoopingSampleProvider(AudioFileReader reader) : ISampleProvider
 {
     public bool Loop { get; set; }
@@ -25,9 +25,9 @@ internal sealed class LoopingSampleProvider(AudioFileReader reader) : ISamplePro
 }
 
 /// <summary>One playing (or fading out) instance of a sound. Doubles as the ISampleProvider added straight
-/// to <see cref="SoundEngine"/>'s mixer: file reader (own volume via <see cref="AudioFileReader.Volume"/>) →
+/// to <see cref="SoundBoardEngine"/>'s mixer: file reader (own volume via <see cref="AudioFileReader.Volume"/>) →
 /// loop wrapper → fade provider → resampled/channel-converted to the mixer's fixed format. Tagged with
-/// (soundId, deviceId, pageId, widgetId) so <c>sound.stop</c>/hold-release can target the right voices.</summary>
+/// (soundId, deviceId, pageId, widgetId) so <c>soundboard.stop</c>/hold-release can target the right voices.</summary>
 internal sealed class SoundVoice : ISampleProvider, IDisposable
 {
     private readonly AudioFileReader _reader;
@@ -42,7 +42,7 @@ internal sealed class SoundVoice : ISampleProvider, IDisposable
     public bool IsPreview { get; }
 
     /// <summary>True once the chain has read 0 samples (file ended without looping, or an immediate stop
-    /// forced it) — <see cref="SoundEngine"/> reaps it from <see cref="_voices"/> and disposes it on the
+    /// forced it) — <see cref="SoundBoardEngine"/> reaps it from <see cref="_voices"/> and disposes it on the
     /// next tick. Not observed by the mixer itself; that happens independently via its own ReadFully logic.</summary>
     public bool Finished { get; private set; }
 
@@ -117,7 +117,7 @@ internal sealed class SoundVoice : ISampleProvider, IDisposable
 }
 
 /// <summary>Which voices a stop targets — every non-null field must match. See
-/// <see cref="SoundEngine.Stop"/>.</summary>
+/// <see cref="SoundBoardEngine.Stop"/>.</summary>
 public readonly record struct VoiceFilter(
     string? SoundId = null, string? DeviceId = null, string? PageId = null, string? WidgetId = null, bool? IsPreview = null)
 {

@@ -1,13 +1,13 @@
 using System.Text.Json.Nodes;
 using MacroGrid.Plugin.Abstractions;
 
-namespace MacroGrid.Plugin.Sound;
+namespace MacroGrid.Plugin.SoundBoard;
 
 /// <summary>Shared "sound" dropdown, sourced live from the current settings so a renamed or newly added
 /// sound shows up without reopening the action's settings.</summary>
-internal static class SoundOptionsSource
+internal static class SoundBoardOptionsSource
 {
-    public static OptionsResult GetSounds(SoundEngine engine)
+    public static OptionsResult GetSounds(SoundBoardEngine engine)
     {
         var options = engine.Settings.Sounds
             .Select(s => new SettingOption(s.Id, s.Name.Length > 0 ? s.Name : Path.GetFileNameWithoutExtension(s.File)))
@@ -18,12 +18,12 @@ internal static class SoundOptionsSource
 
 /// <summary>Plays a sound. Settings: <c>sound</c> (id), <c>playMode</c> (full/hold/toggle),
 /// <c>stopStyle</c> (default/immediate/fade, applied on a hold release or a toggle stop).</summary>
-public sealed class SoundPlayAction(SoundEngine engine) : IActionHandler, IActionDescriptor, IOptionsSource, IReleaseAwareAction
+public sealed class SoundBoardPlayAction(SoundBoardEngine engine) : IActionHandler, IActionDescriptor, IOptionsSource, IReleaseAwareAction
 {
-    public const string TypeId = "sound.play";
+    public const string TypeId = "soundboard.play";
     public string Type => TypeId;
-    public string DisplayName => "Sound: Play";
-    public string Category => "Sound";
+    public string DisplayName => "SoundBoard: Play";
+    public string Category => "SoundBoard";
     public string? Description => "Plays, or for \"hold\"/\"toggle\", also stops a sound";
     public string? Icon => "play";
 
@@ -44,7 +44,7 @@ public sealed class SoundPlayAction(SoundEngine engine) : IActionHandler, IActio
     ];
 
     public Task<OptionsResult> GetOptionsAsync(string sourceId, JsonObject currentValues, CancellationToken cancellationToken) =>
-        Task.FromResult(sourceId == "sounds" ? SoundOptionsSource.GetSounds(engine) : new OptionsResult([], $"Unknown options source: {sourceId}"));
+        Task.FromResult(sourceId == "sounds" ? SoundBoardOptionsSource.GetSounds(engine) : new OptionsResult([], $"Unknown options source: {sourceId}"));
 
     public Task ExecuteAsync(ActionContext context, JsonObject settings, CancellationToken cancellationToken)
     {
@@ -82,12 +82,12 @@ public sealed class SoundPlayAction(SoundEngine engine) : IActionHandler, IActio
 
 /// <summary>Stops one sound or every sound. Settings: <c>target</c> (all/one), <c>sound</c> (id, only for
 /// "one"), <c>stopStyle</c> (default/immediate/fade).</summary>
-public sealed class SoundStopAction(SoundEngine engine) : IActionHandler, IActionDescriptor, IOptionsSource
+public sealed class SoundBoardStopAction(SoundBoardEngine engine) : IActionHandler, IActionDescriptor, IOptionsSource
 {
-    public const string TypeId = "sound.stop";
+    public const string TypeId = "soundboard.stop";
     public string Type => TypeId;
-    public string DisplayName => "Sound: Stop";
-    public string Category => "Sound";
+    public string DisplayName => "SoundBoard: Stop";
+    public string Category => "SoundBoard";
     public string? Description => null;
     public string? Icon => "square";
 
@@ -107,7 +107,7 @@ public sealed class SoundStopAction(SoundEngine engine) : IActionHandler, IActio
     ];
 
     public Task<OptionsResult> GetOptionsAsync(string sourceId, JsonObject currentValues, CancellationToken cancellationToken) =>
-        Task.FromResult(sourceId == "sounds" ? SoundOptionsSource.GetSounds(engine) : new OptionsResult([], $"Unknown options source: {sourceId}"));
+        Task.FromResult(sourceId == "sounds" ? SoundBoardOptionsSource.GetSounds(engine) : new OptionsResult([], $"Unknown options source: {sourceId}"));
 
     public Task ExecuteAsync(ActionContext context, JsonObject settings, CancellationToken cancellationToken)
     {
@@ -131,12 +131,12 @@ public sealed class SoundStopAction(SoundEngine engine) : IActionHandler, IActio
 /// <summary>Sets the master volume. Settings: <c>mode</c> (set/adjust/slider), <c>value</c> (0-100, for
 /// "set"), <c>step</c> (±, for "adjust"). "slider" reads the widget's live dragged value
 /// (<see cref="ActionContext.Value"/>), same pattern as <c>core.setVolume</c>.</summary>
-public sealed class SoundSetMasterVolumeAction(SoundEngine engine) : IActionHandler, IActionDescriptor
+public sealed class SoundBoardSetMasterVolumeAction(SoundBoardEngine engine) : IActionHandler, IActionDescriptor
 {
-    public const string TypeId = "sound.setMasterVolume";
+    public const string TypeId = "soundboard.setMasterVolume";
     public string Type => TypeId;
-    public string DisplayName => "Sound: Master volume";
-    public string Category => "Sound";
+    public string DisplayName => "SoundBoard: Master volume";
+    public string Category => "SoundBoard";
     public string? Description => null;
     public string? Icon => "volume-2";
 

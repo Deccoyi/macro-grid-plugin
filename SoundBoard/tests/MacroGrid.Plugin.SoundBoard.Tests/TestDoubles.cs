@@ -2,7 +2,7 @@ using System.Collections.Concurrent;
 using MacroGrid.Plugin.Abstractions;
 using NAudio.Wave;
 
-namespace MacroGrid.Plugin.Sound.Tests;
+namespace MacroGrid.Plugin.SoundBoard.Tests;
 
 /// <summary>In-memory <see cref="IVariableStore"/> — records every Set/Remove so a test can assert on what
 /// the engine published, in addition to reading current values.</summary>
@@ -17,8 +17,8 @@ public sealed class FakeVariableStore : IVariableStore
     public void Remove(string name) => _values.TryRemove(name, out _);
 }
 
-/// <summary>Minimal <see cref="IPluginHost"/> — enough for <see cref="SoundEngine"/> (DataDirectory,
-/// CreateStatusItem). Registration methods are no-ops: these tests drive SoundEngine directly rather than
+/// <summary>Minimal <see cref="IPluginHost"/> — enough for <see cref="SoundBoardEngine"/> (DataDirectory,
+/// CreateStatusItem). Registration methods are no-ops: these tests drive SoundBoardEngine directly rather than
 /// through the real plugin loader.</summary>
 public sealed class FakePluginHost(string dataDirectory) : IPluginHost
 {
