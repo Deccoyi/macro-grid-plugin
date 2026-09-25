@@ -28,8 +28,7 @@ https://raw.githubusercontent.com/<owner>/<repo>/HEAD/macrogrid-index.json
       "versions": [
         {
           "version": "0.2.0",
-          "sdkVersion": "^0.3.0",
-          "minServerVersion": "0.2.0",
+          "macroGrid": "1.0.0",
           "url": "https://github.com/<owner>/<repo>/releases/download/plugin-obs-v0.2.0/obs-0.2.0.zip",
           "sha256": "<hex>",
           "size": 123456,
@@ -47,13 +46,13 @@ https://raw.githubusercontent.com/<owner>/<repo>/HEAD/macrogrid-index.json
 | `formatVersion` | Bugün her zaman `1`. Gelecekteki bir sürümü anlamayan bir sunucu çökmek yerine o kaynağı yok sayar. |
 | `plugins[].id` / `.name` / `.description` / `.author` / `.homepage` | Herhangi bir şey indirilmeden önce Keşfet'te gösterilir. |
 | `plugins[].kind` | `"csharp"` veya `"js"`, `plugin.json` ile eşleşir. |
-| `versions[].sdkVersion` / `.minServerVersion` | Yayımlanan `plugin.json`'dan kopyalanır; böylece sunucu, indirmeden önce uyumsuz bir sürümü soluklaştırabilir. |
+| `versions[].macroGrid` | Yayımlanan `plugin.json`'dan kopyalanır; böylece sunucu, indirmeden önce uyumsuz bir sürümü soluklaştırabilir. `plugin.json`'da hâlâ varsa `sdkVersion` ve `minServerVersion` (1.0.0 öncesi sunucular için eski alanlar) de kopyalanır. |
 | `versions[].url` | `https://github.com/<aynı owner>/<aynı repo>/releases/download/...` olmalıdır — **bir dizin yalnızca kendi deposunun sürümlerine işaret edebilir.** Sunucu başka bir host veya depoyu reddeder. |
 | `versions[].sha256` / `.size` | Zorunlu. İndirilen dosya, zip'i açmadan önce buna göre denetlenir. |
 | `versions[].permissions` | Yalnızca JavaScript; aksi halde boş dizi. Zip'in `plugin.json`'uyla tam eşleşmelidir. |
 | `versions[].signature` | Yalnızca resmî kaynak için anlamlıdır (aşağıya bakın); bu alan olsa bile diğer kaynaklar üçüncü taraf sayılır. |
 
-Sunucu, indirmeden sonra ayrıca şunu denetler: zip'in kendi `plugin.json`'u (`id`, `version`, `sdkVersion`, `minServerVersion`,
+Sunucu, indirmeden sonra ayrıca şunu denetler: zip'in kendi `plugin.json`'u (`id`, `version`, `macroGrid`, varsa eski alanlar,
 `kind`, `permissions`) dizin girdisiyle tam eşleşmelidir, yoksa kurulum reddedilir.
 
 ## Tek eklentili depo (yapıştırılan bir bağlantı)
@@ -64,7 +63,7 @@ Kökünde tek bir eklenti bulunan bir depoda dizin yoktur; sunucu `plugin.json`'
 https://raw.githubusercontent.com/<owner>/<repo>/HEAD/plugin.json
 ```
 
-Bu, `id`, `version`, `sdkVersion`, `minServerVersion`, `kind` ve `permissions` alanlarını verir — herhangi bir şey indirilmeden
+Bu, `id`, `version`, `macroGrid`, `kind` ve `permissions` alanlarını verir — herhangi bir şey indirilmeden
 önce uyumluluğu göstermeye yeter. Paket ve özeti (hash), bu `version`'dan türetilen sabit URL'lerden gelir:
 
 ```
@@ -95,6 +94,6 @@ hesabı, sunucunun resmî olarak kabul edeceği bir paket üretemez.
 ## CI sizin için ne yapar
 
 Eklentiniz bu deponun `scripts/release-plugin.ps1` betiğiyle yayımlanıyorsa, ya da `examples/third-party-release.yml` dosyasını kendi çok eklentili deponuza kopyaladıysanız (bkz.
-[Eklentinizi yayımlama](/tr/guides/publishing)), `sdkVersion`, `minServerVersion`, `sha256`, `size` veya indirme `url`'sini
+[Eklentinizi yayımlama](/tr/guides/publishing)), `macroGrid`, `sha256`, `size` veya indirme `url`'sini
 dizine hiçbir zaman elle yazmazsınız: sürüm adımı bunları derlemeden ve her sürümden sonra `plugin.json`'dan doldurur ve
 `macrogrid-index.json`'u `main`'e geri işler. Yalnızca `plugin.json`'u ve değişiklik günlüklerini doğru tutmanız yeterlidir.

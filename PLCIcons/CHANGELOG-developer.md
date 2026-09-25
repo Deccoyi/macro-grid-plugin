@@ -3,6 +3,8 @@
 This file tracks the version of this plugin only (independent of the main program — see the "Independent versions" section of `../CONTRIBUTING.md`). The short, public changelog is [CHANGELOG.md](CHANGELOG.md).
 
 ## [Unreleased]
+### Changed
+- `plugin.json` declares `"macroGrid": "1.0.0"` (built against SDK 1.0.0). The old `sdkVersion` / `minServerVersion` stay so servers before 1.0.0 still load it.
 
 ## [0.1.3] - 2026-09-25
 ### Changed

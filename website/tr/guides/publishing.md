@@ -4,7 +4,7 @@ Eklentiler düz klasörler olarak dağıtılır. Yayımlamak, insanlara düzenle
 
 ## Kontrol listesi
 
-1. **Manifest.** `id` benzersiz ve sabittir, `version` [anlamsal sürümlemeyi](/tr/basics/compatibility#eklentinizi-sürümleme) izler, `sdkVersion` derleyip test ettiğiniz SDK'dır, `minServerVersion` kullandığınız özelliklere sahip en eski sunucudur.
+1. **Manifest.** `id` benzersiz ve sabittir, `version` [anlamsal sürümlemeyi](/tr/basics/compatibility#eklentinizi-sürümleme) izler, `macroGrid` kullandığınız özelliklere sahip en eski Macro Grid'dir (derlediğiniz SDK sürümü ya da daha eskisi).
 2. **İzinler** (JavaScript). Yalnızca kullandığınız izinleri isteyin; bkz. [İzinler](/tr/reference/permissions). Daha fazla izin isteyen bir güncelleme, kullanıcının yeniden onayını bekler.
 3. **Bir README**: eklentinin ne yaptığını, gereksinimlerini, ayarlarını ve verileri nerede sakladığını anlatır. Bir sırrı düz metin olarak saklıyorsa bunu belirtin.
 4. **Bir lisans.** Bir `LICENSE` dosyası ekleyin; üçüncü taraf kod veya varlık içeriyorsa bir `NOTICE.md` de ekleyin. Her varlığın (simge, yazı tipi) nereden geldiğini ve yeniden dağıtma hakkınız olduğunu belirtin.

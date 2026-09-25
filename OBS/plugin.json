@@ -6,6 +6,7 @@
   "homepage": "https://github.com/Deccoyi/macro-grid-plugin/tree/main/OBS",
   "defaultLanguage": "en",
   "version": "0.2.2",
+  "macroGrid": "1.0.0",
   "sdkVersion": "^0.4.0",
   "minServerVersion": "0.3.2",
   "entry": "MacroGrid.Plugin.Obs.dll",

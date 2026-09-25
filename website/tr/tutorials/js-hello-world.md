@@ -18,7 +18,7 @@ Aşağıdaki her kod bloğu bu klasörden alınmıştır.
 - `kind` değeri `js`, `entry` ise çalışacak betiktir.
 - `permissions` betiğin neye ihtiyaç duyduğunu listeler. `variables` değişken yayınlamasını, `actions` aksiyon kaydetmesini sağlar.
   Kullanıcı, betik çalışmadan önce tam olarak bu listeyi onaylamak zorundadır.
-- `sdkVersion` ve `minServerVersion`, eklentinin hangi SDK ve sunucu sürümüne ihtiyaç duyduğunu söyler (bkz. [Uyumluluk](/tr/basics/compatibility)).
+- `macroGrid`, eklentinin çalıştığı en eski Macro Grid'i söyler (bkz. [Uyumluluk](/tr/basics/compatibility)).
 
 ## Adım 2: bir değişken
 

@@ -20,7 +20,7 @@ mkdir src
 cd src
 dotnet new classlib -n HelloCSharp -f net10.0 -o .
 del Class1.cs
-dotnet add package MacroGrid.Plugin.Abstractions --version 0.3.1
+dotnet add package MacroGrid.Plugin.Abstractions --version 1.0.0
 ```
 
 `MacroGrid.Plugin.Abstractions` is the plugin SDK: the interfaces your plugin implements. Open `HelloCSharp.csproj` and change the

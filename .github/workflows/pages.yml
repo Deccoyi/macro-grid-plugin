@@ -94,7 +94,7 @@ jobs:
 
       - name: Validate the example manifests
         run: |
-          node -e "for (const f of ['examples/hello-js/plugin.json','examples/hello-csharp/plugin.json']) { const m = JSON.parse(require('fs').readFileSync(f,'utf8')); for (const k of ['id','name','version','sdkVersion','minServerVersion','entry','kind']) if (!m[k]) throw new Error(f + ': missing ' + k); }"
+          node -e "for (const f of ['examples/hello-js/plugin.json','examples/hello-csharp/plugin.json']) { const m = JSON.parse(require('fs').readFileSync(f,'utf8')); for (const k of ['id','name','version','macroGrid','entry','kind']) if (!m[k]) throw new Error(f + ': missing ' + k); }"
 
       - name: Set up .NET
         uses: actions/setup-dotnet@v6
