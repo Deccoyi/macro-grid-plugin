@@ -26,6 +26,7 @@ and every plugin here is versioned on its own. Documentation site: <https://decc
 |---|---|---|
 | [OBS/](OBS/) | C# | Controls OBS Studio over obs-websocket v5: scenes, streaming, recording, audio, scene items, text sources, plus about 45 live `obs.*` variables. |
 | [PLCIcons/](PLCIcons/) | C# | A static icon pack of ladder-logic (PLC) symbols for the editor's icon picker. |
+| [Sound/](Sound/) | C# | Plays local sound files from buttons: named clips with volume, loop, overlap and fade control, plus live `sound.*` variables. |
 | [HelloJs/](HelloJs/) | JavaScript | A small example of a sandboxed script plugin: a counter variable, a settings page, one action. |
 
 ## Installing a plugin
@@ -55,6 +56,8 @@ some-folder/
 dotnet build OBS\src\MacroGrid.Plugin.Obs.csproj
 dotnet test  OBS\tests\MacroGrid.Plugin.Obs.Tests\MacroGrid.Plugin.Obs.Tests.csproj
 dotnet build PLCIcons\src\MacroGrid.Plugin.PlcIcons.csproj
+dotnet build Sound\src\MacroGrid.Plugin.Sound.csproj -p:UseLocalSdk=true
+dotnet test  Sound\tests\MacroGrid.Plugin.Sound.Tests\MacroGrid.Plugin.Sound.Tests.csproj -p:UseLocalSdk=true
 ```
 
 ## Writing your own
@@ -79,5 +82,7 @@ into their build output.
 - [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md): index of every component (name, version, license, copyright, URL).
 - [licenses/](licenses/): the original license text of each component.
 
-No plugin ships third-party code or assets; the listed components are used only to build and test. The PLC icons are original
-AI-generated artwork under this repository's MIT license, not taken from an icon library (see [PLCIcons/NOTICE.md](PLCIcons/NOTICE.md)).
+Most plugins ship no third-party code or assets; the listed components are used only to build and test. The Sound plugin is the
+exception — it ships [NAudio](https://github.com/naudio/NAudio) (MIT) for WASAPI playback and audio file decoding (see
+[Sound/NOTICE.md](Sound/NOTICE.md)). The PLC icons are original AI-generated artwork under this repository's MIT license, not taken
+from an icon library (see [PLCIcons/NOTICE.md](PLCIcons/NOTICE.md)).

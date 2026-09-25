@@ -1,0 +1,168 @@
+# Template for a third-party plugin repository: builds a plugin from a tag, publishes the release and records it in
+# macrogrid-index.json. Copy it to .github/workflows/ in your own repository and adjust the plugin map below. It does not
+# sign anything: only this repository's official releases are signed, and they are built and signed on the maintainer's
+# machine with scripts/release-plugin.ps1 instead of this workflow.
+name: Release plugin
+
+# Tag naming: plugin-<name>-v<version>, for example plugin-obs-v0.2.0. See docs/release.md.
+on:
+  push:
+    tags:
+      - 'plugin-*-v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout this repository
+        uses: actions/checkout@v7
+        with:
+          path: macro-grid-plugin
+          fetch-depth: 0
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Resolve plugin from tag
+        id: plugin
+        shell: pwsh
+        working-directory: macro-grid-plugin
+        run: |
+          $tag = '${{ github.ref_name }}'
+          if ($tag -notmatch '^plugin-(?<name>[a-z0-9-]+)-v(?<version>\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?)$') {
+            throw "Tag '$tag' does not match plugin-<name>-v<version>"
+          }
+          $name = $Matches.name
+          $version = $Matches.version
+          $map = @{
+            'obs'       = @{ dir = 'OBS';      proj = 'OBS/src/MacroGrid.Plugin.Obs.csproj' }
+            'plcicons'  = @{ dir = 'PLCIcons'; proj = 'PLCIcons/src/MacroGrid.Plugin.PlcIcons.csproj' }
+            'plc-icons' = @{ dir = 'PLCIcons'; proj = 'PLCIcons/src/MacroGrid.Plugin.PlcIcons.csproj' }
+            'hellojs'   = @{ dir = 'HelloJs';  proj = '' }
+          }
+          $entry = $map[$name]
+          if (-not $entry) { throw "Unknown plugin '$name'" }
+          $manifest = Get-Content (Join-Path $entry.dir 'plugin.json') -Raw | ConvertFrom-Json
+          if ($manifest.version -ne $version) {
+            throw "Tag version $version does not match plugin.json version $($manifest.version)"
+          }
+          $zip = "$($manifest.id)-$version.zip"
+          "dir=$($entry.dir)" | Out-File -Append -Encoding utf8 $env:GITHUB_OUTPUT
+          "proj=$($entry.proj)" | Out-File -Append -Encoding utf8 $env:GITHUB_OUTPUT
+          "version=$version" | Out-File -Append -Encoding utf8 $env:GITHUB_OUTPUT
+          "zip=$zip" | Out-File -Append -Encoding utf8 $env:GITHUB_OUTPUT
+          "id=$($manifest.id)" | Out-File -Append -Encoding utf8 $env:GITHUB_OUTPUT
+          "pluginName=$($manifest.name)" | Out-File -Append -Encoding utf8 $env:GITHUB_OUTPUT
+          "description=$($manifest.description)" | Out-File -Append -Encoding utf8 $env:GITHUB_OUTPUT
+          "sdkVersion=$($manifest.sdkVersion)" | Out-File -Append -Encoding utf8 $env:GITHUB_OUTPUT
+          "minServerVersion=$($manifest.minServerVersion)" | Out-File -Append -Encoding utf8 $env:GITHUB_OUTPUT
+          "kind=$($manifest.kind)" | Out-File -Append -Encoding utf8 $env:GITHUB_OUTPUT
+          $permissions = @($manifest.permissions | Where-Object { $_ })
+          $permissionsJson = ConvertTo-Json -InputObject $permissions -Compress -AsArray
+          "permissionsJson=$permissionsJson" | Out-File -Append -Encoding utf8 $env:GITHUB_OUTPUT
+          "downloadUrl=https://github.com/${{ github.repository }}/releases/download/$tag/$zip" | Out-File -Append -Encoding utf8 $env:GITHUB_OUTPUT
+          "homepage=https://github.com/${{ github.repository }}/tree/main/$($entry.dir)" | Out-File -Append -Encoding utf8 $env:GITHUB_OUTPUT
+
+      - name: Build and package
+        shell: pwsh
+        working-directory: macro-grid-plugin
+        run: |
+          $dir = '${{ steps.plugin.outputs.dir }}'
+          $proj = '${{ steps.plugin.outputs.proj }}'
+          $stage = Join-Path $PWD 'stage'
+          New-Item -ItemType Directory -Force $stage | Out-Null
+          if ($proj) {
+            dotnet build $proj -c Release -o $stage
+            if ($LASTEXITCODE -ne 0) { throw 'build failed' }
+            Get-ChildItem $stage -Filter *.pdb -Recurse | Remove-Item -Force
+          } else {
+            # JavaScript plugin: the folder is the plugin.
+            Copy-Item (Join-Path $dir '*') $stage -Recurse -Force
+          }
+          # Every archive carries the licence texts.
+          Copy-Item 'LICENSE' (Join-Path $stage 'LICENSE') -Force
+          Copy-Item (Join-Path $dir 'NOTICE.md') (Join-Path $stage 'NOTICE.md') -Force
+          Copy-Item 'THIRD_PARTY_NOTICES.md' $stage -Force
+          Compress-Archive -Path (Join-Path $stage '*') -DestinationPath '${{ steps.plugin.outputs.zip }}' -Force
+
+      - name: Hash the package
+        id: sign
+        shell: pwsh
+        working-directory: macro-grid-plugin
+        run: |
+          $zip = '${{ steps.plugin.outputs.zip }}'
+          $bytes = [System.IO.File]::ReadAllBytes($zip)
+          $sha256 = [System.Security.Cryptography.SHA256]::Create().ComputeHash($bytes)
+          $sha256Hex = -join ($sha256 | ForEach-Object { $_.ToString('x2') })
+          Set-Content -Path "$zip.sha256" -Value $sha256Hex -NoNewline -Encoding ascii
+          "sha256=$sha256Hex" | Out-File -Append -Encoding utf8 $env:GITHUB_OUTPUT
+          "size=$($bytes.Length)" | Out-File -Append -Encoding utf8 $env:GITHUB_OUTPUT
+
+
+      - name: Publish the release
+        shell: pwsh
+        working-directory: macro-grid-plugin
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $dir = '${{ steps.plugin.outputs.dir }}'
+          $zip = '${{ steps.plugin.outputs.zip }}'
+          $version = '${{ steps.plugin.outputs.version }}'
+          $notes = "See $dir/CHANGELOG.md for what changed in this version."
+          $args = @('release', 'create', '${{ github.ref_name }}', $zip, "$zip.sha256",
+            '--title', "$dir $version", '--notes', $notes)
+          if ($version -match '-') { $args += '--prerelease' }
+          gh @args
+          if ($LASTEXITCODE -ne 0) { throw 'gh release create failed' }
+
+      - name: Update the plugin index on main
+        shell: pwsh
+        working-directory: macro-grid-plugin
+        env:
+          GH_TOKEN: ${{ github.token }}
+          IDX_ID: ${{ steps.plugin.outputs.id }}
+          IDX_NAME: ${{ steps.plugin.outputs.pluginName }}
+          IDX_DESCRIPTION: ${{ steps.plugin.outputs.description }}
+          IDX_AUTHOR: ${{ github.repository_owner }}
+          IDX_HOMEPAGE: ${{ steps.plugin.outputs.homepage }}
+          IDX_KIND: ${{ steps.plugin.outputs.kind }}
+          IDX_VERSION: ${{ steps.plugin.outputs.version }}
+          IDX_SDK_VERSION: ${{ steps.plugin.outputs.sdkVersion }}
+          IDX_MIN_SERVER_VERSION: ${{ steps.plugin.outputs.minServerVersion }}
+          IDX_URL: ${{ steps.plugin.outputs.downloadUrl }}
+          IDX_SHA256: ${{ steps.sign.outputs.sha256 }}
+          IDX_SIZE: ${{ steps.sign.outputs.size }}
+          IDX_PERMISSIONS_JSON: ${{ steps.plugin.outputs.permissionsJson }}
+        run: |
+          # Every value above comes through an env var, never interpolated into a quoted
+          # pwsh string, so a description containing a quote or backtick cannot break this step.
+          git fetch origin main
+          git checkout main
+          git pull --ff-only origin main
+
+          ./scripts/update-plugin-index.ps1 `
+            -IndexPath (Join-Path $PWD 'macrogrid-index.json') `
+            -Id $env:IDX_ID `
+            -Name $env:IDX_NAME `
+            -Description $env:IDX_DESCRIPTION `
+            -Author $env:IDX_AUTHOR `
+            -Homepage $env:IDX_HOMEPAGE `
+            -Kind $env:IDX_KIND `
+            -Version $env:IDX_VERSION `
+            -SdkVersion $env:IDX_SDK_VERSION `
+            -MinServerVersion $env:IDX_MIN_SERVER_VERSION `
+            -Url $env:IDX_URL `
+            -Sha256 $env:IDX_SHA256 `
+            -Size ([long]$env:IDX_SIZE) `
+            -Permissions ($env:IDX_PERMISSIONS_JSON | ConvertFrom-Json)
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add macrogrid-index.json
+          git commit -m "chore(index): add $env:IDX_ID $env:IDX_VERSION to the plugin index"
+          git push origin main

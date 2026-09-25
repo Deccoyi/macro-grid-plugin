@@ -17,6 +17,9 @@ Every plugin folder has a `plugin.json` at its root. This is the OBS plugin's:
 | `kind` | yes | `"csharp"` or `"js"`. |
 | `defaultLanguage` | no | The language the plugin's own texts are written in, such as `"en"` (the default). Translations come from `locales/<language>.json` next to `plugin.json`; a missing language or text falls back to the text as written. |
 | `permissions` | no | JavaScript only: the permissions the script needs (see [Permissions](/reference/permissions)). Ignored for C# plugins. |
+| `description` | no | A one-line summary shown in Discover and the Store. Additive; older hosts ignore it. |
+| `author` | no | The plugin's author, shown next to `description`. Additive. |
+| `homepage` | no | A URL to the plugin's page or source, shown as a link. Additive. |
 
 ## JSON schema
 
@@ -37,7 +40,10 @@ editor:
     "entry": { "type": "string" },
     "kind": { "enum": ["csharp", "js"] },
     "defaultLanguage": { "type": "string" },
-    "permissions": { "type": ["array", "null"], "items": { "type": "string" } }
+    "permissions": { "type": ["array", "null"], "items": { "type": "string" } },
+    "description": { "type": "string" },
+    "author": { "type": "string" },
+    "homepage": { "type": "string" }
   },
   "additionalProperties": true
 }

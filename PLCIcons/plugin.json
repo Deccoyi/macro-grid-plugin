@@ -1,10 +1,13 @@
 {
   "id": "plc-icons",
   "name": "PLC Icons",
+  "description": "A static icon pack: 29 ladder-logic symbols in their own category in the editor's icon picker.",
+  "author": "Deccoyi",
+  "homepage": "https://github.com/Deccoyi/macro-grid-plugin/tree/main/PLCIcons",
   "defaultLanguage": "en",
-  "version": "0.1.2",
-  "sdkVersion": "^0.3.0",
-  "minServerVersion": "0.1.0",
+  "version": "0.1.3",
+  "sdkVersion": "^0.4.0",
+  "minServerVersion": "0.3.2",
   "entry": "MacroGrid.Plugin.PlcIcons.dll",
   "kind": "csharp",
   "permissions": null

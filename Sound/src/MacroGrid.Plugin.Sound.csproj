@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Target framework, SDK reference and the files that travel with the plugin: see build/Plugin.props. -->
+  <Import Project="$(MSBuildThisFileDirectory)..\..\build\Plugin.props" />
+
+  <PropertyGroup>
+    <RootNamespace>MacroGrid.Plugin.Sound</RootNamespace>
+    <AssemblyName>MacroGrid.Plugin.Sound</AssemblyName>
+    <!-- WasapiOut and the CoreAudio device enumeration are Windows-only APIs. -->
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <!-- A plugin is loaded by PluginLoadContext (AssemblyDependencyResolver), not launched via `dotnet exec`,
+         so NAudio's DLLs must sit physically next to the plugin's own DLL — its .deps.json alone resolves
+         fine on the machine that built it (NuGet's global cache still has the path), but not once the plugin
+         folder is copied anywhere else, which is exactly what "Install from Folder" and every release zip do. -->
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- MIT. The only plugin so far that ships a third-party dependency in its output — see
+         THIRD_PARTY_NOTICES.md and licenses/naudio/. -->
+    <PackageReference Include="NAudio" Version="2.2.1" />
+  </ItemGroup>
+
+</Project>

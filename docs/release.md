@@ -1,6 +1,6 @@
 # Releasing a plugin
 
-Every plugin is released on its own, from a tag. Releases are cut from `main`.
+Every plugin is released on its own, from a tag. Releases are cut from `main`, on the maintainer's machine: the plugin-signing key never leaves it.
 
 ## Tag naming
 
@@ -14,22 +14,29 @@ plugin-<name>-v<version>
 | `PLCIcons/` | `plcicons` | `plugin-plcicons-v0.1.1` |
 | `HelloJs/` | `hellojs` | `plugin-hellojs-v0.1.0` |
 
-`<version>` is the plugin's own semantic version and must equal `version` in that plugin's `plugin.json`; the workflow refuses a tag
-that does not match. The server and the phone app use their own tag schemes (`server-v...`, `client-v...`) in their own repositories.
+`<version>` is the plugin's own semantic version and must equal `version` in that plugin's `plugin.json`; the release script takes the
+version from `plugin.json` and refuses a tag that already exists. The server and the phone app use their own tag schemes (`server-v...`, `client-v...`) in their own repositories.
 
 ## Checklist
 
 1. On `dev`, move the plugin's `[Unreleased]` entries in both changelogs to a dated version heading.
 2. Set `version` in the plugin's `plugin.json` to the new version. Check `sdkVersion` and `minServerVersion` are still honest.
 3. Make sure CI is green on `dev`, then merge `dev` into `main`.
-4. Tag the merge commit on `main` and push the tag:
+4. Check out `main` (clean, equal to `origin/main`) and run the release script. Without `-Publish` it only builds and signs into a
+   temp folder, so you can inspect the zip first:
    ```
-   git tag plugin-obs-v0.2.0
-   git push origin plugin-obs-v0.2.0
+   ./scripts/release-plugin.ps1 -Name obs
+   ./scripts/release-plugin.ps1 -Name obs -Publish
    ```
-5. The `Release plugin` workflow (`.github/workflows/release.yml`) builds that plugin, zips the output together with `LICENSE`,
-   `NOTICE.md` and `THIRD_PARTY_NOTICES.md`, and creates a **draft** pre-release. Review the draft, paste the plugin's public
-   `CHANGELOG.md` entry into the notes, and publish it.
+   `-Name` is `obs`, `plc-icons` or `hellojs`. The key defaults to `%USERPROFILE%\signing\plugin-signing\plugin-signing-private.pem`
+   (`-KeyPath` overrides it). C# plugins need the SDK version they reference to exist on nuget.org first.
+5. The script builds that plugin, zips the output together with `LICENSE`, `NOTICE.md` and `THIRD_PARTY_NOTICES.md`, hashes the zip
+   (`<zip>.sha256`) and signs it with the plugin-signing key (`<zip>.sig`, `scripts/sign-package.cs`), then publishes the release with
+   `gh` — not a draft, tag `plugin-<name>-v<version>`. It then commits the plugin's new version into `macrogrid-index.json` on `main`
+   (`scripts/update-plugin-index.ps1`), the file the host and the Store read; see
+   [Source index](../website/reference/source-index.md) for its format.
+6. Every official release must be signed, so there is no unsigned path. Keep the key folder backed up and out of every repository.
+   `.github/workflows` has no release workflow on purpose; `examples/third-party-release.yml` is a signing-free template for other repositories.
 
 ## Installing a released plugin
 

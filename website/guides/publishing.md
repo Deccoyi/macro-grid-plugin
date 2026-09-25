@@ -35,8 +35,24 @@ plugin-<name>-v<version>
 ```
 
 for example `plugin-obs-v0.2.0`. The version must equal `version` in the plugin's `plugin.json`. A release workflow builds that
-plugin, zips the output with its licence files and creates a draft pre-release for review. The rules for contributing are in
-[Repository rules](/guides/repo-rules).
+plugin, zips the output with its licence files, hashes and signs the zip, publishes the release (not a draft), and commits the
+plugin's new version into `macrogrid-index.json` on `main` — see [Source index](/reference/source-index) for that file's format
+and what the signature covers. The rules for contributing are in [Repository rules](/guides/repo-rules).
+
+## Running your own source
+
+The host can install from any public GitHub repository the user adds, not only this one — with a clear third-party warning,
+since only this repository's releases are signed with the official key. Two shapes are supported:
+
+- **A multi-plugin repository**, added as a source in the Discover tab: keep a `macrogrid-index.json` at your repository's root
+  on `main`, listing your own plugins and pointing only at your own repository's releases. Copy this repository's
+  `examples/third-party-release.yml` and `scripts/update-plugin-index.ps1` as a starting point and drop the signing step (you have
+  no official key, and a signature you added yourself would not be trusted anyway).
+- **A single-plugin repository**, installed by pasting its URL: keep `plugin.json` at the root on `main`, always matching the
+  latest release, tagged `v<version>` with a `<id>-<version>.zip` and a `<id>-<version>.zip.sha256` asset.
+
+Either way, `macrogrid-index.json` at your root instead of `plugin.json` is what tells the host "this is a multi-plugin
+repository" — see [Source index](/reference/source-index) for the exact schema.
 
 ## Getting your plugin into the Store
 

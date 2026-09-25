@@ -27,7 +27,16 @@ Resmî depoya bir eklenti katkısı yaparsanız, her eklenti `main` üzerindeki 
 plugin-<name>-v<version>
 ```
 
-örneğin `plugin-obs-v0.2.0`. Sürüm, eklentinin `plugin.json` dosyasındaki `version` ile aynı olmalıdır. Bir sürüm iş akışı (release workflow) o eklentiyi derler, çıktıyı lisans dosyalarıyla zipler ve inceleme için taslak bir ön sürüm (pre-release) oluşturur. Katkı kuralları [Depo kuralları](/tr/guides/repo-rules) sayfasındadır.
+örneğin `plugin-obs-v0.2.0`. Sürüm, eklentinin `plugin.json` dosyasındaki `version` ile aynı olmalıdır. Bir sürüm iş akışı (release workflow) o eklentiyi derler, çıktıyı lisans dosyalarıyla zipler, zip'i özetler (hash) ve imzalar, sürümü (taslak değil) yayımlar, ve eklentinin yeni sürümünü `main` üzerindeki `macrogrid-index.json` dosyasına işler — bu dosyanın biçimi ve imzanın neyi kapsadığı için bkz. [Kaynak dizini](/tr/reference/source-index). Katkı kuralları [Depo kuralları](/tr/guides/repo-rules) sayfasındadır.
+
+## Kendi kaynağınızı çalıştırma
+
+Sunucu, kullanıcının eklediği herhangi bir genel GitHub deposundan da eklenti kurabilir, yalnızca bu depo değil — ama açık bir üçüncü taraf uyarısıyla, çünkü yalnızca bu deponun sürümleri resmî anahtarla imzalanır. İki biçim desteklenir:
+
+- **Çok eklentili bir depo**, Keşfet sekmesinde kaynak olarak eklenir: deponuzun kökünde, `main` üzerinde, yalnızca kendi sürümlerinize işaret eden bir `macrogrid-index.json` tutun. Bu deponun `examples/third-party-release.yml` ve `scripts/update-plugin-index.ps1` dosyalarını başlangıç noktası olarak kopyalayın ve imzalama adımını çıkarın (resmî bir anahtarınız yok, ve kendiniz eklediğiniz bir imzaya zaten güvenilmez).
+- **Tek eklentili bir depo**, URL'si yapıştırılarak kurulur: kökte, her zaman en son sürümle eşleşen bir `plugin.json` tutun; `v<version>` etiketiyle, bir `<id>-<version>.zip` ve bir `<id>-<version>.zip.sha256` varlığıyla.
+
+Kökte `plugin.json` yerine `macrogrid-index.json` bulunması, sunucuya "bu çok eklentili bir depo" olduğunu söyler — tam şema için bkz. [Kaynak dizini](/tr/reference/source-index).
 
 ## Eklentinizi Mağaza'ya ekleme
 

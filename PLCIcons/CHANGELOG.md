@@ -4,6 +4,11 @@ New features and fixes in the PLC Icons pack. For technical details, see [CHANGE
 
 ## Unreleased
 
+## 0.1.3 - 2026-09-25
+### Changed
+- **Needs Macro Grid 0.3.2 or newer:** this version works with the new plugin system, so an older Macro Grid will not load it.
+- **Plugin catalog:** the plugin now has a description and author for the Discover tab.
+
 ## 0.1.2 - 2026-09-24
 ### New
 - **Languages:** The pack name is shown in Turkish or English, following the language of the app.

@@ -6,7 +6,7 @@ on:
   # message to skip a run entirely, or start it by hand from the Actions tab (workflow_dispatch).
   push:
     branches: [main]
-    paths-ignore: ["**.md", "docs/**", "licenses/**", "THIRD_PARTY_NOTICES.md", ".github/ISSUE_TEMPLATE/**", ".github/PULL_REQUEST_TEMPLATE.md"]
+    paths-ignore: ["**.md", "docs/**", "licenses/**", "THIRD_PARTY_NOTICES.md", ".github/ISSUE_TEMPLATE/**", ".github/PULL_REQUEST_TEMPLATE.md", "macrogrid-index.json"]
   pull_request:
     branches: [main, dev]
   workflow_dispatch:
