@@ -1,8 +1,10 @@
-# Changelog — Sound
+# Changelog — SoundBoard
 
-New features and fixes in the Sound plugin. For technical details, see [CHANGELOG-developer.md](CHANGELOG-developer.md).
+New features and fixes in the SoundBoard plugin. For technical details, see [CHANGELOG-developer.md](CHANGELOG-developer.md).
 
 ## Unreleased
+
+## 0.1.0 - 2026-09-25
 ### New
 - First version: play local sound files from buttons. Pick a file, give it a name, a volume and a loop switch, and bind it to a
   widget — full play, hold-to-play or toggle. Overlap several sounds or have a new one cut the others off. Fade in and out. A master

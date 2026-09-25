@@ -3,10 +3,10 @@ using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using MacroGrid.Plugin.Abstractions;
 
-namespace MacroGrid.Plugin.Sound;
+namespace MacroGrid.Plugin.SoundBoard;
 
 /// <summary>One row of the "sounds" list. <see cref="Id"/> is a permanent short id ("s1", "s2", ...) assigned
-/// by <see cref="SoundSettingsPage.Save"/> the first time a row is saved, and used to name its
+/// by <see cref="SoundBoardSettingsPage.Save"/> the first time a row is saved, and used to name its
 /// <c>sound.&lt;id&gt;.*</c> variables and its "sound" action option — renaming or reordering the row later
 /// never changes it. <see cref="File"/> is the absolute path as the person picked it; the file is never
 /// copied into the plugin's own folder, so moving it means picking it again.</summary>
@@ -20,7 +20,7 @@ public sealed class SoundEntry
 }
 
 /// <summary>Persisted as this plugin's own <c>settings.json</c> in <see cref="IPluginHost.DataDirectory"/>.</summary>
-public sealed class SoundSettingsData
+public sealed class SoundBoardSettingsData
 {
     /// <summary>A CoreAudio device id, or null/empty for the system default render device.</summary>
     public string? OutputDeviceId { get; set; }
@@ -33,7 +33,7 @@ public sealed class SoundSettingsData
     /// the ones currently playing).</summary>
     public string OverlapMode { get; set; } = "overlap";
 
-    /// <summary>"immediate" or "fade" — the default a <c>sound.stop</c>/<c>sound.play</c> binding falls back
+    /// <summary>"immediate" or "fade" — the default a <c>soundboard.stop</c>/<c>soundboard.play</c> binding falls back
     /// to when its own <c>stopStyle</c> field is left at "default".</summary>
     public string StopStyle { get; set; } = "immediate";
 
@@ -42,24 +42,24 @@ public sealed class SoundSettingsData
 
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web) { WriteIndented = true };
 
-    public static SoundSettingsData LoadOrCreate(string dataDirectory)
+    public static SoundBoardSettingsData LoadOrCreate(string dataDirectory)
     {
         Directory.CreateDirectory(dataDirectory);
         var path = Path.Combine(dataDirectory, "settings.json");
         if (!File.Exists(path))
         {
-            var defaults = new SoundSettingsData();
+            var defaults = new SoundBoardSettingsData();
             File.WriteAllText(path, JsonSerializer.Serialize(defaults, JsonOptions));
             return defaults;
         }
 
         try
         {
-            return JsonSerializer.Deserialize<SoundSettingsData>(File.ReadAllText(path), JsonOptions) ?? new SoundSettingsData();
+            return JsonSerializer.Deserialize<SoundBoardSettingsData>(File.ReadAllText(path), JsonOptions) ?? new SoundBoardSettingsData();
         }
         catch (JsonException)
         {
-            return new SoundSettingsData();
+            return new SoundBoardSettingsData();
         }
     }
 
@@ -74,7 +74,7 @@ public sealed class SoundSettingsData
 /// loop, a preview button and a missing-file notice), master volume and the overlap/stop/fade defaults.
 /// Also answers the "devices" dropdown (<see cref="IOptionsSource"/>) and the "preview" button
 /// (<see cref="ISettingsCommandHandler"/>).</summary>
-public sealed class SoundSettingsPage(IPluginHost host, SoundEngine engine) : IPluginSettingsPage, IOptionsSource, ISettingsCommandHandler
+public sealed class SoundBoardSettingsPage(IPluginHost host, SoundBoardEngine engine) : IPluginSettingsPage, IOptionsSource, ISettingsCommandHandler
 {
     /// <summary>Only formats AudioFileReader decodes reliably on a stock Windows install: .wav/.mp3/.aiff
     /// natively, the rest through Media Foundation, which ships a FLAC decoder since Windows 10 1709 but has
@@ -182,7 +182,7 @@ public sealed class SoundSettingsPage(IPluginHost host, SoundEngine engine) : IP
             }
         }
 
-        var data = new SoundSettingsData
+        var data = new SoundBoardSettingsData
         {
             OutputDeviceId = values["outputDevice"]?.GetValue<string>(),
             Sounds = sounds,

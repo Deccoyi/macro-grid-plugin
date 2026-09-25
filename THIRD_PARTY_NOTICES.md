@@ -3,7 +3,7 @@
 This repository's own code and assets are MIT licensed, see [LICENSE](LICENSE) (copyright (c) 2026 Deccoyi).
 
 **What ships:** most plugins contain no third-party code or assets — their build output is only their own code, plus their `LICENSE`
-and `NOTICE.md`. The Sound plugin is the exception: it ships NAudio (see below) inside its build output, because shared-mode WASAPI
+and `NOTICE.md`. The SoundBoard plugin is the exception: it ships NAudio (see below) inside its build output, because shared-mode WASAPI
 playback and audio file decoding are not something .NET provides on its own. Every other component below is used to build or test
 only, and is not distributed with a plugin. The original license texts are kept in [licenses/](licenses/). This file is an index, not
 a replacement for those texts.
@@ -28,7 +28,7 @@ Notes:
   Feather MIT text that Lucide's license file contains) to `licenses/lucide/` and list it here.
 - The OBS plugin speaks the obs-websocket v5 protocol to a running OBS Studio. It contains no OBS or obs-websocket code.
 - HelloJs and the plugin code of OBS and PLCIcons use only what ships with .NET or the plugin host.
-- The Sound plugin's `NAudio.WinForms`, `NAudio.Midi` and `NAudio.Asio` sub-packages come along as NAudio's own dependencies but are
+- The SoundBoard plugin's `NAudio.WinForms`, `NAudio.Midi` and `NAudio.Asio` sub-packages come along as NAudio's own dependencies but are
   not used by the plugin's code (it only opens a shared-mode WASAPI output and decodes audio files); they are still shipped because
   NuGet resolves the whole `NAudio` metapackage as one unit, and all of it is the same MIT license.
 

@@ -17,7 +17,7 @@
   ./scripts/release-plugin.ps1 -Name hellojs -Publish   # also release and update the index
 #>
 param(
-    [Parameter(Mandatory)] [ValidateSet('obs', 'plc-icons', 'hellojs')] [string]$Name,
+    [Parameter(Mandatory)] [ValidateSet('obs', 'plc-icons', 'hellojs', 'soundboard')] [string]$Name,
     [string]$KeyPath = (Join-Path $env:USERPROFILE 'signing\plugin-signing\plugin-signing-private.pem'),
     [string]$OutDir = (Join-Path ([System.IO.Path]::GetTempPath()) 'macrogrid-plugin-release'),
     [switch]$Publish
@@ -31,6 +31,7 @@ $plugins = @{
     'obs'       = @{ dir = 'OBS';      proj = 'OBS/src/MacroGrid.Plugin.Obs.csproj' }
     'plc-icons' = @{ dir = 'PLCIcons'; proj = 'PLCIcons/src/MacroGrid.Plugin.PlcIcons.csproj' }
     'hellojs'   = @{ dir = 'HelloJs';  proj = '' }
+    'soundboard' = @{ dir = 'SoundBoard'; proj = 'SoundBoard/src/MacroGrid.Plugin.SoundBoard.csproj' }
 }
 $entry = $plugins[$Name]
 $owner = 'Deccoyi'
@@ -76,8 +77,18 @@ Copy-Item (Join-Path $entry.dir 'NOTICE.md') (Join-Path $stage 'NOTICE.md') -For
 Copy-Item 'THIRD_PARTY_NOTICES.md' $stage -Force
 
 $zip = Join-Path $OutDir $zipName
-Add-Type -AssemblyName System.IO.Compression.FileSystem
-[System.IO.Compression.ZipFile]::CreateFromDirectory($stage, $zip, [System.IO.Compression.CompressionLevel]::Optimal, $false)
+# Entries use forward slashes; Windows PowerShell 5.1's CreateFromDirectory can write backslashes.
+Add-Type -AssemblyName System.IO.Compression, System.IO.Compression.FileSystem
+$stageRoot = (Resolve-Path $stage).Path.TrimEnd('\') + '\'
+$archive = [System.IO.Compression.ZipFile]::Open($zip, [System.IO.Compression.ZipArchiveMode]::Create)
+try {
+    foreach ($file in Get-ChildItem $stage -Recurse -File) {
+        $entryName = $file.FullName.Substring($stageRoot.Length).Replace('\', '/')
+        [void][System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($archive, $file.FullName, $entryName, [System.IO.Compression.CompressionLevel]::Optimal)
+    }
+} finally {
+    $archive.Dispose()
+}
 
 # Hash and sign (sign-package.cs prints sha256=, size= and signature= lines).
 $result = @{}
