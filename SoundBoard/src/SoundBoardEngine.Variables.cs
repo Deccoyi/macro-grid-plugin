@@ -8,7 +8,8 @@ public sealed partial class SoundBoardEngine
 {
     public IEnumerable<VariableInfo> Describe()
     {
-        yield return new("soundboard.nowPlaying", "Name of the most recently started sound", "{soundboard.nowPlaying}", Category);
+        yield return new("soundboard.nowPlaying", "Name of the sound playing now (empty when nothing plays)", "{soundboard.nowPlaying}", Category);
+        yield return new("soundboard.lastPlayed", "Name of the most recently started sound", "{soundboard.lastPlayed}", Category);
         yield return new("soundboard.masterVolume", "Master volume (%)", "{soundboard.masterVolume|0}", Category) { Type = VariableType.Number, Unit = "%" };
 
         SoundBoardSettingsData settings;
@@ -84,11 +85,16 @@ public sealed partial class SoundBoardEngine
         {
             var voice = playing[entry.Id].FirstOrDefault();
             store.Set($"soundboard.{entry.Id}.playing", voice is not null);
-            if (voice is null) continue;
+            if (voice is null)
+            {
+                store.Set($"soundboard.{entry.Id}.remaining", TimeSpan.Zero);
+                continue;
+            }
 
             var remaining = voice.Duration - voice.Position;
             store.Set($"soundboard.{entry.Id}.remaining", remaining < TimeSpan.Zero ? TimeSpan.Zero : remaining);
         }
+        PublishNowPlaying();
     }
 
     private void PublishStaticVariables(IVariableStore store)
@@ -96,6 +102,8 @@ public sealed partial class SoundBoardEngine
         SoundBoardSettingsData settings;
         lock (_lock) settings = _settings;
         store.Set("soundboard.masterVolume", settings.MasterVolume);
+        store.Set("soundboard.nowPlaying", "");
+        store.Set("soundboard.lastPlayed", "");
         foreach (var entry in settings.Sounds)
         {
             store.Set($"soundboard.{entry.Id}.name", entry.Name.Length > 0 ? entry.Name : Path.GetFileNameWithoutExtension(entry.File));

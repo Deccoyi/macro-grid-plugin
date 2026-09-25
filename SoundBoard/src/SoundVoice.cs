@@ -12,15 +12,24 @@ internal sealed class LoopingSampleProvider(AudioFileReader reader) : ISamplePro
 
     public WaveFormat WaveFormat => reader.WaveFormat;
 
+    /// <summary>Fills the whole buffer while looping (rewinding as often as needed): the mixer drops any input
+    /// that returns fewer samples than it asked for, which would end a looping voice at the first end of file.</summary>
     public int Read(float[] buffer, int offset, int count)
     {
-        var read = reader.Read(buffer, offset, count);
-        if (read == 0 && Loop)
+        var total = 0;
+        while (total < count)
         {
-            reader.Position = 0;
-            read = reader.Read(buffer, offset, count);
+            var read = reader.Read(buffer, offset + total, count - total);
+            if (read == 0)
+            {
+                if (!Loop) break;
+                reader.Position = 0;
+                read = reader.Read(buffer, offset + total, count - total);
+                if (read == 0) break; // an empty file: nothing to loop
+            }
+            total += read;
         }
-        return read;
+        return total;
     }
 }
 
@@ -41,8 +50,8 @@ internal sealed class SoundVoice : ISampleProvider, IDisposable
     public string WidgetId { get; }
     public bool IsPreview { get; }
 
-    /// <summary>True once the chain has read 0 samples (file ended without looping, or an immediate stop
-    /// forced it) — <see cref="SoundBoardEngine"/> reaps it from <see cref="_voices"/> and disposes it on the
+    /// <summary>True once the chain returned fewer samples than asked for (file ended without looping, or an
+    /// immediate stop forced it) — <see cref="SoundBoardEngine"/> reaps it from <see cref="_voices"/> and disposes it on the
     /// next tick. Not observed by the mixer itself; that happens independently via its own ReadFully logic.</summary>
     public bool Finished { get; private set; }
 
@@ -93,7 +102,9 @@ internal sealed class SoundVoice : ISampleProvider, IDisposable
     public int Read(float[] buffer, int offset, int count)
     {
         var read = _output.Read(buffer, offset, count);
-        if (read == 0) Finished = true;
+        // A short read is the end: the mixer removes an input on its first short read and never reads it again,
+        // so waiting for a read of exactly 0 would leave the voice (and its "playing" variable) stuck on.
+        if (read < count) Finished = true;
         return read;
     }
 
