@@ -38,6 +38,11 @@ version from `plugin.json` and refuses a tag that already exists. The server and
    [Source index](../website/reference/source-index.md) for its format.
 6. Every official release must be signed, so there is no unsigned path. Keep the key folder backed up and out of every repository.
    `.github/workflows` has no release workflow on purpose; `examples/third-party-release.yml` is a signing-free template for other repositories.
+7. Publishing the release starts the **Documentation site** workflow (`pages.yml`), which rebuilds the Store with the new zip and
+   changelog. Check that the run finished green (`gh run list --workflow pages.yml -L 1`) and the plugin's Store page shows the new
+   version. A new plugin needs no extra step: the Store lists every top-level folder with a `plugin.json` (`website/store/catalog.json`
+   only sets its category and icon). If `deploy` fails with "not allowed to deploy to github-pages due to environment protection
+   rules", the `github-pages` environment must allow the tag pattern `plugin-*-v*` (Settings, Environments).
 
 ## Installing a released plugin
 

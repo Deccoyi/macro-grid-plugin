@@ -43,8 +43,8 @@ Kökte `plugin.json` yerine `macrogrid-index.json` bulunması, sunucuya "bu çok
 [Mağaza](/tr/store/), bu deponun eklentilerini listeler ve kendini depodan ve GitHub sürümlerinden oluşturur; bu yüzden bir eklentiyi listelemek üç adımdır (katkı için önce [Depo kuralları](/tr/guides/repo-rules) sayfasını izleyin):
 
 1. **Klasörü ekleyin**: depo kökünde (örneğin `MyPlugin/`) `plugin.json`, bir `README.md` (ilk bölümü "Ne yapar" olur, ilk paragrafı kart metni olur), bir `CHANGELOG.md` ve yukarıda anlatıldığı gibi lisans dosyaları bulunsun.
-2. **`website/store/catalog.json` dosyasına bir satır ekleyin**: `{ "id": "my-plugin", "dir": "MyPlugin", "category": "Integrations", "icon": "code" }`.
-   `id`, `plugin.json` içindeki `id` ile aynı olmalıdır. `icon`, `website/public/store/icons/` içindeki bir SVG'nin adıdır; yoksa kart bir harf gösterir. En başa sıralamak için `"featured": true` ekleyin.
+2. **İsterseniz `website/store/catalog.json` dosyasına bir satır ekleyin**: `{ "id": "my-plugin", "dir": "MyPlugin", "category": "Integrations", "icon": "code" }`.
+   Mağaza, `plugin.json` içeren her kök klasörü bu satır olmadan da listeler (kategori "Diğer", ikon yok); satır yalnızca kartın görünümünü belirler. `id`, `plugin.json` içindeki `id` ile aynı olmalıdır. `icon`, `website/public/store/icons/` içindeki bir SVG'nin adıdır; yoksa kart bir harf gösterir. En başa sıralamak için `"featured": true` ekleyin.
 3. **Bir sürüm etiketleyin**: `plugin-<id>-vX.Y.Z` (örneğin `plugin-my-plugin-v0.1.0`), [Sürümler](#bu-depodaki-surumler) bölümünde anlatıldığı gibi. Sürüm yayımlandığında Mağaza, zip dosyasını indirme düğmesi olarak gösterir. Site, bir sürüm yayımlandığında, düzenlendiğinde veya silindiğinde yeniden oluşturulur.
 
 Taslak sürümler asla gösterilmez. Bir eklentinin yayımlanmış sürümü olana kadar kartı GitHub Releases sayfasına bağlanır.

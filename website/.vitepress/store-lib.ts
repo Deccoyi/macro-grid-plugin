@@ -203,6 +203,14 @@ async function build(): Promise<StorePlugin[]> {
   } catch (e) {
     console.warn(`[store] catalog.json is invalid (${(e as Error).message}).`)
   }
+  // Every top-level folder with a plugin.json is listed; catalog.json only adds optional display details (category,
+  // icon, featured, order). A new plugin therefore shows up in the Store without any extra step.
+  const listed = new Set(catalog.map((e) => e.dir))
+  for (const d of fs.readdirSync(root, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+    if (d.isDirectory() && !listed.has(d.name) && fs.existsSync(path.join(root, d.name, 'plugin.json'))) {
+      catalog.push({ id: d.name.toLowerCase(), dir: d.name })
+    }
+  }
   const all = await fetchReleases()
   const published = all.filter((r) => r && !r.draft && typeof r.tag_name === 'string')
   const plugins: StorePlugin[] = []

@@ -93,7 +93,7 @@ const tr: typeof en = {
   download: 'İndir',
   getOnGithub: "GitHub'dan edinin",
   details: 'Ayrıntılar',
-  categories: { Examples: 'Örnekler', 'Icon packs': 'Simge paketleri', Integrations: 'Entegrasyonlar', Other: 'Diğer' },
+  categories: { Audio: 'Ses', Examples: 'Örnekler', 'Icon packs': 'Simge paketleri', Integrations: 'Entegrasyonlar', Other: 'Diğer' },
 
   store: 'Mağaza',
   notFound: 'Eklenti bulunamadı.',
