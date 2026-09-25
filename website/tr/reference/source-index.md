@@ -77,10 +77,10 @@ sunucu bunu doğrudan kurmak yerine kaynak olarak eklemeyi önerir (yukarıdaki 
 
 ## Resmî kaynak imzalama
 
-Resmî depo ([`Deccoyi/macro-grid-plugin`](https://github.com/Deccoyi/macro-grid-plugin)) ayrıca her sürümü, GitHub Actions'tan
-hiç çıkmayan özel bir ECDSA P-256 anahtarıyla imzalar:
+Resmî depo ([`Deccoyi/macro-grid-plugin`](https://github.com/Deccoyi/macro-grid-plugin)) ayrıca her sürümü, yayımlayanın
+makinesinden hiç çıkmayan özel bir ECDSA P-256 anahtarıyla imzalar:
 
-- Sürüm iş akışı, zip'in baytlarını okur, `ECDsa.SignData(bytes, HashAlgorithmName.SHA256)` ile imzalar (onaltılık `sha256`
+- Sürüm betiği (`scripts/release-plugin.ps1`), zip'in baytlarını okur, `ECDsa.SignData(bytes, HashAlgorithmName.SHA256)` ile imzalar (onaltılık `sha256`
   metnini değil — ham dosya baytlarını) ve sonucu base64 ile `<zip>.sig` olarak kodlar; bu bir IEEE P1363 (`r`&#8203;`||`&#8203;`s`,
   64 bayt) imzasıdır.
 - `macrogrid-index.json`, o sürümün `signature` alanında aynı base64 değerini taşır.
@@ -89,12 +89,12 @@ hiç çıkmayan özel bir ECDSA P-256 anahtarıyla imzalar:
 - Resmî olmayan bir kaynağın girdisindeki bir imza, onu resmî yapmaz — yalnızca gömülü resmî kaynak URL'si üzerinden alınan
   paketler bu şekilde doğrulanır ve güvenilir. Geri kalan her şey her zaman üçüncü taraf olarak gösterilir.
 
-Bu yüzden özel anahtar yalnızca bu depoda bir GitHub Actions gizli anahtarıdır (`PLUGIN_SIGNING_PRIVATE_KEY`) ve `release.yml`,
-bu gizli anahtar eksikse sürümü yayımlamayı reddeder.
+Bu yüzden resmî sürümler yerelde derlenip imzalanır ve özel anahtar hiçbir zaman GitHub'da tutulmaz: ele geçirilmiş bir GitHub
+hesabı, sunucunun resmî olarak kabul edeceği bir paket üretemez.
 
 ## CI sizin için ne yapar
 
-Eklentiniz bu deponun `release.yml`'inden yayımlanıyorsa, ya da bu iş akışını kendi çok eklentili deponuza kopyaladıysanız (bkz.
+Eklentiniz bu deponun `scripts/release-plugin.ps1` betiğiyle yayımlanıyorsa, ya da `examples/third-party-release.yml` dosyasını kendi çok eklentili deponuza kopyaladıysanız (bkz.
 [Eklentinizi yayımlama](/tr/guides/publishing)), `sdkVersion`, `minServerVersion`, `sha256`, `size` veya indirme `url`'sini
-dizine hiçbir zaman elle yazmazsınız: iş akışı bunları derlemeden ve her sürümden sonra `plugin.json`'dan doldurur ve
+dizine hiçbir zaman elle yazmazsınız: sürüm adımı bunları derlemeden ve her sürümden sonra `plugin.json`'dan doldurur ve
 `macrogrid-index.json`'u `main`'e geri işler. Yalnızca `plugin.json`'u ve değişiklik günlüklerini doğru tutmanız yeterlidir.
