@@ -1,0 +1,67 @@
+[
+  {
+    "name": "regression",
+    "color": "b60205",
+    "description": "It worked in an earlier version"
+  },
+  {
+    "name": "priority: high",
+    "color": "b60205",
+    "description": "Blocks people: a crash, lost data or a broken install"
+  },
+  {
+    "name": "needs-triage",
+    "color": "fbca04",
+    "description": "New issue, not looked at yet (added automatically)"
+  },
+  {
+    "name": "needs-info",
+    "color": "e4e669",
+    "description": "We asked a question and are waiting for the reporter"
+  },
+  {
+    "name": "confirmed",
+    "color": "d9c400",
+    "description": "Reproduced or accepted by a maintainer"
+  },
+  {
+    "name": "in progress",
+    "color": "b7a600",
+    "description": "Someone is working on it"
+  },
+  {
+    "name": "plugin-request",
+    "color": "5319e7",
+    "description": "A request for a new plugin"
+  },
+  {
+    "name": "plugin: obs",
+    "color": "5319e7",
+    "description": "The OBS plugin"
+  },
+  {
+    "name": "plugin: plc-icons",
+    "color": "5319e7",
+    "description": "The PLC Icons plugin"
+  },
+  {
+    "name": "plugin: hello-js",
+    "color": "5319e7",
+    "description": "The JavaScript example plugin"
+  },
+  {
+    "name": "area: sdk",
+    "color": "1d76db",
+    "description": "The plugin SDK and its docs"
+  },
+  {
+    "name": "area: store",
+    "color": "1d76db",
+    "description": "The plugin store website"
+  },
+  {
+    "name": "area: docs-site",
+    "color": "1d76db",
+    "description": "The documentation website"
+  }
+]
