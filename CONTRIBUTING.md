@@ -93,11 +93,13 @@ against, `minServerVersion` to the oldest server that has what you use.
 
 ## Changelogs
 
-Update both changelogs of the plugin you changed, under `[Unreleased]`, when a change is finished:
+When a change is finished, update the changelogs of the plugin you changed, under `[Unreleased]`:
 
-- `CHANGELOG-developer.md`: detailed and technical, in [Keep a Changelog](https://keepachangelog.com/) style (Added / Changed / Fixed).
 - `CHANGELOG.md`: one short, plain sentence per change under "New / Changed / Fixed". No code, file or API names, and leave out small
   bug fixes and internal changes (tests, refactors, tooling).
+- `CHANGELOG-developer.md`, in [Keep a Changelog](https://keepachangelog.com/) style, **only** for changes to settings, action types or variable names that could break a
+  saved profile, the SDK version the plugin is built for, permission changes, migrations, or anything a plugin author or user has to do differently. The rest belongs in
+  the commit message and the pull request description. Entries already there stay as they are.
 
 ## Commits
 
@@ -114,3 +116,29 @@ checklist are in [docs/release.md](docs/release.md).
 
 A plugin with logic should have tests next to it (see `OBS/tests`, which drives the plugin against a fake obs-websocket server). Run
 `dotnet test` on the plugin's test project before you open a pull request.
+
+## Issues and labels
+
+Open an issue from the [chooser](https://github.com/Deccoyi/macro-grid-plugin/issues/new/choose): pick a form, or its plain-text twin (the same questions, written as
+text you fill in). Questions and ideas start in [Discussions](https://github.com/Deccoyi/macro-grid-plugin/discussions); a maintainer turns one into an issue when there is
+something to fix or build. Security problems go to the private form, never to a public issue.
+
+What the labels mean. New issues get `needs-triage` and the area on their own; the maintainer sets the rest.
+
+| Label | Meaning |
+|---|---|
+| `bug`, `enhancement`, `documentation` | The kind of work. |
+| `regression` | It worked in an earlier version. |
+| `plugin: obs` | The OBS plugin |
+| `plugin: plc-icons` | The PLC Icons plugin |
+| `plugin: hello-js` | The JavaScript example plugin |
+| `area: sdk` | The plugin SDK and its docs |
+| `area: store` | The plugin store website |
+| `area: docs-site` | The documentation website |
+| `needs-triage` | Not looked at yet (automatic). |
+| `needs-info` | We asked a question and wait for the reporter. |
+| `confirmed` | Reproduced or accepted by a maintainer. |
+| `in progress` | Someone is working on it. |
+| `priority: high` | Blocks people: a crash, lost data or a broken install. |
+| `good first issue`, `help wanted` | A good place to start, or where help is welcome. |
+| `duplicate`, `invalid`, `wontfix` | Closing reasons; the closing comment says why. |

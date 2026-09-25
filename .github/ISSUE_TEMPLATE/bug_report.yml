@@ -49,3 +49,18 @@ body:
       label: Logs
       description: Relevant server log lines. Remove passwords, tokens and personal data first.
       render: text
+  - type: dropdown
+    id: regression
+    attributes:
+      label: Did it work in an earlier version?
+      options:
+        - No, or I am not sure
+        - Yes, it worked in an earlier version (write which one below)
+      default: 0
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before you send
+      options:
+        - label: I searched the existing issues and Discussions, and this is not already reported.
+          required: true
