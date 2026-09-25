@@ -25,6 +25,28 @@
                                              "signature":  "aItwe6Eh8xTM0Va6t3naKO6z72eynrfFe4Uaf4n0XLlCQYKGZZKf78eG4VE8Zmt1ierU71itZS4qZF30ssbErQ=="
                                          }
                                      ]
+                    },
+                    {
+                        "id":  "obs",
+                        "name":  "OBS Control",
+                        "description":  "Controls OBS Studio over obs-websocket: scenes, streaming, recording, audio, sources and live variables.",
+                        "author":  "Deccoyi",
+                        "homepage":  "https://github.com/Deccoyi/macro-grid-plugin/tree/main/OBS",
+                        "kind":  "csharp",
+                        "versions":  [
+                                         {
+                                             "version":  "0.2.2",
+                                             "sdkVersion":  "^0.4.0",
+                                             "minServerVersion":  "0.3.2",
+                                             "url":  "https://github.com/Deccoyi/macro-grid-plugin/releases/download/plugin-obs-v0.2.2/obs-0.2.2.zip",
+                                             "sha256":  "f624200e64f7b59e2b7776806a77df8f82cc20b4a9011c60468ec68bce9ba769",
+                                             "size":  48274,
+                                             "permissions":  [
+
+                                                             ],
+                                             "signature":  "ncDrDPfT2+pJjtzQ115V68+kScfX71nrumpVtV4YcbOKeqtjKoZMUtbV+DEPiInCLyuxDwRZ95pNgYqAvW/zRg=="
+                                         }
+                                     ]
                     }
                 ]
 }
