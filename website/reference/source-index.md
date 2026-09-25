@@ -79,9 +79,9 @@ The zip's own `plugin.json` must equal the one read from `main`. If the reposito
 ## Official-source signing
 
 The official repository ([`Deccoyi/macro-grid-plugin`](https://github.com/Deccoyi/macro-grid-plugin)) additionally signs every
-release with a dedicated ECDSA P-256 key that never leaves GitHub Actions:
+release with a dedicated ECDSA P-256 key that never leaves the maintainer's machine:
 
-- The release workflow reads the zip's bytes, signs them with `ECDsa.SignData(bytes, HashAlgorithmName.SHA256)` (not the hex
+- The release script (`scripts/release-plugin.ps1`) reads the zip's bytes, signs them with `ECDsa.SignData(bytes, HashAlgorithmName.SHA256)` (not the hex
   `sha256` string — the raw file bytes), and base64-encodes the result as `<zip>.sig`, an IEEE P1363 (`r`&#8203;`||`&#8203;`s`,
   64 bytes) signature.
 - `macrogrid-index.json` carries the same base64 value in that version's `signature` field.
@@ -90,12 +90,12 @@ release with a dedicated ECDSA P-256 key that never leaves GitHub Actions:
 - A signature on a *non*-official source's entry does not make it official — only packages fetched through the built-in official
   source URL are verified and trusted that way. Everything else is always shown as third-party.
 
-This is why the private key is a GitHub Actions secret (`PLUGIN_SIGNING_PRIVATE_KEY`) in this repository only, and why
-`release.yml` refuses to publish a release if that secret is missing.
+This is why the official releases are built and signed locally and the private key is never stored on GitHub: a compromised
+GitHub account cannot produce a package the host accepts as official.
 
 ## What CI does for you
 
-If your plugin is released from this repository's `release.yml`, or you copy that workflow into your own multi-plugin
+If your plugin is released with this repository's `scripts/release-plugin.ps1`, or you copy `examples/third-party-release.yml` into your own multi-plugin
 repository (see [Publishing your plugin](/guides/publishing)), you never write `sdkVersion`, `minServerVersion`, `sha256`,
-`size` or the download `url` into the index by hand: the workflow fills them in from the build and from `plugin.json` after
+`size` or the download `url` into the index by hand: the release step fills them in from the build and from `plugin.json` after
 each release and commits `macrogrid-index.json` back to `main`. You only keep `plugin.json` and the changelogs honest.

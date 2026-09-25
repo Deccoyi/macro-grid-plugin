@@ -46,7 +46,7 @@ since only this repository's releases are signed with the official key. Two shap
 
 - **A multi-plugin repository**, added as a source in the Discover tab: keep a `macrogrid-index.json` at your repository's root
   on `main`, listing your own plugins and pointing only at your own repository's releases. Copy this repository's
-  `.github/workflows/release.yml` and `scripts/update-plugin-index.ps1` as a starting point and drop the signing step (you have
+  `examples/third-party-release.yml` and `scripts/update-plugin-index.ps1` as a starting point and drop the signing step (you have
   no official key, and a signature you added yourself would not be trusted anyway).
 - **A single-plugin repository**, installed by pasting its URL: keep `plugin.json` at the root on `main`, always matching the
   latest release, tagged `v<version>` with a `<id>-<version>.zip` and a `<id>-<version>.zip.sha256` asset.
