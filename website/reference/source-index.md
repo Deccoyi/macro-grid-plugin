@@ -29,8 +29,7 @@ https://raw.githubusercontent.com/<owner>/<repo>/HEAD/macrogrid-index.json
       "versions": [
         {
           "version": "0.2.0",
-          "sdkVersion": "^0.3.0",
-          "minServerVersion": "0.2.0",
+          "macroGrid": "1.0.0",
           "url": "https://github.com/<owner>/<repo>/releases/download/plugin-obs-v0.2.0/obs-0.2.0.zip",
           "sha256": "<hex>",
           "size": 123456,
@@ -45,16 +44,16 @@ https://raw.githubusercontent.com/<owner>/<repo>/HEAD/macrogrid-index.json
 
 | Field | Meaning |
 |---|---|
-| `formatVersion` | Always `1` today. A host that does not understand a future version ignores that source rather than crashing. |
+| `formatVersion` | Always `1` today, also with `macroGrid` entries (a server before 1.0.0 refuses any other number). A host that does not understand a future version ignores that source rather than crashing. |
 | `plugins[].id` / `.name` / `.description` / `.author` / `.homepage` | Shown in Discover before anything is downloaded. |
 | `plugins[].kind` | `"csharp"` or `"js"`, matching `plugin.json`. |
-| `versions[].sdkVersion` / `.minServerVersion` | Copied from the released `plugin.json` so the host can grey out an incompatible version without downloading it. |
+| `versions[].macroGrid` | Copied from the released `plugin.json` so the host can grey out an incompatible version without downloading it. `sdkVersion` and `minServerVersion` (legacy, for servers before 1.0.0) are copied too when `plugin.json` still has them. |
 | `versions[].url` | Must be `https://github.com/<same owner>/<same repo>/releases/download/...` — **an index can only point at its own repository's releases.** A host refuses any other host or repository. |
 | `versions[].sha256` / `.size` | Required. Checked against the downloaded file before it is unzipped. |
 | `versions[].permissions` | JavaScript only; empty array otherwise. Must match the zip's `plugin.json` exactly. |
 | `versions[].signature` | Only meaningful for the official source (see below); other sources are third-party even when this is present. |
 
-The host also checks, after download: the zip's own `plugin.json` (`id`, `version`, `sdkVersion`, `minServerVersion`, `kind`,
+The host also checks, after download: the zip's own `plugin.json` (`id`, `version`, `macroGrid`, `kind`,
 `permissions`) must equal the index entry exactly, or the install is refused.
 
 ## Single-plugin repository (a pasted link)
@@ -65,7 +64,7 @@ A repository with one plugin at its root has no index; the host reads `plugin.js
 https://raw.githubusercontent.com/<owner>/<repo>/HEAD/plugin.json
 ```
 
-That gives `id`, `version`, `sdkVersion`, `minServerVersion`, `kind` and `permissions` — enough to show compatibility before
+That gives `id`, `version`, `macroGrid`, `kind` and `permissions` — enough to show compatibility before
 downloading anything. The package and its hash come from fixed URLs derived from that `version`:
 
 ```
@@ -96,6 +95,6 @@ GitHub account cannot produce a package the host accepts as official.
 ## What CI does for you
 
 If your plugin is released with this repository's `scripts/release-plugin.ps1`, or you copy `examples/third-party-release.yml` into your own multi-plugin
-repository (see [Publishing your plugin](/guides/publishing)), you never write `sdkVersion`, `minServerVersion`, `sha256`,
+repository (see [Publishing your plugin](/guides/publishing)), you never write `macroGrid`, `sha256`,
 `size` or the download `url` into the index by hand: the release step fills them in from the build and from `plugin.json` after
 each release and commits `macrogrid-index.json` back to `main`. You only keep `plugin.json` and the changelogs honest.

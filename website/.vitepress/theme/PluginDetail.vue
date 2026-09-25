@@ -46,7 +46,7 @@ const stats = computed(() => {
   return [
     { v: x.version, l: t.value.statVersion },
     { v: x.kind, l: t.value.statKind },
-    { v: x.minServerVersion ? `${x.minServerVersion}+` : '-', l: t.value.statServer },
+    { v: x.macroGrid ? `${x.macroGrid}+` : '-', l: t.value.statServer },
     isCs.value
       ? { v: t.value.statFull, l: t.value.statAccess }
       : { v: String(x.permissions.length), l: t.value.statPermissions },
@@ -59,13 +59,12 @@ const details = computed(() => {
   const rows: { k: string; v: string; mono?: boolean }[] = [{ k: t.value.statVersion, v: x.version }]
   if (x.releaseDate) rows.push({ k: t.value.detailRelease, v: fmtDate(x.releaseDate) })
   rows.push({ k: t.value.detailId, v: x.id, mono: true }, { k: t.value.detailType, v: isCs.value ? t.value.kindCs : t.value.kindJs })
-  if (x.minServerVersion) rows.push({ k: t.value.detailServer, v: `${x.minServerVersion} ${t.value.orNewer}` })
-  if (x.sdkVersion) rows.push({ k: t.value.detailSdk, v: x.sdkVersion, mono: true })
+  if (x.macroGrid) rows.push({ k: t.value.detailServer, v: `${x.macroGrid} ${t.value.orNewer}` })
   return rows
 })
 
 const requirements = computed(() =>
-  p.value?.minServerVersion ? [`${t.value.server} ${p.value.minServerVersion} ${t.value.orNewer}`] : [],
+  p.value?.macroGrid ? [`${t.value.server} ${p.value.macroGrid} ${t.value.orNewer}`] : [],
 )
 
 function permDesc(name: string): string {

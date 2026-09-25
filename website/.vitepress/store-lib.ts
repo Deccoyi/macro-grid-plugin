@@ -39,8 +39,8 @@ export interface StorePlugin {
   kind: 'C#' | 'JavaScript'
   version: string
   prerelease: boolean
-  minServerVersion: string
-  sdkVersion: string
+  /** The oldest Macro Grid the plugin runs on ("1.0.0"); older manifests only have minServerVersion, which stands in for it. */
+  macroGrid: string
   permissions: string[]
   downloadUrl: string
   hasRelease: boolean
@@ -268,8 +268,7 @@ async function build(): Promise<StorePlugin[]> {
         kind: kindRaw === 'csharp' ? 'C#' : 'JavaScript',
         version: latest?.version ?? String(manifest.version ?? ''),
         prerelease: latest ? latest.prerelease : true,
-        minServerVersion: String(manifest.minServerVersion ?? ''),
-        sdkVersion: String(manifest.sdkVersion ?? ''),
+        macroGrid: String(manifest.macroGrid ?? manifest.minServerVersion ?? ''),
         permissions: Array.isArray(manifest.permissions) ? manifest.permissions.map(String) : [],
         downloadUrl: latest?.downloadUrl ?? RELEASES_PAGE,
         hasRelease: !!latest?.downloadUrl,

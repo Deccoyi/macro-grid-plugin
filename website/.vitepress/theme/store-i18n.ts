@@ -67,7 +67,6 @@ const en = {
   detailId: 'ID',
   detailType: 'Type',
   detailServer: 'Needs server',
-  detailSdk: 'SDK',
 
   releaseNotes: 'Release notes',
   noReleaseInfo: 'Release information is not available right now.',
@@ -139,7 +138,6 @@ const tr: typeof en = {
   detailId: 'Kimlik',
   detailType: 'Tür',
   detailServer: 'Gerekli sunucu',
-  detailSdk: 'SDK',
 
   releaseNotes: 'Sürüm notları',
   noReleaseInfo: 'Sürüm bilgisi şu an kullanılamıyor.',

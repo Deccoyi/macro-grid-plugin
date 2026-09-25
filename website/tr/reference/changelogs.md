@@ -9,6 +9,6 @@ Her eklenti, `plugin.json` dosyasının yanında iki değişiklik günlüğü tu
 
 Eklenti SDK'sının ve sunucunun kendi değişiklik günlükleri
 [sunucu deposunda](https://github.com/Deccoyi/macro-grid/tree/main/docs) bulunur: `CHANGELOG.md` (kısa) ve `CHANGELOG-developer.md`
-(ayrıntılı). `sdkVersion` değerini değiştirmeden önce bunları okuyun, çünkü `0.x` bir SDK'nın minor sürümü eklentileri bozabilir.
+(ayrıntılı). `macroGrid` değerini artırmadan ya da yeni bir MAJOR'a geçmeden önce bunları okuyun.
 
 Her eklentinin sürümleri, bu deponun [Releases sayfasındadır](https://github.com/Deccoyi/macro-grid-plugin/releases) ve `plugin-<name>-v<version>` olarak etiketlenir.

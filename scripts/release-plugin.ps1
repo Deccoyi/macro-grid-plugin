@@ -53,6 +53,7 @@ if ($Publish) {
 
 $manifest = Get-Content (Join-Path $entry.dir 'plugin.json') -Raw | ConvertFrom-Json
 $version = $manifest.version
+if ($manifest.macroGrid -notmatch '^\d+\.\d+\.\d+$') { throw "plugin.json needs `"macroGrid`" as MAJOR.MINOR.PATCH (the oldest Macro Grid it runs on), found '$($manifest.macroGrid)'." }
 $tag = "plugin-$Name-v$version"
 $zipName = "$($manifest.id)-$version.zip"
 if ($Publish -and (git tag --list $tag)) { throw "Tag $tag already exists; bump version in plugin.json first." }
@@ -121,8 +122,9 @@ if ($LASTEXITCODE -ne 0) { throw 'gh release create failed' }
     -Homepage "https://github.com/$owner/$repo/tree/main/$($entry.dir)" `
     -Kind $manifest.kind `
     -Version $version `
-    -SdkVersion $manifest.sdkVersion `
-    -MinServerVersion $manifest.minServerVersion `
+    -MacroGrid $manifest.macroGrid `
+    -SdkVersion "$($manifest.sdkVersion)" `
+    -MinServerVersion "$($manifest.minServerVersion)" `
     -Url "https://github.com/$owner/$repo/releases/download/$tag/$zipName" `
     -Sha256 $result.sha256 `
     -Size ([long]$result.size) `

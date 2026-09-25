@@ -58,7 +58,7 @@ Kaynak depoda her eklenti ayrıca `plugin.json` dosyasının yanında bir README
 Eklentiler penceresi, içinde `plugin.json` bulunan her klasörü listeler:
 
 - **Yüklü**: çalışıyor, aksiyonları ve değişkenleri kullanılabilir.
-- **Uyumsuz**: `sdkVersion` veya `minServerVersion` bu sunucu tarafından karşılanmıyor.
+- **Uyumsuz**: `macroGrid` bu Macro Grid'den daha yeni bir sürüm ya da başka bir MAJOR istiyor (mesaj hangisi olduğunu söyler).
 - **Onay bekliyor**: bildirdiği izinler kullanıcı tarafından henüz onaylanmamış bir JavaScript eklentisi. Onaylanana kadar çalışmaz.
 - **Hata**: `plugin.json` ayrıştırılamadı, giriş dosyası eksik, kimlik kurulu başka bir eklenti tarafından kullanılıyor, bir
   aksiyon türü zaten kayıtlı, bir izin bilinmiyor, `Initialize` (ya da betiğin ilk çalışması) başarısız oldu veya bir JavaScript

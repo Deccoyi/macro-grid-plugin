@@ -11,8 +11,9 @@ Every plugin folder has a `plugin.json` at its root. This is the OBS plugin's:
 | `id` | yes | Unique, stable id. Used in the folder name, in action types and variable names, and for approvals. The server refuses a second plugin with the same id. |
 | `name` | yes | Display name in the Plugins window. |
 | `version` | yes | The plugin's own semantic version, independent of the server's. |
-| `sdkVersion` | yes | The plugin SDK range the plugin was built against, a caret range such as `^0.3.0`. While the SDK is `0.x`, `^0.3.0` matches only `0.3.x`. If the server's SDK does not satisfy it the plugin is listed as *Incompatible* and not loaded. |
-| `minServerVersion` | yes | The oldest server version the plugin needs. An older server lists the plugin as *Incompatible*. |
+| `macroGrid` | yes | The oldest Macro Grid the plugin runs on, as `MAJOR.MINOR.PATCH` such as `1.3.0`. The plugin runs on every Macro Grid from that version up to, but not including, the next MAJOR. Macro Grid and the plugin SDK share one version, so use the SDK version you build against, or an older one if you use nothing newer. A server that does not fit lists the plugin as *Incompatible* and does not load it. |
+| `sdkVersion` | no | Legacy, from before Macro Grid 1.0.0. Read only when `macroGrid` is missing: `^0.4.x` then counts as `macroGrid: 1.0.0`, older ranges are incompatible. Keep it next to `macroGrid` only if the plugin must still load on servers older than 1.0.0. |
+| `minServerVersion` | no | Legacy, the same as `sdkVersion`. Macro Grid 1.0.0 and newer ignore it. |
 | `entry` | yes | C#: the entry DLL's file name. JavaScript: the script (usually `index.js`). |
 | `kind` | yes | `"csharp"` or `"js"`. |
 | `defaultLanguage` | no | The language the plugin's own texts are written in, such as `"en"` (the default). Translations come from `locales/<language>.json` next to `plugin.json`; a missing language or text falls back to the text as written. |
@@ -30,11 +31,12 @@ editor:
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
-  "required": ["id", "name", "version", "sdkVersion", "minServerVersion", "entry", "kind"],
+  "required": ["id", "name", "version", "macroGrid", "entry", "kind"],
   "properties": {
     "id": { "type": "string" },
     "name": { "type": "string" },
     "version": { "type": "string" },
+    "macroGrid": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
     "sdkVersion": { "type": "string" },
     "minServerVersion": { "type": "string" },
     "entry": { "type": "string" },

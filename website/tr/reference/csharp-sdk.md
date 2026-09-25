@@ -1,7 +1,7 @@
 # C# SDK arayüzleri
 
-SDK, `MacroGrid.Plugin.Abstractions` NuGet paketidir (ad alanı `MacroGrid.Plugin.Abstractions`, sürüm `0.3.1`, çalışma zamanında `PluginSdk.Version` olarak sunulur). Aşağıdaki imzalar,
-[sunucu deposundaki](https://github.com/Deccoyi/macro-grid/tree/main/src/MacroGrid.Plugin.Abstractions) SDK kaynağının imzalarıdır. SDK `0.x` sürümündedir: bir minor sürüm bunları değiştirebilir.
+SDK, `MacroGrid.Plugin.Abstractions` NuGet paketidir (ad alanı `MacroGrid.Plugin.Abstractions`, sürüm `1.0.0`, Macro Grid ile aynı numara, çalışma zamanında `PluginSdk.Version` olarak sunulur). Aşağıdaki imzalar,
+[sunucu deposundaki](https://github.com/Deccoyi/macro-grid/tree/main/src/MacroGrid.Plugin.Abstractions) SDK kaynağının imzalarıdır. Bir MAJOR içinde SDK yalnızca büyür.
 
 ## Giriş noktası
 
@@ -168,7 +168,7 @@ Bkz. [Simge paketleri](/tr/guides/icon-packs).
 
 ## Manifest türleri
 
-`PluginManifest` (`Id`, `Name`, `Version`, `SdkVersion`, `MinServerVersion`, `Entry`, `Kind`, `Permissions` alanlarına sahip bir kayıt) ve
+`PluginManifest` (`Id`, `Name`, `Version`, `MacroGrid`, ayrıca eski `SdkVersion` ve `MinServerVersion`, `Entry`, `Kind`, `Permissions` alanlarına sahip bir kayıt) ve
 `PluginKind` (`Csharp`, `Js`), [`plugin.json`](/tr/reference/manifest) dosyasını yansıtır.
 
 ## Serbest bırakma (Disposal)

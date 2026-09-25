@@ -9,7 +9,7 @@
     <!-- Same convention as the plugins in this repository: the SDK comes from NuGet by default;
          -p:UseLocalSdk=true builds against a sibling checkout of the server repository instead. -->
     <UseLocalSdk Condition="'$(UseLocalSdk)' == ''">false</UseLocalSdk>
-    <MacroGridSdkVersion Condition="'$(MacroGridSdkVersion)' == ''">0.3.1</MacroGridSdkVersion>
+    <MacroGridSdkVersion Condition="'$(MacroGridSdkVersion)' == ''">1.0.0</MacroGridSdkVersion>
     <LocalSdkProject Condition="'$(LocalSdkProject)' == ''">$(MSBuildProjectDirectory)\..\..\..\..\macro-grid\src\MacroGrid.Plugin.Abstractions\MacroGrid.Plugin.Abstractions.csproj</LocalSdkProject>
   </PropertyGroup>
 

@@ -14,6 +14,11 @@ Read `CONTRIBUTING.md` first: it covers plugin versioning, isolation, the manife
 - `CHANGELOG-developer.md` records only: changes to settings, action types or variable names that could break a saved profile, the SDK version the plugin is built for, permission changes (JavaScript plugins), migrations, and anything a plugin author or user has to do differently. Everything else (how it was built, refactors, internal details, small fixes) goes in the commit message and the pull request description, not in this file. Entries already there stay as they are.
 - When a change is finished, update `CHANGELOG.md` under `[Unreleased]`, and `CHANGELOG-developer.md` only if the change is one of the kinds above. See the `commit-all` skill.
 
+## Versions, releases and signing
+- Any version, release, tag or signing work: read the central guide first, `docs/guides/release.md` in the server repository (`macro-grid`, https://github.com/Deccoyi/macro-grid/blob/main/docs/guides/release.md). It has the tag table, the order of a release and the signing keys. `docs/release.md` here only has the plugin release script steps; do not copy the shared content into it.
+- A plugin's `version` is its own; `macroGrid` in `plugin.json` is the oldest Macro Grid it runs on (three parts, same MAJOR as the SDK it is built against, never newer than it).
+- A plugin release (`scripts/release-plugin.ps1 -Publish`) signs with a key that stays on the maintainer's PC and publishes outward: ask the owner before each one, and never print or copy the key.
+
 ## Commits
 - Conventional Commits (`type(scope): description`), always in English.
 

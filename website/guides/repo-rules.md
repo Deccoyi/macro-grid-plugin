@@ -39,8 +39,8 @@ macro-grid-plugin/
 
 ## The manifest and compatibility
 
-Every plugin has a `plugin.json` at its root; the fields are in the [manifest reference](/reference/manifest). `sdkVersion` and
-`minServerVersion` are checked when the server loads the plugin. Set them honestly.
+Every plugin has a `plugin.json` at its root; the fields are in the [manifest reference](/reference/manifest). `macroGrid` (the oldest
+Macro Grid the plugin runs on) is checked when the server loads the plugin. Set it honestly.
 
 ## C# and JavaScript plugins
 
