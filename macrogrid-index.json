@@ -79,6 +79,18 @@
                         "kind":  "csharp",
                         "versions":  [
                                          {
+                                             "version":  "0.1.1",
+                                             "sdkVersion":  "^0.4.0",
+                                             "minServerVersion":  "0.3.2",
+                                             "url":  "https://github.com/Deccoyi/macro-grid-plugin/releases/download/plugin-soundboard-v0.1.1/soundboard-0.1.1.zip",
+                                             "sha256":  "83afedc1a8c4f5a61b863da8e56f58bd3b3023b1a4d3d4367ba8f198d240b74d",
+                                             "size":  261978,
+                                             "permissions":  [
+
+                                                             ],
+                                             "signature":  "1wORFSCr498NMYAIDH7vM30EIe1V7z9VLxVLPz4QeNZU4uMCCuK6u7sBLQCtBpMIz5Mf05ZfLDIRnYrRcn0d+w=="
+                                         },
+                                         {
                                              "version":  "0.1.0",
                                              "sdkVersion":  "^0.4.0",
                                              "minServerVersion":  "0.3.2",
