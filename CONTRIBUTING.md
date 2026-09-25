@@ -109,8 +109,9 @@ example `feat(obs): pause reconnecting while OBS is not running`. Group related 
 ## Releases and tags
 
 A plugin is released by pushing a tag named `plugin-<name>-v<version>` on `main`, for example `plugin-obs-v0.2.0`. The tag version must
-match `version` in the plugin's `plugin.json`. The release workflow builds the plugin and creates a draft release. Details and the
-checklist are in [docs/release.md](docs/release.md).
+match `version` in the plugin's `plugin.json`. The release workflow builds the plugin, hashes and signs the zip, publishes the release,
+and updates `macrogrid-index.json` on `main`. Details and the checklist are in [docs/release.md](docs/release.md); the index format is
+in [website/reference/source-index.md](website/reference/source-index.md).
 
 ## Tests
 

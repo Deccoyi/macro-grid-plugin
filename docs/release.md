@@ -28,8 +28,11 @@ that does not match. The server and the phone app use their own tag schemes (`se
    git push origin plugin-obs-v0.2.0
    ```
 5. The `Release plugin` workflow (`.github/workflows/release.yml`) builds that plugin, zips the output together with `LICENSE`,
-   `NOTICE.md` and `THIRD_PARTY_NOTICES.md`, and creates a **draft** pre-release. Review the draft, paste the plugin's public
-   `CHANGELOG.md` entry into the notes, and publish it.
+   `NOTICE.md` and `THIRD_PARTY_NOTICES.md`, hashes the zip (`<zip>.sha256`) and signs it with the repository's plugin-signing
+   key (`<zip>.sig`), then publishes the release — not a draft. It then commits the plugin's new version into
+   `macrogrid-index.json` on `main`, the file the host and the Store read; see
+   [Source index](../website/reference/source-index.md) for its format.
+6. The workflow refuses to run if the `PLUGIN_SIGNING_PRIVATE_KEY` secret is missing; every official release must be signed.
 
 ## Installing a released plugin
 
