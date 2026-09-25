@@ -11,10 +11,10 @@ on:
       - "HelloJs/**"
       - "OBS/src/ObsPlugin.cs"
       - "PLCIcons/**"
-      # The Store page of SoundBoard is built from these files.
-      - "SoundBoard/plugin.json"
-      - "SoundBoard/README.md"
-      - "SoundBoard/CHANGELOG.md"
+      # Every plugin's Store page is built from these files.
+      - "*/plugin.json"
+      - "*/README.md"
+      - "*/CHANGELOG.md"
       - ".github/workflows/pages.yml"
   pull_request:
     paths:
@@ -23,10 +23,10 @@ on:
       - "HelloJs/**"
       - "OBS/src/ObsPlugin.cs"
       - "PLCIcons/**"
-      # The Store page of SoundBoard is built from these files.
-      - "SoundBoard/plugin.json"
-      - "SoundBoard/README.md"
-      - "SoundBoard/CHANGELOG.md"
+      # Every plugin's Store page is built from these files.
+      - "*/plugin.json"
+      - "*/README.md"
+      - "*/CHANGELOG.md"
       - ".github/workflows/pages.yml"
   # The Store lists the published releases, so the site is rebuilt when one changes.
   release:

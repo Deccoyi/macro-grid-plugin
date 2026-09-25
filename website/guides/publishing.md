@@ -61,9 +61,10 @@ plugin takes three steps (for a contribution, follow the [Repository rules](/gui
 
 1. **Add the folder** at the repository root (for example `MyPlugin/`) with `plugin.json`, a `README.md` (its first section becomes
    "What it does" and its first paragraph the card text), a `CHANGELOG.md` and the licence files, as described above.
-2. **Add one line to `website/store/catalog.json`**: `{ "id": "my-plugin", "dir": "MyPlugin", "category": "Integrations", "icon": "code" }`.
-   `id` must equal the `id` in `plugin.json`. `icon` is the name of an SVG in `website/public/store/icons/`; without one the card shows
-   a letter. Set `"featured": true` to sort it first.
+2. **Optionally add one line to `website/store/catalog.json`**: `{ "id": "my-plugin", "dir": "MyPlugin", "category": "Integrations", "icon": "code" }`.
+   The Store lists every top-level folder that has a `plugin.json` even without this line (category "Other", no icon); the line only
+   sets how the card looks. `id` must equal the `id` in `plugin.json`. `icon` is the name of an SVG in `website/public/store/icons/`;
+   without one the card shows a letter. Set `"featured": true` to sort it first.
 3. **Tag a release** `plugin-<id>-vX.Y.Z` (for example `plugin-my-plugin-v0.1.0`) as described in [Releases](#releases-in-this-repository).
    Once the release is published, the Store shows its zip as the download button. The site is rebuilt whenever a release is published,
    edited or deleted.
