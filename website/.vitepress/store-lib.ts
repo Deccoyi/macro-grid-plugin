@@ -14,8 +14,22 @@ export interface StoreRelease {
   downloadUrl: string | null
 }
 
+export interface ChangelogGroup {
+  /** The "###" heading of the group as written in CHANGELOG.md ("New", "Fixed", ...), or '' for loose items. */
+  name: string
+  html: string
+}
+
+export interface ChangelogEntry {
+  version: string
+  /** ISO date (YYYY-MM-DD) from the "## 0.2.1 - 2026-09-24" heading, or ''. */
+  date: string
+  groups: ChangelogGroup[]
+}
+
 export interface StorePlugin {
   id: string
+  author: string
   name: string
   description: string
   category: string
@@ -31,8 +45,9 @@ export interface StorePlugin {
   downloadUrl: string
   hasRelease: boolean
   releases: StoreRelease[]
+  releaseDate: string
   whatItDoes: string
-  changelog: string
+  changelog: ChangelogEntry[]
   sourceUrl: string
 }
 
@@ -152,6 +167,24 @@ async function render(src: string, dirOnGithub: string): Promise<string> {
   }
 }
 
+/** Splits the CHANGELOG.md body ("## 0.2.1 - 2026-09-24" / "### New" / list) into versions and groups, each group rendered to HTML. */
+async function parseChangelog(md: string, dirOnGithub: string): Promise<ChangelogEntry[]> {
+  const entries: ChangelogEntry[] = []
+  for (const part of md.split(/^(?=## )/m)) {
+    const m = part.match(/^##\s+v?(\d+\.\d+\.\d+\S*)(?:\s*[-–—]\s*(\d{4}-\d{2}-\d{2}))?[^\n]*\n([\s\S]*)$/)
+    if (!m) continue
+    const groups: ChangelogGroup[] = []
+    for (const g of m[3].split(/^(?=### )/m)) {
+      const gm = g.match(/^###\s+([^\n]+)\n([\s\S]*)$/)
+      const src = (gm ? gm[2] : g).trim()
+      if (!src) continue
+      groups.push({ name: gm ? gm[1].trim() : '', html: await render(src, dirOnGithub) })
+    }
+    entries.push({ version: m[1], date: m[2] ?? '', groups })
+  }
+  return entries
+}
+
 let cache: Promise<StorePlugin[]> | undefined
 
 export function loadStore(): Promise<StorePlugin[]> {
@@ -217,6 +250,7 @@ async function build(): Promise<StorePlugin[]> {
 
       plugins.push({
         id,
+        author: REPO.split('/')[0],
         name: manifest.name ?? id,
         description: manifest.description ? String(manifest.description) : oneLine(readme.first),
         category: entry.category ?? 'Other',
@@ -232,8 +266,9 @@ async function build(): Promise<StorePlugin[]> {
         downloadUrl: latest?.downloadUrl ?? RELEASES_PAGE,
         hasRelease: !!latest?.downloadUrl,
         releases: releases.slice(0, 4),
+        releaseDate: latest?.date ?? '',
         whatItDoes: await render(readme.intro, entry.dir),
-        changelog: await render(changelogRaw, entry.dir),
+        changelog: await parseChangelog(changelogRaw, entry.dir),
         sourceUrl: `https://github.com/${REPO}/tree/main/${entry.dir}`,
       })
     } catch (e) {
