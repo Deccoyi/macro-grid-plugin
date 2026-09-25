@@ -80,6 +80,50 @@ public sealed class SoundBoardEngineTests : IDisposable
             Assert.Equal(buffer.Length, mixer.Read(buffer, 0, buffer.Length));
     }
 
+    [Fact]
+    public void A_voice_finishes_when_the_mixer_drops_it_after_a_short_read()
+    {
+        // The mixer removes an input on its first short read and never reads it again, so Finished must not
+        // depend on a later read that returns exactly 0.
+        var mixer = new MixingSampleProvider(MixerFormat) { ReadFully = true };
+        var voice = new SoundVoice(TestWav.CreateFullScale(_dataDir, TimeSpan.FromMilliseconds(10), sampleRate: 8000),
+            100, loop: false, MixerFormat, "s1", "d", "p", "w", isPreview: false);
+        mixer.AddMixerInput(voice);
+
+        var buffer = new float[4096];
+        for (var i = 0; i < 20; i++) mixer.Read(buffer, 0, buffer.Length);
+
+        Assert.True(voice.Finished);
+        voice.Dispose();
+    }
+
+    [Fact]
+    public async Task Variables_go_back_to_idle_when_a_sound_ends_by_itself()
+    {
+        var store = new FakeVariableStore();
+        using var engine = new SoundBoardEngine(new FakePluginHost(_dataDir));
+        var file = TestWav.CreateFullScale(_dataDir, TimeSpan.FromMilliseconds(10), sampleRate: 8000);
+        engine.ApplySettings(new SoundBoardSettingsData { Sounds = [new SoundEntry { Id = "s1", Name = "Bell", File = file }] });
+        using var cts = new CancellationTokenSource();
+        var run = engine.RunAsync(store, cts.Token);
+
+        var voice = NewVoice("s1", TimeSpan.FromMilliseconds(10));
+        engine.AddVoiceForTesting(voice);
+        // Read past the end the way the mixer would, so the voice reports Finished.
+        var buffer = new float[4096];
+        voice.Read(buffer, 0, buffer.Length);
+        Assert.True(voice.Finished);
+        Assert.False(engine.IsPlaying("s1"));
+
+        for (var i = 0; i < 100 && engine.VoicesForTesting.Count > 0; i++) await Task.Delay(50);
+
+        Assert.Empty(engine.VoicesForTesting);
+        Assert.Equal(false, store.Get("soundboard.s1.playing"));
+        Assert.Equal("", store.Get("soundboard.nowPlaying"));
+        cts.Cancel();
+        await run;
+    }
+
     // ---- SoundBoardEngine's own bookkeeping, added to the mixer directly (AddVoiceForTesting) ----
 
     private SoundVoice NewVoice(string soundId, TimeSpan duration, string deviceId = "d", string pageId = "p", string widgetId = "w", bool isPreview = false) =>

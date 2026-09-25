@@ -6,6 +6,13 @@ changelog is [CHANGELOG.md](CHANGELOG.md).
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-09-26
+### Changed
+- `soundboard.nowPlaying` now holds the name of the sound playing at that moment (the latest started voice that has not finished) and is `""` when idle. The old meaning, the last started sound's name, moved to the new `soundboard.lastPlayed`. Bindings that showed the last sound after it ended need `soundboard.lastPlayed`.
+
+### Fixed
+- A non-looping sound never became "finished": the mixer drops an input on its first short read and does not read it again, but `SoundVoice` waited for a read of 0. The voice, `soundboard.<id>.playing` and toggle mode stayed stuck on. A short read now marks the voice finished; `LoopingSampleProvider` fills the whole buffer so a looping voice is not dropped at the end of the file.
+
 ## [0.1.0] - 2026-09-25
 
 ### Added

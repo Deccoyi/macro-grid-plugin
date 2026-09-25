@@ -36,9 +36,10 @@ already playing, and a changed output device reopens on the next sound.
 
 ## Variables
 
-All names start with `sound.`; use them in widget text as `{soundboard.s1.name}`.
+All names start with `soundboard.`; use them in widget text as `{soundboard.s1.name}`.
 
-- `soundboard.nowPlaying` — name of the most recently started sound.
+- `soundboard.nowPlaying` — name of the sound playing now (the most recent one if several play); empty when nothing plays.
+- `soundboard.lastPlayed` — name of the most recently started sound; stays after it ends.
 - `soundboard.masterVolume` — master volume (%).
 - Per sound (`<id>` is the row's own short id, e.g. `s1`, shown nowhere in the UI but stable across renames and reordering):
   `soundboard.<id>.name`, `soundboard.<id>.playing` (true/false — pair it with a dynamic color rule to light up a button while it plays),

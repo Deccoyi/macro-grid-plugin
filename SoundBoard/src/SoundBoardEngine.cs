@@ -109,14 +109,34 @@ public sealed partial class SoundBoardEngine : IVariableProvider, IVariableCatal
         TouchActivity();
         WakeLoop();
 
-        var name = entry.Name.Length > 0 ? entry.Name : Path.GetFileNameWithoutExtension(entry.File);
-        _store?.Set("soundboard.nowPlaying", name);
+        _store?.Set("soundboard.lastPlayed", DisplayName(entry));
         _store?.Set($"soundboard.{soundId}.playing", true);
+        PublishNowPlaying();
+    }
+
+    private static string DisplayName(SoundEntry entry) =>
+        entry.Name.Length > 0 ? entry.Name : Path.GetFileNameWithoutExtension(entry.File);
+
+    /// <summary>"soundboard.nowPlaying": the name of the most recently started sound that is still playing, empty
+    /// when nothing plays. (<c>soundboard.lastPlayed</c> keeps the last started name after it ends.)</summary>
+    private void PublishNowPlaying()
+    {
+        string name = "";
+        lock (_lock)
+        {
+            var voice = _voices.LastOrDefault(v => !v.IsPreview && !v.Finished);
+            if (voice is not null)
+            {
+                var entry = _settings.Sounds.FirstOrDefault(s => s.Id == voice.SoundId);
+                if (entry is not null) name = DisplayName(entry);
+            }
+        }
+        _store?.Set("soundboard.nowPlaying", name);
     }
 
     public bool IsPlaying(string soundId)
     {
-        lock (_lock) return _voices.Any(v => !v.IsPreview && v.SoundId == soundId);
+        lock (_lock) return _voices.Any(v => !v.IsPreview && !v.Finished && v.SoundId == soundId);
     }
 
     /// <summary>Test seam: adds a voice straight to the mixer without opening a real output device, so
@@ -169,7 +189,11 @@ public sealed partial class SoundBoardEngine : IVariableProvider, IVariableCatal
 
         try { _mixer.RemoveMixerInput(voice); } catch (ArgumentException) { /* already gone from the mixer */ }
         voice.Dispose();
-        if (!voice.IsPreview) _store?.Set($"soundboard.{voice.SoundId}.playing", IsPlaying(voice.SoundId));
+        if (!voice.IsPreview)
+        {
+            _store?.Set($"soundboard.{voice.SoundId}.playing", IsPlaying(voice.SoundId));
+            PublishNowPlaying();
+        }
     }
 
     /// <summary>Starts (or, if one is already playing, stops) a one-off preview voice for the settings
