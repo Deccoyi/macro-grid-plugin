@@ -69,6 +69,28 @@
                                              "signature":  "UtkrZOi+8DVSb6A8b/d099cHUZrDe1gZXN7cujuZCAt5ozhCs9vxHIf0nd/v5xlttIzhi4L0Jx/boz2jXyYBvA=="
                                          }
                                      ]
+                    },
+                    {
+                        "id":  "soundboard",
+                        "name":  "SoundBoard",
+                        "description":  "Plays local sound files from buttons: named clips with volume, loop, overlap and fade control.",
+                        "author":  "Deccoyi",
+                        "homepage":  "https://github.com/Deccoyi/macro-grid-plugin/tree/main/SoundBoard",
+                        "kind":  "csharp",
+                        "versions":  [
+                                         {
+                                             "version":  "0.1.0",
+                                             "sdkVersion":  "^0.4.0",
+                                             "minServerVersion":  "0.3.2",
+                                             "url":  "https://github.com/Deccoyi/macro-grid-plugin/releases/download/plugin-soundboard-v0.1.0/soundboard-0.1.0.zip",
+                                             "sha256":  "9e1456cb655573732ac5b7248a489601a0446e9212a2ba35949d08916ba754c3",
+                                             "size":  261615,
+                                             "permissions":  [
+
+                                                             ],
+                                             "signature":  "47Fh/ko5Vt0snGOCe+Yr2h6W2pwallLzgwMO6t5Q8vZgWYCFDENKC0Uv0k741DIvUovikH1+v5kKGZyKIPJHtA=="
+                                         }
+                                     ]
                     }
                 ]
 }
