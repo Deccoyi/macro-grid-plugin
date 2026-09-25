@@ -58,7 +58,7 @@ Installing a folder whose `id` is already installed replaces that plugin. Files 
 The Plugins window lists every folder that has a `plugin.json`:
 
 - **Loaded**: running, its actions and variables are available.
-- **Incompatible**: `sdkVersion` or `minServerVersion` is not satisfied by this server.
+- **Incompatible**: `macroGrid` asks for a newer Macro Grid than this one, or for another MAJOR (the message says which).
 - **Needs approval**: a JavaScript plugin whose declared permissions the user has not approved yet. It does not run until they do.
 - **Error**: `plugin.json` could not be parsed, the entry file is missing, the id is already used by another installed plugin, an
   action type is already registered, a permission is unknown, `Initialize` (or the script's first run) failed, or a JavaScript

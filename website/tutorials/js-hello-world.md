@@ -18,7 +18,7 @@ Create a folder `hello-js` with a file `plugin.json`:
 - `kind` is `js`, and `entry` is the script to run.
 - `permissions` lists what the script needs. `variables` lets it publish variables, `actions` lets it register actions. The user
   has to approve exactly this list before the script runs.
-- `sdkVersion` and `minServerVersion` say which SDK and server this plugin needs (see [Compatibility](/basics/compatibility)).
+- `macroGrid` says the oldest Macro Grid this plugin runs on (see [Compatibility](/basics/compatibility)).
 
 ## Step 2: a variable
 

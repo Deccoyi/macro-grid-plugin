@@ -11,7 +11,7 @@ Id: `sound`.
 
 1. Build: `dotnet build SoundBoard\src\MacroGrid.Plugin.SoundBoard.csproj -p:UseLocalSdk=true` (add `-c Release` for a release build). This needs
    the `macro-grid` repository next to this one, see the [top-level README](../README.md#building). `-p:UseLocalSdk=true` is required
-   until the Plugin SDK version this plugin targets (see `plugin.json`'s `sdkVersion`) is published on NuGet.
+   until the Plugin SDK version this plugin targets (see `plugin.json`'s `macroGrid`) is published on NuGet.
 2. In the Macro Grid editor open **Plugins → Manage Plugins… → Install from Folder…** and pick `SoundBoard\src\bin\Debug\net10.0-windows\`
    (or `Release\net10.0-windows\`). The build copies `plugin.json` next to the DLL. The plugin is loaded immediately.
 

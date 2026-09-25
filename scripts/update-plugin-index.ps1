@@ -19,8 +19,10 @@ param(
     [Parameter(Mandatory)] [string]$Homepage,
     [Parameter(Mandatory)] [ValidateSet('csharp', 'js')] [string]$Kind,
     [Parameter(Mandatory)] [string]$Version,
-    [Parameter(Mandatory)] [string]$SdkVersion,
-    [Parameter(Mandatory)] [string]$MinServerVersion,
+    [Parameter(Mandatory)] [ValidatePattern('^\d+\.\d+\.\d+$')] [string]$MacroGrid,
+    # Legacy pair, copied from plugin.json when it still has them: servers before 1.0.0 need both.
+    [string]$SdkVersion = '',
+    [string]$MinServerVersion = '',
     [Parameter(Mandatory)] [string]$Url,
     [Parameter(Mandatory)] [string]$Sha256,
     [Parameter(Mandatory)] [long]$Size,
@@ -47,6 +49,7 @@ if (Test-Path $IndexPath) {
     $index = Get-Content $IndexPath -Raw | ConvertFrom-Json
 } else {
     $index = [PSCustomObject]@{
+        # Stays 1 on purpose: a server before 1.0.0 refuses any other format. The 1.0.0 server reads "macroGrid" from a format 1 entry.
         formatVersion = 1
         name          = 'Macro Grid Plugins'
         author        = $Author
@@ -78,15 +81,14 @@ if (-not $entry) {
 }
 
 $versions = @($entry.versions | Where-Object { $_.version -ne $Version })
-$newVersion = [PSCustomObject]@{
-    version          = $Version
-    sdkVersion       = $SdkVersion
-    minServerVersion = $MinServerVersion
-    url              = $Url
-    sha256           = $Sha256
-    size             = $Size
-    permissions      = @($Permissions)
-}
+$fields = [ordered]@{ version = $Version; macroGrid = $MacroGrid }
+if ($SdkVersion) { $fields.sdkVersion = $SdkVersion }
+if ($MinServerVersion) { $fields.minServerVersion = $MinServerVersion }
+$fields.url = $Url
+$fields.sha256 = $Sha256
+$fields.size = $Size
+$fields.permissions = @($Permissions)
+$newVersion = [PSCustomObject]$fields
 if ($Signature) {
     $newVersion | Add-Member -NotePropertyName signature -NotePropertyValue $Signature
 }
