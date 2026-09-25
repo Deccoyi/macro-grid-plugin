@@ -1,0 +1,14 @@
+{
+  "id": "sound",
+  "name": "Sound",
+  "description": "Plays local sound files from buttons: named clips with volume, loop, overlap and fade control.",
+  "author": "Deccoyi",
+  "homepage": "https://github.com/Deccoyi/macro-grid-plugin/tree/main/Sound",
+  "defaultLanguage": "en",
+  "version": "0.1.0",
+  "sdkVersion": "^0.4.0",
+  "minServerVersion": "0.3.1",
+  "entry": "MacroGrid.Plugin.Sound.dll",
+  "kind": "csharp",
+  "permissions": null
+}
