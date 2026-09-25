@@ -3,6 +3,10 @@
 This file tracks the version of this plugin only (independent of the main program — see the "Independent versions" section of `../CONTRIBUTING.md`). The short, public changelog is [CHANGELOG.md](CHANGELOG.md).
 
 ## [Unreleased]
+### Changed
+- `sdkVersion` bumped to `^0.4.0` (`Directory.Build.props`'s `MacroGridSdkVersion` moved to 0.4.0 for the whole repository) — the SDK
+  bump itself brings nothing this plugin uses yet, but a server older than SDK 0.4.0 will no longer load it. No plugin version bump.
+
 ### Added
 - **Plugin languages:** the plugin's own texts are now English (the default language, `defaultLanguage: "en"` in `plugin.json`) and `locales/tr.json` holds the Turkish translations, keyed by the English text. The host translates them by the language in the preferences. Log lines, exception messages and the per-item scene variable descriptions are English only. The locale files are copied into the build output. The `obs.status` variable now holds the English text.
 - License files: `LICENSE` and `NOTICE.md` are now copied into the build output next to `plugin.json` (documentation and packaging only, no behavior change, no version bump).

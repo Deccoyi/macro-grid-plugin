@@ -5,7 +5,7 @@
            dotnet build -p:UseLocalSdk=true
          See docs/using-the-sdk-package.md. Each plugin csproj switches on this property. -->
     <UseLocalSdk Condition="'$(UseLocalSdk)' == ''">false</UseLocalSdk>
-    <MacroGridSdkVersion Condition="'$(MacroGridSdkVersion)' == ''">0.3.1</MacroGridSdkVersion>
+    <MacroGridSdkVersion Condition="'$(MacroGridSdkVersion)' == ''">0.4.0</MacroGridSdkVersion>
     <LocalSdkProject>$(MSBuildThisFileDirectory)..\macro-grid\src\MacroGrid.Plugin.Abstractions\MacroGrid.Plugin.Abstractions.csproj</LocalSdkProject>
   </PropertyGroup>
 </Project>
