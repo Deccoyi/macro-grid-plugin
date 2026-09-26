@@ -28,9 +28,9 @@ updates:
     groups:
       deps:
         patterns: ["*"]
-  # Sound ships NAudio inside its package, so its dependencies must be watched too.
+  # SoundBoard ships NAudio inside its package, so its dependencies must be watched too.
   - package-ecosystem: nuget
-    directory: "/Sound/src"
+    directory: "/SoundBoard/src"
     target-branch: dev
     schedule:
       interval: monthly
@@ -39,7 +39,7 @@ updates:
       deps:
         patterns: ["*"]
   - package-ecosystem: nuget
-    directory: "/Sound/tests/MacroGrid.Plugin.Sound.Tests"
+    directory: "/SoundBoard/tests/MacroGrid.Plugin.SoundBoard.Tests"
     target-branch: dev
     schedule:
       interval: monthly
