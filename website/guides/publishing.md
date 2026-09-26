@@ -6,7 +6,7 @@ can install from the editor.
 ## Checklist
 
 1. **Manifest.** `id` is unique and stable, `version` follows [semantic versioning](/basics/compatibility#versioning-your-plugin),
-   `sdkVersion` is the SDK you built and tested against, `minServerVersion` the oldest server that has what you use.
+   `macroGrid` is the oldest Macro Grid that has what you use (the SDK version you build against, or older).
 2. **Permissions** (JavaScript). Ask only for what you use; see [Permissions](/reference/permissions). An update that asks for more
    waits for the user's approval again.
 3. **A README** that says what the plugin does, its requirements, its settings and where it stores data. Say so if it stores a
@@ -46,7 +46,7 @@ since only this repository's releases are signed with the official key. Two shap
 
 - **A multi-plugin repository**, added as a source in the Discover tab: keep a `macrogrid-index.json` at your repository's root
   on `main`, listing your own plugins and pointing only at your own repository's releases. Copy this repository's
-  `.github/workflows/release.yml` and `scripts/update-plugin-index.ps1` as a starting point and drop the signing step (you have
+  `examples/third-party-release.yml` and `scripts/update-plugin-index.ps1` as a starting point and drop the signing step (you have
   no official key, and a signature you added yourself would not be trusted anyway).
 - **A single-plugin repository**, installed by pasting its URL: keep `plugin.json` at the root on `main`, always matching the
   latest release, tagged `v<version>` with a `<id>-<version>.zip` and a `<id>-<version>.zip.sha256` asset.
@@ -61,9 +61,10 @@ plugin takes three steps (for a contribution, follow the [Repository rules](/gui
 
 1. **Add the folder** at the repository root (for example `MyPlugin/`) with `plugin.json`, a `README.md` (its first section becomes
    "What it does" and its first paragraph the card text), a `CHANGELOG.md` and the licence files, as described above.
-2. **Add one line to `website/store/catalog.json`**: `{ "id": "my-plugin", "dir": "MyPlugin", "category": "Integrations", "icon": "code" }`.
-   `id` must equal the `id` in `plugin.json`. `icon` is the name of an SVG in `website/public/store/icons/`; without one the card shows
-   a letter. Set `"featured": true` to sort it first.
+2. **Optionally add one line to `website/store/catalog.json`**: `{ "id": "my-plugin", "dir": "MyPlugin", "category": "Integrations", "icon": "code" }`.
+   The Store lists every top-level folder that has a `plugin.json` even without this line (category "Other", no icon); the line only
+   sets how the card looks. `id` must equal the `id` in `plugin.json`. `icon` is the name of an SVG in `website/public/store/icons/`;
+   without one the card shows a letter. Set `"featured": true` to sort it first.
 3. **Tag a release** `plugin-<id>-vX.Y.Z` (for example `plugin-my-plugin-v0.1.0`) as described in [Releases](#releases-in-this-repository).
    Once the release is published, the Store shows its zip as the download button. The site is rebuilt whenever a release is published,
    edited or deleted.

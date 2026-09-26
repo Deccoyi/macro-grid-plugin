@@ -67,7 +67,6 @@ const en = {
   detailId: 'ID',
   detailType: 'Type',
   detailServer: 'Needs server',
-  detailSdk: 'SDK',
 
   releaseNotes: 'Release notes',
   noReleaseInfo: 'Release information is not available right now.',
@@ -93,7 +92,7 @@ const tr: typeof en = {
   download: 'İndir',
   getOnGithub: "GitHub'dan edinin",
   details: 'Ayrıntılar',
-  categories: { Examples: 'Örnekler', 'Icon packs': 'Simge paketleri', Integrations: 'Entegrasyonlar', Other: 'Diğer' },
+  categories: { Audio: 'Ses', Examples: 'Örnekler', 'Icon packs': 'Simge paketleri', Integrations: 'Entegrasyonlar', Other: 'Diğer' },
 
   store: 'Mağaza',
   notFound: 'Eklenti bulunamadı.',
@@ -139,7 +138,6 @@ const tr: typeof en = {
   detailId: 'Kimlik',
   detailType: 'Tür',
   detailServer: 'Gerekli sunucu',
-  detailSdk: 'SDK',
 
   releaseNotes: 'Sürüm notları',
   noReleaseInfo: 'Sürüm bilgisi şu an kullanılamıyor.',

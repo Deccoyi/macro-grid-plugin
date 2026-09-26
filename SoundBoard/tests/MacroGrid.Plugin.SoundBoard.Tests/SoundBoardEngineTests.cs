@@ -2,17 +2,17 @@ using MacroGrid.Plugin.Abstractions;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
 
-namespace MacroGrid.Plugin.Sound.Tests;
+namespace MacroGrid.Plugin.SoundBoard.Tests;
 
 /// <summary>Exercises the sample-provider chain and the engine's playback bookkeeping "by hand" — no WASAPI
-/// device is ever opened (SoundEngine degrades to logging a status instead of throwing when one isn't
+/// device is ever opened (SoundBoardEngine degrades to logging a status instead of throwing when one isn't
 /// available, see EnsureOutputOpen), so these run the same on a machine with no audio hardware.</summary>
-public sealed class SoundEngineTests : IDisposable
+public sealed class SoundBoardEngineTests : IDisposable
 {
     private readonly string _dataDir = Path.Combine(Path.GetTempPath(), "sound-tests-" + Guid.NewGuid().ToString("N"));
     private static readonly WaveFormat MixerFormat = WaveFormat.CreateIeeeFloatWaveFormat(48000, 2);
 
-    public SoundEngineTests() => Directory.CreateDirectory(_dataDir);
+    public SoundBoardEngineTests() => Directory.CreateDirectory(_dataDir);
 
     public void Dispose()
     {
@@ -80,7 +80,51 @@ public sealed class SoundEngineTests : IDisposable
             Assert.Equal(buffer.Length, mixer.Read(buffer, 0, buffer.Length));
     }
 
-    // ---- SoundEngine's own bookkeeping, added to the mixer directly (AddVoiceForTesting) ----
+    [Fact]
+    public void A_voice_finishes_when_the_mixer_drops_it_after_a_short_read()
+    {
+        // The mixer removes an input on its first short read and never reads it again, so Finished must not
+        // depend on a later read that returns exactly 0.
+        var mixer = new MixingSampleProvider(MixerFormat) { ReadFully = true };
+        var voice = new SoundVoice(TestWav.CreateFullScale(_dataDir, TimeSpan.FromMilliseconds(10), sampleRate: 8000),
+            100, loop: false, MixerFormat, "s1", "d", "p", "w", isPreview: false);
+        mixer.AddMixerInput(voice);
+
+        var buffer = new float[4096];
+        for (var i = 0; i < 20; i++) mixer.Read(buffer, 0, buffer.Length);
+
+        Assert.True(voice.Finished);
+        voice.Dispose();
+    }
+
+    [Fact]
+    public async Task Variables_go_back_to_idle_when_a_sound_ends_by_itself()
+    {
+        var store = new FakeVariableStore();
+        using var engine = new SoundBoardEngine(new FakePluginHost(_dataDir));
+        var file = TestWav.CreateFullScale(_dataDir, TimeSpan.FromMilliseconds(10), sampleRate: 8000);
+        engine.ApplySettings(new SoundBoardSettingsData { Sounds = [new SoundEntry { Id = "s1", Name = "Bell", File = file }] });
+        using var cts = new CancellationTokenSource();
+        var run = engine.RunAsync(store, cts.Token);
+
+        var voice = NewVoice("s1", TimeSpan.FromMilliseconds(10));
+        engine.AddVoiceForTesting(voice);
+        // Read past the end the way the mixer would, so the voice reports Finished.
+        var buffer = new float[4096];
+        voice.Read(buffer, 0, buffer.Length);
+        Assert.True(voice.Finished);
+        Assert.False(engine.IsPlaying("s1"));
+
+        for (var i = 0; i < 100 && engine.VoicesForTesting.Count > 0; i++) await Task.Delay(50);
+
+        Assert.Empty(engine.VoicesForTesting);
+        Assert.Equal(false, store.Get("soundboard.s1.playing"));
+        Assert.Equal("", store.Get("soundboard.nowPlaying"));
+        cts.Cancel();
+        await run;
+    }
+
+    // ---- SoundBoardEngine's own bookkeeping, added to the mixer directly (AddVoiceForTesting) ----
 
     private SoundVoice NewVoice(string soundId, TimeSpan duration, string deviceId = "d", string pageId = "p", string widgetId = "w", bool isPreview = false) =>
         new(TestWav.CreateFullScale(_dataDir, duration, sampleRate: 8000), 100, loop: false, MixerFormat, soundId, deviceId, pageId, widgetId, isPreview);
@@ -88,7 +132,7 @@ public sealed class SoundEngineTests : IDisposable
     [Fact]
     public void Stop_immediate_removes_the_voice_right_away()
     {
-        using var engine = new SoundEngine(new FakePluginHost(_dataDir));
+        using var engine = new SoundBoardEngine(new FakePluginHost(_dataDir));
         engine.AddVoiceForTesting(NewVoice("s1", TimeSpan.FromSeconds(5)));
 
         engine.Stop(new VoiceFilter(SoundId: "s1"), "immediate");
@@ -99,7 +143,7 @@ public sealed class SoundEngineTests : IDisposable
     [Fact]
     public async Task Stop_fade_removes_the_voice_only_after_the_fade_out_delay()
     {
-        using var engine = new SoundEngine(new FakePluginHost(_dataDir));
+        using var engine = new SoundBoardEngine(new FakePluginHost(_dataDir));
         engine.AddVoiceForTesting(NewVoice("s1", TimeSpan.FromSeconds(5)));
 
         engine.Stop(new VoiceFilter(SoundId: "s1"), "fade"); // uses settings.FadeOutMs (default 500ms)
@@ -112,7 +156,7 @@ public sealed class SoundEngineTests : IDisposable
     [Fact]
     public void StopAll_never_touches_a_preview_voice()
     {
-        using var engine = new SoundEngine(new FakePluginHost(_dataDir));
+        using var engine = new SoundBoardEngine(new FakePluginHost(_dataDir));
         engine.AddVoiceForTesting(NewVoice("s1", TimeSpan.FromSeconds(5)));
         engine.AddVoiceForTesting(NewVoice("", TimeSpan.FromSeconds(5), isPreview: true));
 
@@ -122,16 +166,16 @@ public sealed class SoundEngineTests : IDisposable
         Assert.True(engine.VoicesForTesting[0].IsPreview);
     }
 
-    // ---- sound.play / sound.stop actions: overlap, cut, toggle, hold-release ----
+    // ---- soundboard.play / soundboard.stop actions: overlap, cut, toggle, hold-release ----
 
     private static ActionContext Context(string deviceId = "dev1", string pageId = "page1", string widgetId = "w1") =>
         new(deviceId, pageId, widgetId, new FakeDeviceController());
 
-    private (SoundEngine Engine, string SoundAId, string SoundBId) NewEngineWithTwoSounds()
+    private (SoundBoardEngine Engine, string SoundAId, string SoundBId) NewEngineWithTwoSounds()
     {
         var host = new FakePluginHost(_dataDir);
-        var engine = new SoundEngine(host);
-        var page = new SoundSettingsPage(host, engine);
+        var engine = new SoundBoardEngine(host);
+        var page = new SoundBoardSettingsPage(host, engine);
         var fileA = TestWav.CreateFullScale(_dataDir, TimeSpan.FromSeconds(5), sampleRate: 8000);
         var fileB = TestWav.CreateFullScale(_dataDir, TimeSpan.FromSeconds(5), sampleRate: 8000);
         page.Save(new System.Text.Json.Nodes.JsonObject
@@ -151,10 +195,10 @@ public sealed class SoundEngineTests : IDisposable
     {
         var (engine, soundA, soundB) = NewEngineWithTwoSounds();
         using var _ = engine;
-        var action = new SoundPlayAction(engine);
+        var action = new SoundBoardPlayAction(engine);
 
-        await action.ExecuteAsync(Context(), SoundSettingsForPlay(soundA), default);
-        await action.ExecuteAsync(Context(), SoundSettingsForPlay(soundB), default);
+        await action.ExecuteAsync(Context(), SoundBoardSettingsForPlay(soundA), default);
+        await action.ExecuteAsync(Context(), SoundBoardSettingsForPlay(soundB), default);
 
         Assert.True(engine.IsPlaying(soundA));
         Assert.True(engine.IsPlaying(soundB));
@@ -166,12 +210,12 @@ public sealed class SoundEngineTests : IDisposable
         var (engine, soundA, soundB) = NewEngineWithTwoSounds();
         using var _ = engine;
         SetOverlapMode(engine, "cut");
-        var action = new SoundPlayAction(engine);
+        var action = new SoundBoardPlayAction(engine);
 
-        await action.ExecuteAsync(Context(), SoundSettingsForPlay(soundA), default);
+        await action.ExecuteAsync(Context(), SoundBoardSettingsForPlay(soundA), default);
         Assert.True(engine.IsPlaying(soundA));
 
-        await action.ExecuteAsync(Context(), SoundSettingsForPlay(soundB), default);
+        await action.ExecuteAsync(Context(), SoundBoardSettingsForPlay(soundB), default);
 
         Assert.False(engine.IsPlaying(soundA));
         Assert.True(engine.IsPlaying(soundB));
@@ -182,8 +226,8 @@ public sealed class SoundEngineTests : IDisposable
     {
         var (engine, soundA, _) = NewEngineWithTwoSounds();
         using var _ = engine;
-        var action = new SoundPlayAction(engine);
-        var settings = SoundSettingsForPlay(soundA, playMode: "toggle");
+        var action = new SoundBoardPlayAction(engine);
+        var settings = SoundBoardSettingsForPlay(soundA, playMode: "toggle");
 
         await action.ExecuteAsync(Context(), settings, default);
         Assert.True(engine.IsPlaying(soundA));
@@ -197,8 +241,8 @@ public sealed class SoundEngineTests : IDisposable
     {
         var (engine, soundA, _) = NewEngineWithTwoSounds();
         using var _ = engine;
-        var action = new SoundPlayAction(engine);
-        var settings = SoundSettingsForPlay(soundA, playMode: "hold");
+        var action = new SoundBoardPlayAction(engine);
+        var settings = SoundBoardSettingsForPlay(soundA, playMode: "hold");
 
         await action.ExecuteAsync(Context(deviceId: "dev1", widgetId: "w1"), settings, default);
         Assert.True(engine.IsPlaying(soundA));
@@ -217,8 +261,8 @@ public sealed class SoundEngineTests : IDisposable
     {
         var (engine, soundA, _) = NewEngineWithTwoSounds();
         using var _ = engine;
-        var action = new SoundPlayAction(engine);
-        var settings = SoundSettingsForPlay(soundA, playMode: "full");
+        var action = new SoundBoardPlayAction(engine);
+        var settings = SoundBoardSettingsForPlay(soundA, playMode: "full");
 
         await action.ExecuteAsync(Context(), settings, default);
         await action.ReleaseAsync(Context(), settings, default);
@@ -226,16 +270,16 @@ public sealed class SoundEngineTests : IDisposable
         Assert.True(engine.IsPlaying(soundA));
     }
 
-    private static System.Text.Json.Nodes.JsonObject SoundSettingsForPlay(string soundId, string playMode = "full") => new()
+    private static System.Text.Json.Nodes.JsonObject SoundBoardSettingsForPlay(string soundId, string playMode = "full") => new()
     {
         ["sound"] = soundId,
         ["playMode"] = playMode,
     };
 
-    private static void SetOverlapMode(SoundEngine engine, string mode)
+    private static void SetOverlapMode(SoundBoardEngine engine, string mode)
     {
         var current = engine.Settings;
-        engine.ApplySettings(new SoundSettingsData
+        engine.ApplySettings(new SoundBoardSettingsData
         {
             OutputDeviceId = current.OutputDeviceId,
             Sounds = current.Sounds,
@@ -248,7 +292,7 @@ public sealed class SoundEngineTests : IDisposable
     }
 }
 
-/// <summary>Records nothing — SoundEngine tests never call into IDeviceController, only ActionContext needs one.</summary>
+/// <summary>Records nothing — SoundBoardEngine tests never call into IDeviceController, only ActionContext needs one.</summary>
 internal sealed class FakeDeviceController : IDeviceController
 {
     public Task ShowPageAsync(string pageId) => Task.CompletedTask;

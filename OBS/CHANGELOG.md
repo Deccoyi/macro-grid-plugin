@@ -4,6 +4,11 @@ New features and fixes in the OBS plugin. For technical details, see [CHANGELOG-
 
 ## Unreleased
 
+## 0.2.2 - 2026-09-25
+### Changed
+- **Needs Macro Grid 0.3.2 or newer:** this version works with the new plugin system, so an older Macro Grid will not load it.
+- **Plugin catalog:** the plugin now has a description and author for the Discover tab.
+
 ## 0.2.1 - 2026-09-24
 ### New
 - **Languages:** Action names, form labels, values and status texts are shown in Turkish or English, following the language of the app.

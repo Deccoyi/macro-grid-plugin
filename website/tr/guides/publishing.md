@@ -4,7 +4,7 @@ Eklentiler düz klasörler olarak dağıtılır. Yayımlamak, insanlara düzenle
 
 ## Kontrol listesi
 
-1. **Manifest.** `id` benzersiz ve sabittir, `version` [anlamsal sürümlemeyi](/tr/basics/compatibility#eklentinizi-sürümleme) izler, `sdkVersion` derleyip test ettiğiniz SDK'dır, `minServerVersion` kullandığınız özelliklere sahip en eski sunucudur.
+1. **Manifest.** `id` benzersiz ve sabittir, `version` [anlamsal sürümlemeyi](/tr/basics/compatibility#eklentinizi-sürümleme) izler, `macroGrid` kullandığınız özelliklere sahip en eski Macro Grid'dir (derlediğiniz SDK sürümü ya da daha eskisi).
 2. **İzinler** (JavaScript). Yalnızca kullandığınız izinleri isteyin; bkz. [İzinler](/tr/reference/permissions). Daha fazla izin isteyen bir güncelleme, kullanıcının yeniden onayını bekler.
 3. **Bir README**: eklentinin ne yaptığını, gereksinimlerini, ayarlarını ve verileri nerede sakladığını anlatır. Bir sırrı düz metin olarak saklıyorsa bunu belirtin.
 4. **Bir lisans.** Bir `LICENSE` dosyası ekleyin; üçüncü taraf kod veya varlık içeriyorsa bir `NOTICE.md` de ekleyin. Her varlığın (simge, yazı tipi) nereden geldiğini ve yeniden dağıtma hakkınız olduğunu belirtin.
@@ -33,7 +33,7 @@ plugin-<name>-v<version>
 
 Sunucu, kullanıcının eklediği herhangi bir genel GitHub deposundan da eklenti kurabilir, yalnızca bu depo değil — ama açık bir üçüncü taraf uyarısıyla, çünkü yalnızca bu deponun sürümleri resmî anahtarla imzalanır. İki biçim desteklenir:
 
-- **Çok eklentili bir depo**, Keşfet sekmesinde kaynak olarak eklenir: deponuzun kökünde, `main` üzerinde, yalnızca kendi sürümlerinize işaret eden bir `macrogrid-index.json` tutun. Bu deponun `.github/workflows/release.yml` ve `scripts/update-plugin-index.ps1` dosyalarını başlangıç noktası olarak kopyalayın ve imzalama adımını çıkarın (resmî bir anahtarınız yok, ve kendiniz eklediğiniz bir imzaya zaten güvenilmez).
+- **Çok eklentili bir depo**, Keşfet sekmesinde kaynak olarak eklenir: deponuzun kökünde, `main` üzerinde, yalnızca kendi sürümlerinize işaret eden bir `macrogrid-index.json` tutun. Bu deponun `examples/third-party-release.yml` ve `scripts/update-plugin-index.ps1` dosyalarını başlangıç noktası olarak kopyalayın ve imzalama adımını çıkarın (resmî bir anahtarınız yok, ve kendiniz eklediğiniz bir imzaya zaten güvenilmez).
 - **Tek eklentili bir depo**, URL'si yapıştırılarak kurulur: kökte, her zaman en son sürümle eşleşen bir `plugin.json` tutun; `v<version>` etiketiyle, bir `<id>-<version>.zip` ve bir `<id>-<version>.zip.sha256` varlığıyla.
 
 Kökte `plugin.json` yerine `macrogrid-index.json` bulunması, sunucuya "bu çok eklentili bir depo" olduğunu söyler — tam şema için bkz. [Kaynak dizini](/tr/reference/source-index).
@@ -43,8 +43,8 @@ Kökte `plugin.json` yerine `macrogrid-index.json` bulunması, sunucuya "bu çok
 [Mağaza](/tr/store/), bu deponun eklentilerini listeler ve kendini depodan ve GitHub sürümlerinden oluşturur; bu yüzden bir eklentiyi listelemek üç adımdır (katkı için önce [Depo kuralları](/tr/guides/repo-rules) sayfasını izleyin):
 
 1. **Klasörü ekleyin**: depo kökünde (örneğin `MyPlugin/`) `plugin.json`, bir `README.md` (ilk bölümü "Ne yapar" olur, ilk paragrafı kart metni olur), bir `CHANGELOG.md` ve yukarıda anlatıldığı gibi lisans dosyaları bulunsun.
-2. **`website/store/catalog.json` dosyasına bir satır ekleyin**: `{ "id": "my-plugin", "dir": "MyPlugin", "category": "Integrations", "icon": "code" }`.
-   `id`, `plugin.json` içindeki `id` ile aynı olmalıdır. `icon`, `website/public/store/icons/` içindeki bir SVG'nin adıdır; yoksa kart bir harf gösterir. En başa sıralamak için `"featured": true` ekleyin.
+2. **İsterseniz `website/store/catalog.json` dosyasına bir satır ekleyin**: `{ "id": "my-plugin", "dir": "MyPlugin", "category": "Integrations", "icon": "code" }`.
+   Mağaza, `plugin.json` içeren her kök klasörü bu satır olmadan da listeler (kategori "Diğer", ikon yok); satır yalnızca kartın görünümünü belirler. `id`, `plugin.json` içindeki `id` ile aynı olmalıdır. `icon`, `website/public/store/icons/` içindeki bir SVG'nin adıdır; yoksa kart bir harf gösterir. En başa sıralamak için `"featured": true` ekleyin.
 3. **Bir sürüm etiketleyin**: `plugin-<id>-vX.Y.Z` (örneğin `plugin-my-plugin-v0.1.0`), [Sürümler](#bu-depodaki-surumler) bölümünde anlatıldığı gibi. Sürüm yayımlandığında Mağaza, zip dosyasını indirme düğmesi olarak gösterir. Site, bir sürüm yayımlandığında, düzenlendiğinde veya silindiğinde yeniden oluşturulur.
 
 Taslak sürümler asla gösterilmez. Bir eklentinin yayımlanmış sürümü olana kadar kartı GitHub Releases sayfasına bağlanır.

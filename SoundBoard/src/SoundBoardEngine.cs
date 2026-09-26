@@ -4,9 +4,9 @@ using NAudio.CoreAudioApi;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
 
-[assembly: InternalsVisibleTo("MacroGrid.Plugin.Sound.Tests")]
+[assembly: InternalsVisibleTo("MacroGrid.Plugin.SoundBoard.Tests")]
 
-namespace MacroGrid.Plugin.Sound;
+namespace MacroGrid.Plugin.SoundBoard;
 
 /// <summary>
 /// Owns the plugin's whole audio lifetime: one shared-mode <see cref="WasapiOut"/> on the configured device,
@@ -16,9 +16,9 @@ namespace MacroGrid.Plugin.Sound;
 /// on the first <see cref="Play"/> and closes after <see cref="IdleCloseDelay"/> of nothing playing (see
 /// <see cref="RunAsync"/>) — a soundboard that is not being used costs nothing.
 /// </summary>
-public sealed partial class SoundEngine : IVariableProvider, IVariableCatalogSource, IDisposable
+public sealed partial class SoundBoardEngine : IVariableProvider, IVariableCatalogSource, IDisposable
 {
-    private const string Category = "Sound";
+    private const string Category = "SoundBoard";
     private static readonly WaveFormat MixerFormat = WaveFormat.CreateIeeeFloatWaveFormat(48000, 2);
     internal static readonly TimeSpan IdleCloseDelay = TimeSpan.FromSeconds(30);
     private static readonly TimeSpan RemainingTickInterval = TimeSpan.FromMilliseconds(250); // ~4 Hz, only while something plays
@@ -34,25 +34,25 @@ public sealed partial class SoundEngine : IVariableProvider, IVariableCatalogSou
 
     private WasapiOut? _output;
     private DateTime _lastActivityUtc = DateTime.UtcNow;
-    private SoundSettingsData _settings;
+    private SoundBoardSettingsData _settings;
     private IVariableStore? _store;
 
-    public SoundEngine(IPluginHost host)
+    public SoundBoardEngine(IPluginHost host)
     {
         _host = host;
-        _settings = SoundSettingsData.LoadOrCreate(host.DataDirectory);
+        _settings = SoundBoardSettingsData.LoadOrCreate(host.DataDirectory);
         _masterVolume = new VolumeSampleProvider(_mixer) { Volume = (float)(_settings.MasterVolume / 100.0) };
-        _fileStatus = host.CreateStatusItem("sound-files");
-        _deviceStatus = host.CreateStatusItem("sound-device");
+        _fileStatus = host.CreateStatusItem("soundboard-files");
+        _deviceStatus = host.CreateStatusItem("soundboard-device");
         UpdateFileStatus();
     }
 
-    public SoundSettingsData Settings { get { lock (_lock) return _settings; } }
+    public SoundBoardSettingsData Settings { get { lock (_lock) return _settings; } }
 
-    /// <summary>Applied by <see cref="SoundSettingsPage.Save"/>. Persists, updates the master and every
+    /// <summary>Applied by <see cref="SoundBoardSettingsPage.Save"/>. Persists, updates the master and every
     /// currently playing voice's volume/loop live (no restart), reopens the output on a device change, and
     /// removes the variables of any sound row that was deleted.</summary>
-    public void ApplySettings(SoundSettingsData next)
+    public void ApplySettings(SoundBoardSettingsData next)
     {
         List<string> removedIds;
         var deviceChanged = false;
@@ -109,19 +109,39 @@ public sealed partial class SoundEngine : IVariableProvider, IVariableCatalogSou
         TouchActivity();
         WakeLoop();
 
-        var name = entry.Name.Length > 0 ? entry.Name : Path.GetFileNameWithoutExtension(entry.File);
-        _store?.Set("sound.nowPlaying", name);
-        _store?.Set($"sound.{soundId}.playing", true);
+        _store?.Set("soundboard.lastPlayed", DisplayName(entry));
+        _store?.Set($"soundboard.{soundId}.playing", true);
+        PublishNowPlaying();
+    }
+
+    private static string DisplayName(SoundEntry entry) =>
+        entry.Name.Length > 0 ? entry.Name : Path.GetFileNameWithoutExtension(entry.File);
+
+    /// <summary>"soundboard.nowPlaying": the name of the most recently started sound that is still playing, empty
+    /// when nothing plays. (<c>soundboard.lastPlayed</c> keeps the last started name after it ends.)</summary>
+    private void PublishNowPlaying()
+    {
+        string name = "";
+        lock (_lock)
+        {
+            var voice = _voices.LastOrDefault(v => !v.IsPreview && !v.Finished);
+            if (voice is not null)
+            {
+                var entry = _settings.Sounds.FirstOrDefault(s => s.Id == voice.SoundId);
+                if (entry is not null) name = DisplayName(entry);
+            }
+        }
+        _store?.Set("soundboard.nowPlaying", name);
     }
 
     public bool IsPlaying(string soundId)
     {
-        lock (_lock) return _voices.Any(v => !v.IsPreview && v.SoundId == soundId);
+        lock (_lock) return _voices.Any(v => !v.IsPreview && !v.Finished && v.SoundId == soundId);
     }
 
     /// <summary>Test seam: adds a voice straight to the mixer without opening a real output device, so
     /// Stop/StopAll/IsPlaying and the fade-removal timing can be exercised "by hand" (see
-    /// MacroGrid.Plugin.Sound.Tests) without a WASAPI device being available.</summary>
+    /// MacroGrid.Plugin.SoundBoard.Tests) without a WASAPI device being available.</summary>
     internal void AddVoiceForTesting(SoundVoice voice)
     {
         lock (_lock) _voices.Add(voice);
@@ -130,7 +150,7 @@ public sealed partial class SoundEngine : IVariableProvider, IVariableCatalogSou
 
     internal IReadOnlyList<SoundVoice> VoicesForTesting { get { lock (_lock) return [.. _voices]; } }
 
-    /// <summary>"default" resolves to the settings' own <see cref="SoundSettingsData.StopStyle"/>; anything
+    /// <summary>"default" resolves to the settings' own <see cref="SoundBoardSettingsData.StopStyle"/>; anything
     /// else (immediate/fade) overrides it for this stop only.</summary>
     public void Stop(VoiceFilter filter, string style)
     {
@@ -169,11 +189,15 @@ public sealed partial class SoundEngine : IVariableProvider, IVariableCatalogSou
 
         try { _mixer.RemoveMixerInput(voice); } catch (ArgumentException) { /* already gone from the mixer */ }
         voice.Dispose();
-        if (!voice.IsPreview) _store?.Set($"sound.{voice.SoundId}.playing", IsPlaying(voice.SoundId));
+        if (!voice.IsPreview)
+        {
+            _store?.Set($"soundboard.{voice.SoundId}.playing", IsPlaying(voice.SoundId));
+            PublishNowPlaying();
+        }
     }
 
     /// <summary>Starts (or, if one is already playing, stops) a one-off preview voice for the settings
-    /// window's Preview button — never persisted, never counted by "sound.*" variables or <see cref="Stop"/>
+    /// window's Preview button — never persisted, never counted by "soundboard.*" variables or <see cref="Stop"/>
     /// with a sound-scoped filter, and always at most one at a time.</summary>
     public string? TogglePreview(string file, double volumePercent)
     {
@@ -207,7 +231,7 @@ public sealed partial class SoundEngine : IVariableProvider, IVariableCatalogSou
             _masterVolume.Volume = (float)(percent / 100.0);
             _settings.Save(_host.DataDirectory);
         }
-        _store?.Set("sound.masterVolume", percent);
+        _store?.Set("soundboard.masterVolume", percent);
     }
 
     public double GetMasterVolume() { lock (_lock) return _settings.MasterVolume; }
@@ -232,7 +256,7 @@ public sealed partial class SoundEngine : IVariableProvider, IVariableCatalogSou
     /// configured one just got unplugged, it's held exclusively by another app, ...); that must never turn a
     /// button press into an unhandled exception. On failure this only reports it through
     /// <see cref="_deviceStatus"/> and leaves <see cref="_output"/> null (retried on the next Play) — voice
-    /// bookkeeping (overlap/cut, toggle, hold-release, the sound.* variables) proceeds either way, so nothing
+    /// bookkeeping (overlap/cut, toggle, hold-release, the soundboard.* variables) proceeds either way, so nothing
     /// but the actual sound is missing until a device is available again.</summary>
     private void EnsureOutputOpen()
     {
@@ -295,7 +319,7 @@ public sealed partial class SoundEngine : IVariableProvider, IVariableCatalogSou
 
     private void UpdateFileStatus()
     {
-        SoundSettingsData settings;
+        SoundBoardSettingsData settings;
         lock (_lock) settings = _settings;
         var missing = settings.Sounds.Count(s => s.File.Length == 0 || !File.Exists(s.File));
         _fileStatus.Update(

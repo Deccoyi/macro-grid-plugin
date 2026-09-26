@@ -43,3 +43,11 @@ jobs:
       - name: Test OBS plugin
         working-directory: macro-grid-plugin
         run: dotnet test OBS/tests/MacroGrid.Plugin.Obs.Tests/MacroGrid.Plugin.Obs.Tests.csproj -c Release
+
+      - name: Build SoundBoard plugin
+        working-directory: macro-grid-plugin
+        run: dotnet build SoundBoard/src/MacroGrid.Plugin.SoundBoard.csproj -c Release
+
+      - name: Test SoundBoard plugin
+        working-directory: macro-grid-plugin
+        run: dotnet test SoundBoard/tests/MacroGrid.Plugin.SoundBoard.Tests/MacroGrid.Plugin.SoundBoard.Tests.csproj -c Release

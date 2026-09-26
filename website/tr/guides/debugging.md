@@ -15,7 +15,7 @@ Her eklentinin bir durumu vardır ve adının altında bir ileti gösterilir:
 
 | Durum | Olağan neden |
 |---|---|
-| **Uyumsuz** (*Incompatible*) | `sdkVersion` veya `minServerVersion` bu sunucuyla uyuşmuyor. Bkz. [Uyumluluk](/tr/basics/compatibility). |
+| **Uyumsuz** (*Incompatible*) | `macroGrid` bu Macro Grid'den daha yeni bir sürüm ya da başka bir MAJOR istiyor; adın altındaki mesaj hangisi olduğunu söyler. Bkz. [Uyumluluk](/tr/basics/compatibility). |
 | **Onay bekliyor** (*Needs approval*) | Bir JavaScript eklentisinin izinleri henüz onaylanmadı. |
 | **Hata** (*Error*) | `plugin.json` ayrıştırılamadı; giriş dosyası yok; `id` veya bir aksiyon türü zaten kullanımda; bilinmeyen bir izin dizesi var; `Initialize` veya betiğin ilk çalışması hata verdi; ya da eklenti art arda 5 kez başarısız olduğu için kapatıldı. |
 

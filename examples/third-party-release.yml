@@ -1,3 +1,7 @@
+# Template for a third-party plugin repository: builds a plugin from a tag, publishes the release and records it in
+# macrogrid-index.json. Copy it to .github/workflows/ in your own repository and adjust the plugin map below. It does not
+# sign anything: only this repository's official releases are signed, and they are built and signed on the maintainer's
+# machine with scripts/release-plugin.ps1 instead of this workflow.
 name: Release plugin
 
 # Tag naming: plugin-<name>-v<version>, for example plugin-obs-v0.2.0. See docs/release.md.
@@ -55,6 +59,7 @@ jobs:
           "id=$($manifest.id)" | Out-File -Append -Encoding utf8 $env:GITHUB_OUTPUT
           "pluginName=$($manifest.name)" | Out-File -Append -Encoding utf8 $env:GITHUB_OUTPUT
           "description=$($manifest.description)" | Out-File -Append -Encoding utf8 $env:GITHUB_OUTPUT
+          "macroGrid=$($manifest.macroGrid)" | Out-File -Append -Encoding utf8 $env:GITHUB_OUTPUT
           "sdkVersion=$($manifest.sdkVersion)" | Out-File -Append -Encoding utf8 $env:GITHUB_OUTPUT
           "minServerVersion=$($manifest.minServerVersion)" | Out-File -Append -Encoding utf8 $env:GITHUB_OUTPUT
           "kind=$($manifest.kind)" | Out-File -Append -Encoding utf8 $env:GITHUB_OUTPUT
@@ -86,12 +91,10 @@ jobs:
           Copy-Item 'THIRD_PARTY_NOTICES.md' $stage -Force
           Compress-Archive -Path (Join-Path $stage '*') -DestinationPath '${{ steps.plugin.outputs.zip }}' -Force
 
-      - name: Hash and sign the package
+      - name: Hash the package
         id: sign
         shell: pwsh
         working-directory: macro-grid-plugin
-        env:
-          SIGNING_PRIVATE_KEY: ${{ secrets.PLUGIN_SIGNING_PRIVATE_KEY }}
         run: |
           $zip = '${{ steps.plugin.outputs.zip }}'
           $bytes = [System.IO.File]::ReadAllBytes($zip)
@@ -101,17 +104,6 @@ jobs:
           "sha256=$sha256Hex" | Out-File -Append -Encoding utf8 $env:GITHUB_OUTPUT
           "size=$($bytes.Length)" | Out-File -Append -Encoding utf8 $env:GITHUB_OUTPUT
 
-          if (-not $env:SIGNING_PRIVATE_KEY) {
-            throw 'PLUGIN_SIGNING_PRIVATE_KEY secret is not set; the official index cannot ship unsigned entries.'
-          }
-          $ecdsa = [System.Security.Cryptography.ECDsa]::Create()
-          $ecdsa.ImportFromPem($env:SIGNING_PRIVATE_KEY)
-          # Signs the zip's own bytes with SHA-256; the host verifies the same way (see
-          # website/reference/source-index.md), not by re-signing the sha256 hex text.
-          $signature = $ecdsa.SignData($bytes, [System.Security.Cryptography.HashAlgorithmName]::SHA256)
-          $signatureBase64 = [System.Convert]::ToBase64String($signature)
-          Set-Content -Path "$zip.sig" -Value $signatureBase64 -NoNewline -Encoding ascii
-          "signature=$signatureBase64" | Out-File -Append -Encoding utf8 $env:GITHUB_OUTPUT
 
       - name: Publish the release
         shell: pwsh
@@ -123,7 +115,7 @@ jobs:
           $zip = '${{ steps.plugin.outputs.zip }}'
           $version = '${{ steps.plugin.outputs.version }}'
           $notes = "See $dir/CHANGELOG.md for what changed in this version."
-          $args = @('release', 'create', '${{ github.ref_name }}', $zip, "$zip.sha256", "$zip.sig",
+          $args = @('release', 'create', '${{ github.ref_name }}', $zip, "$zip.sha256",
             '--title', "$dir $version", '--notes', $notes)
           if ($version -match '-') { $args += '--prerelease' }
           gh @args
@@ -141,12 +133,12 @@ jobs:
           IDX_HOMEPAGE: ${{ steps.plugin.outputs.homepage }}
           IDX_KIND: ${{ steps.plugin.outputs.kind }}
           IDX_VERSION: ${{ steps.plugin.outputs.version }}
+          IDX_MACRO_GRID: ${{ steps.plugin.outputs.macroGrid }}
           IDX_SDK_VERSION: ${{ steps.plugin.outputs.sdkVersion }}
           IDX_MIN_SERVER_VERSION: ${{ steps.plugin.outputs.minServerVersion }}
           IDX_URL: ${{ steps.plugin.outputs.downloadUrl }}
           IDX_SHA256: ${{ steps.sign.outputs.sha256 }}
           IDX_SIZE: ${{ steps.sign.outputs.size }}
-          IDX_SIGNATURE: ${{ steps.sign.outputs.signature }}
           IDX_PERMISSIONS_JSON: ${{ steps.plugin.outputs.permissionsJson }}
         run: |
           # Every value above comes through an env var, never interpolated into a quoted
@@ -164,12 +156,12 @@ jobs:
             -Homepage $env:IDX_HOMEPAGE `
             -Kind $env:IDX_KIND `
             -Version $env:IDX_VERSION `
+            -MacroGrid $env:IDX_MACRO_GRID `
             -SdkVersion $env:IDX_SDK_VERSION `
             -MinServerVersion $env:IDX_MIN_SERVER_VERSION `
             -Url $env:IDX_URL `
             -Sha256 $env:IDX_SHA256 `
             -Size ([long]$env:IDX_SIZE) `
-            -Signature $env:IDX_SIGNATURE `
             -Permissions ($env:IDX_PERMISSIONS_JSON | ConvertFrom-Json)
 
           git config user.name 'github-actions[bot]'

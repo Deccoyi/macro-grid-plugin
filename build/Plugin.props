@@ -8,6 +8,28 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <!-- plugin.json's "macroGrid" is the oldest Macro Grid the plugin runs on (MAJOR.MINOR.PATCH); Macro Grid and the SDK share one
+       version. It must be in the same MAJOR as the SDK this plugin is built against and must not be newer than it (the minor and
+       patch may be lower: that is what lets the plugin run on more servers). Raise it when you start to use something added to the SDK
+       in a newer MINOR. See docs/using-the-sdk-package.md. -->
+  <Target Name="CheckMacroGridVersion" BeforeTargets="BeforeBuild">
+    <PropertyGroup>
+      <_DeclaredMacroGrid>$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(MSBuildProjectDirectory)\..\plugin.json')), '"macroGrid"\s*:\s*"([^"]*)"').Groups[1].Value)</_DeclaredMacroGrid>
+      <_ThreePart>$([System.Text.RegularExpressions.Regex]::IsMatch('$(_DeclaredMacroGrid)', '^\d+\.\d+\.\d+$'))</_ThreePart>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(_ThreePart)' == 'True'">
+      <_DeclaredMajor>$(_DeclaredMacroGrid.Split('.')[0])</_DeclaredMajor>
+      <_SdkMajor>$(MacroGridSdkVersion.Split('.')[0])</_SdkMajor>
+      <_DeclaredTooNew>$([MSBuild]::VersionGreaterThan('$(_DeclaredMacroGrid)', '$(MacroGridSdkVersion)'))</_DeclaredTooNew>
+    </PropertyGroup>
+    <Error Condition="'$(_ThreePart)' != 'True'"
+           Text="plugin.json needs &quot;macroGrid&quot; as MAJOR.MINOR.PATCH, for example &quot;$(MacroGridSdkVersion)&quot; (found: '$(_DeclaredMacroGrid)')." />
+    <Error Condition="'$(_ThreePart)' == 'True' And '$(_DeclaredMajor)' != '$(_SdkMajor)'"
+           Text="plugin.json says macroGrid $(_DeclaredMacroGrid), but the SDK it is built against is $(MacroGridSdkVersion): the MAJOR must be the same." />
+    <Error Condition="'$(_ThreePart)' == 'True' And '$(_DeclaredTooNew)' == 'True'"
+           Text="plugin.json says macroGrid $(_DeclaredMacroGrid), which is newer than the SDK it is built against ($(MacroGridSdkVersion))." />
+  </Target>
+
   <ItemGroup>
     <!-- SDK: NuGet by default, sibling checkout with -p:UseLocalSdk=true (see Directory.Build.props and
          docs/using-the-sdk-package.md). Either way the SDK dll stays out of the plugin output: the server

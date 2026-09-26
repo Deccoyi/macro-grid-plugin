@@ -11,7 +11,7 @@ Nothing to set up. `dotnet build` restores `MacroGrid.Plugin.Abstractions` (vers
 In your own plugin project:
 
 ```xml
-<PackageReference Include="MacroGrid.Plugin.Abstractions" Version="0.3.1"
+<PackageReference Include="MacroGrid.Plugin.Abstractions" Version="1.0.0"
                   PrivateAssets="all" ExcludeAssets="runtime" />
 ```
 
@@ -45,6 +45,8 @@ Alternatively uncomment the `local-sdk` line in `nuget.config` (do not commit th
 
 ## Versions
 
-Package version = `PluginSdk.Version` in the server repo. A plugin's `plugin.json` `sdkVersion` range (for example
-`^0.3.0`) must match the SDK version you build against. When the SDK version changes, bump `MacroGridSdkVersion`
-in `Directory.Build.props` and the plugins' `sdkVersion`.
+Package version = the Macro Grid version = `PluginSdk.Version` in the server repo (one number for both). A plugin's `plugin.json` says
+`"macroGrid": "1.0.0"`: the oldest Macro Grid it runs on. The build checks that it has the same MAJOR as `MacroGridSdkVersion` and is not
+newer than it; the minor and patch may be lower, which lets the plugin run on more servers. When you start to use something added in a newer
+MINOR, bump `MacroGridSdkVersion` in `Directory.Build.props` and raise `macroGrid` in that plugin's `plugin.json` to match. After a MAJOR
+release of Macro Grid, every plugin is rebuilt against it.

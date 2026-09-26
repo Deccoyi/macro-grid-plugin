@@ -4,8 +4,8 @@
   <Import Project="$(MSBuildThisFileDirectory)..\..\build\Plugin.props" />
 
   <PropertyGroup>
-    <RootNamespace>MacroGrid.Plugin.Sound</RootNamespace>
-    <AssemblyName>MacroGrid.Plugin.Sound</AssemblyName>
+    <RootNamespace>MacroGrid.Plugin.SoundBoard</RootNamespace>
+    <AssemblyName>MacroGrid.Plugin.SoundBoard</AssemblyName>
     <!-- WasapiOut and the CoreAudio device enumeration are Windows-only APIs. -->
     <TargetFramework>net10.0-windows</TargetFramework>
     <!-- A plugin is loaded by PluginLoadContext (AssemblyDependencyResolver), not launched via `dotnet exec`,

@@ -11,6 +11,10 @@ on:
       - "HelloJs/**"
       - "OBS/src/ObsPlugin.cs"
       - "PLCIcons/**"
+      # Every plugin's Store page is built from these files.
+      - "*/plugin.json"
+      - "*/README.md"
+      - "*/CHANGELOG.md"
       - ".github/workflows/pages.yml"
   pull_request:
     paths:
@@ -19,6 +23,10 @@ on:
       - "HelloJs/**"
       - "OBS/src/ObsPlugin.cs"
       - "PLCIcons/**"
+      # Every plugin's Store page is built from these files.
+      - "*/plugin.json"
+      - "*/README.md"
+      - "*/CHANGELOG.md"
       - ".github/workflows/pages.yml"
   # The Store lists the published releases, so the site is rebuilt when one changes.
   release:
@@ -86,7 +94,7 @@ jobs:
 
       - name: Validate the example manifests
         run: |
-          node -e "for (const f of ['examples/hello-js/plugin.json','examples/hello-csharp/plugin.json']) { const m = JSON.parse(require('fs').readFileSync(f,'utf8')); for (const k of ['id','name','version','sdkVersion','minServerVersion','entry','kind']) if (!m[k]) throw new Error(f + ': missing ' + k); }"
+          node -e "for (const f of ['examples/hello-js/plugin.json','examples/hello-csharp/plugin.json']) { const m = JSON.parse(require('fs').readFileSync(f,'utf8')); for (const k of ['id','name','version','macroGrid','entry','kind']) if (!m[k]) throw new Error(f + ': missing ' + k); }"
 
       - name: Set up .NET
         uses: actions/setup-dotnet@v6

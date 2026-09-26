@@ -5,9 +5,10 @@
   "author": "Deccoyi",
   "homepage": "https://github.com/Deccoyi/macro-grid-plugin/tree/main/PLCIcons",
   "defaultLanguage": "en",
-  "version": "0.1.2",
+  "version": "0.1.3",
+  "macroGrid": "1.0.0",
   "sdkVersion": "^0.4.0",
-  "minServerVersion": "0.1.0",
+  "minServerVersion": "0.3.2",
   "entry": "MacroGrid.Plugin.PlcIcons.dll",
   "kind": "csharp",
   "permissions": null

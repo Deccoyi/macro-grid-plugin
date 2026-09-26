@@ -15,7 +15,7 @@ Each plugin shows a status, and a message is shown under its name:
 
 | Status | Usual cause |
 |---|---|
-| **Incompatible** | `sdkVersion` or `minServerVersion` does not match this server. See [Compatibility](/basics/compatibility). |
+| **Incompatible** | `macroGrid` asks for a newer Macro Grid than this one, or for another MAJOR; the message under the name says which. See [Compatibility](/basics/compatibility). |
 | **Needs approval** | A JavaScript plugin's permissions are not approved yet. |
 | **Error** | `plugin.json` could not be parsed; the entry file is missing; the `id` or an action type is already used; a permission string is unknown; `Initialize` or the script's first run threw; or the plugin was switched off after failing 5 times in a row. |
 

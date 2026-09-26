@@ -1,25 +1,26 @@
 using MacroGrid.Plugin.Abstractions;
 
-namespace MacroGrid.Plugin.Sound;
+namespace MacroGrid.Plugin.SoundBoard;
 
 // Variables: the catalog, the RunAsync loop (event-driven except "remaining", which only polls while
 // something plays), and cleanup on a settings change.
-public sealed partial class SoundEngine
+public sealed partial class SoundBoardEngine
 {
     public IEnumerable<VariableInfo> Describe()
     {
-        yield return new("sound.nowPlaying", "Name of the most recently started sound", "{sound.nowPlaying}", Category);
-        yield return new("sound.masterVolume", "Master volume (%)", "{sound.masterVolume|0}", Category) { Type = VariableType.Number, Unit = "%" };
+        yield return new("soundboard.nowPlaying", "Name of the sound playing now (empty when nothing plays)", "{soundboard.nowPlaying}", Category);
+        yield return new("soundboard.lastPlayed", "Name of the most recently started sound", "{soundboard.lastPlayed}", Category);
+        yield return new("soundboard.masterVolume", "Master volume (%)", "{soundboard.masterVolume|0}", Category) { Type = VariableType.Number, Unit = "%" };
 
-        SoundSettingsData settings;
+        SoundBoardSettingsData settings;
         lock (_lock) settings = _settings;
         foreach (var entry in settings.Sounds)
         {
             var label = entry.Name.Length > 0 ? entry.Name : Path.GetFileNameWithoutExtension(entry.File);
-            yield return new($"sound.{entry.Id}.name", $"{label} — name", $"{{sound.{entry.Id}.name}}", Category);
-            yield return new($"sound.{entry.Id}.playing", $"{label} — playing", $"{{sound.{entry.Id}.playing}}", Category) { Type = VariableType.Boolean };
-            yield return new($"sound.{entry.Id}.remaining", $"{label} — remaining", $"{{sound.{entry.Id}.remaining}}", Category) { Type = VariableType.Duration };
-            yield return new($"sound.{entry.Id}.duration", $"{label} — duration", $"{{sound.{entry.Id}.duration}}", Category) { Type = VariableType.Duration };
+            yield return new($"soundboard.{entry.Id}.name", $"{label} — name", $"{{soundboard.{entry.Id}.name}}", Category);
+            yield return new($"soundboard.{entry.Id}.playing", $"{label} — playing", $"{{soundboard.{entry.Id}.playing}}", Category) { Type = VariableType.Boolean };
+            yield return new($"soundboard.{entry.Id}.remaining", $"{label} — remaining", $"{{soundboard.{entry.Id}.remaining}}", Category) { Type = VariableType.Duration };
+            yield return new($"soundboard.{entry.Id}.duration", $"{label} — duration", $"{{soundboard.{entry.Id}.duration}}", Category) { Type = VariableType.Duration };
         }
     }
 
@@ -78,28 +79,35 @@ public sealed partial class SoundEngine
         }
 
         var playing = active.Where(v => !v.IsPreview).ToLookup(v => v.SoundId);
-        SoundSettingsData settings;
+        SoundBoardSettingsData settings;
         lock (_lock) settings = _settings;
         foreach (var entry in settings.Sounds)
         {
             var voice = playing[entry.Id].FirstOrDefault();
-            store.Set($"sound.{entry.Id}.playing", voice is not null);
-            if (voice is null) continue;
+            store.Set($"soundboard.{entry.Id}.playing", voice is not null);
+            if (voice is null)
+            {
+                store.Set($"soundboard.{entry.Id}.remaining", TimeSpan.Zero);
+                continue;
+            }
 
             var remaining = voice.Duration - voice.Position;
-            store.Set($"sound.{entry.Id}.remaining", remaining < TimeSpan.Zero ? TimeSpan.Zero : remaining);
+            store.Set($"soundboard.{entry.Id}.remaining", remaining < TimeSpan.Zero ? TimeSpan.Zero : remaining);
         }
+        PublishNowPlaying();
     }
 
     private void PublishStaticVariables(IVariableStore store)
     {
-        SoundSettingsData settings;
+        SoundBoardSettingsData settings;
         lock (_lock) settings = _settings;
-        store.Set("sound.masterVolume", settings.MasterVolume);
+        store.Set("soundboard.masterVolume", settings.MasterVolume);
+        store.Set("soundboard.nowPlaying", "");
+        store.Set("soundboard.lastPlayed", "");
         foreach (var entry in settings.Sounds)
         {
-            store.Set($"sound.{entry.Id}.name", entry.Name.Length > 0 ? entry.Name : Path.GetFileNameWithoutExtension(entry.File));
-            store.Set($"sound.{entry.Id}.duration", TryGetDuration(entry.File));
+            store.Set($"soundboard.{entry.Id}.name", entry.Name.Length > 0 ? entry.Name : Path.GetFileNameWithoutExtension(entry.File));
+            store.Set($"soundboard.{entry.Id}.duration", TryGetDuration(entry.File));
         }
     }
 
@@ -119,9 +127,9 @@ public sealed partial class SoundEngine
 
     private void RemoveSoundVariables(string soundId)
     {
-        _store?.Remove($"sound.{soundId}.name");
-        _store?.Remove($"sound.{soundId}.playing");
-        _store?.Remove($"sound.{soundId}.remaining");
-        _store?.Remove($"sound.{soundId}.duration");
+        _store?.Remove($"soundboard.{soundId}.name");
+        _store?.Remove($"soundboard.{soundId}.playing");
+        _store?.Remove($"soundboard.{soundId}.remaining");
+        _store?.Remove($"soundboard.{soundId}.duration");
     }
 }

@@ -39,8 +39,8 @@ export interface StorePlugin {
   kind: 'C#' | 'JavaScript'
   version: string
   prerelease: boolean
-  minServerVersion: string
-  sdkVersion: string
+  /** The oldest Macro Grid the plugin runs on ("1.0.0"); older manifests only have minServerVersion, which stands in for it. */
+  macroGrid: string
   permissions: string[]
   downloadUrl: string
   hasRelease: boolean
@@ -203,6 +203,14 @@ async function build(): Promise<StorePlugin[]> {
   } catch (e) {
     console.warn(`[store] catalog.json is invalid (${(e as Error).message}).`)
   }
+  // Every top-level folder with a plugin.json is listed; catalog.json only adds optional display details (category,
+  // icon, featured, order). A new plugin therefore shows up in the Store without any extra step.
+  const listed = new Set(catalog.map((e) => e.dir))
+  for (const d of fs.readdirSync(root, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+    if (d.isDirectory() && !listed.has(d.name) && fs.existsSync(path.join(root, d.name, 'plugin.json'))) {
+      catalog.push({ id: d.name.toLowerCase(), dir: d.name })
+    }
+  }
   const all = await fetchReleases()
   const published = all.filter((r) => r && !r.draft && typeof r.tag_name === 'string')
   const plugins: StorePlugin[] = []
@@ -260,8 +268,7 @@ async function build(): Promise<StorePlugin[]> {
         kind: kindRaw === 'csharp' ? 'C#' : 'JavaScript',
         version: latest?.version ?? String(manifest.version ?? ''),
         prerelease: latest ? latest.prerelease : true,
-        minServerVersion: String(manifest.minServerVersion ?? ''),
-        sdkVersion: String(manifest.sdkVersion ?? ''),
+        macroGrid: String(manifest.macroGrid ?? manifest.minServerVersion ?? ''),
         permissions: Array.isArray(manifest.permissions) ? manifest.permissions.map(String) : [],
         downloadUrl: latest?.downloadUrl ?? RELEASES_PAGE,
         hasRelease: !!latest?.downloadUrl,
