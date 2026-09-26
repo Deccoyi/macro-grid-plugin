@@ -7,8 +7,9 @@
   so a compromised GitHub account cannot produce a signed plugin. Run it from a clean, up-to-date `main`.
 
   Steps: read the plugin's plugin.json, build and zip it together with the licence texts, hash and sign the zip
-  (scripts/sign-package.cs), then, only with -Publish, create the GitHub release (tag plugin-<name>-v<version>)
-  with the zip, .sha256 and .sig attached, and commit the new version into macrogrid-index.json on main.
+  (scripts/sign-package.cs) and write its software bill of materials, then, only with -Publish, create the GitHub
+  release (tag plugin-<name>-v<version>) with the zip, .sha256, .sig and SBOM attached, and commit the new version into
+  macrogrid-index.json on main. A C# plugin with a known vulnerable package is refused before anything is built.
 
   Without -Publish nothing leaves this machine: the signed zip is left in the output folder for inspection.
 
@@ -60,6 +61,15 @@ if ($Publish -and (git tag --list $tag)) { throw "Tag $tag already exists; bump 
 
 Write-Host "Releasing $($manifest.name) $version ($tag)"
 
+# A release never ships a package with a known vulnerability.
+if ($entry.proj) {
+    dotnet restore $entry.proj --verbosity quiet
+    if ($LASTEXITCODE -ne 0) { throw 'restore failed' }
+    $report = dotnet list $entry.proj package --vulnerable --include-transitive 2>&1 | Out-String
+    if ($LASTEXITCODE -ne 0) { Write-Host $report; throw 'dotnet list package failed' }
+    if ($report -match 'has the following vulnerable packages') { Write-Host $report; throw 'A package of this plugin has a known vulnerability; update it first.' }
+}
+
 # Build and package.
 if (Test-Path $OutDir) { Remove-Item $OutDir -Recurse -Force }
 $stage = Join-Path $OutDir 'stage'
@@ -99,6 +109,22 @@ dotnet run (Join-Path $PSScriptRoot 'sign-package.cs') -- $zip $KeyPath | ForEac
 if (-not $result.signature) { throw 'signing failed' }
 Write-Host "Signed $zipName ($($result.size) bytes, sha256 $($result.sha256))"
 
+# Software bill of materials (CycloneDX): the packages the zip ships. The plugin SDK is left out, because a plugin is
+# only built against it and the server supplies its own copy at run time. A JavaScript plugin has no packages.
+$sbom = $null
+if ($entry.proj) {
+    $tools = Join-Path $OutDir 'tools'
+    dotnet tool install CycloneDX --version 6.2.0 --tool-path $tools --add-source https://api.nuget.org/v3/index.json | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw 'Installing the SBOM generator failed' }
+    $sbomName = "$($manifest.id)-$version.cdx.json"
+    & (Join-Path $tools 'dotnet-CycloneDX.exe') $entry.proj --exclude-dev --exclude-test-projects --output-format Json `
+        --set-name $manifest.name --set-version $version --exclude-filter MacroGrid.Plugin.Abstractions `
+        --output $OutDir --filename $sbomName
+    if ($LASTEXITCODE -ne 0) { throw 'SBOM failed' }
+    $sbom = Join-Path $OutDir $sbomName
+    Write-Host "SBOM: $sbomName"
+}
+
 if (-not $Publish) {
     Write-Host "Dry run: nothing was published. Files are in $OutDir"
     return
@@ -106,7 +132,8 @@ if (-not $Publish) {
 
 # Publish the GitHub release; the tag is created on main's current commit.
 $notes = "See $($entry.dir)/CHANGELOG.md for what changed in this version."
-$ghArgs = @('release', 'create', $tag, $zip, "$zip.sha256", "$zip.sig", '--repo', "$owner/$repo",
+$assets = @($zip, "$zip.sha256", "$zip.sig") + @($sbom | Where-Object { $_ })
+$ghArgs = @('release', 'create', $tag) + $assets + @('--repo', "$owner/$repo",
     '--target', 'main', '--title', "$($entry.dir) $version", '--notes', $notes)
 if ($version -match '-') { $ghArgs += '--prerelease' }
 & gh @ghArgs

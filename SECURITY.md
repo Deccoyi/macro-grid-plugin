@@ -33,6 +33,18 @@ Macro Grid is a hobby project maintained in spare time, not a full-time job or a
 maintainer will try to fix real problems, but there is no guaranteed response time, no guaranteed fix, no support schedule and no bug
 bounty. Fixes land when there is time for them. If that is not acceptable for how you use the software, do not rely on it.
 
+## How fixes are announced
+
+When a reported vulnerability is fixed, the fix is described in a GitHub security advisory on this repository and under "Security" in the
+plugin's changelog.
+
 ## Supported versions
 
-Only the latest released version of each plugin (or, before the first release, the `dev` branch) receives fixes.
+Only the latest released version of each plugin (or, before the first release, the `dev` branch) receives fixes. A version stops receiving
+fixes as soon as a newer one is released; there is no longer support period.
+
+## What a release contains
+
+Each C# plugin release has a software bill of materials (SBOM) attached, `<id>-<version>.cdx.json` (CycloneDX), listing the packages inside
+the zip (the plugin SDK is not in the zip; the server supplies it). JavaScript plugins contain no packages. A release is refused when one of
+those packages has a known vulnerability, and every pull request runs the same check.
