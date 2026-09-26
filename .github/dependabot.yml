@@ -28,6 +28,25 @@ updates:
     groups:
       deps:
         patterns: ["*"]
+  # Sound ships NAudio inside its package, so its dependencies must be watched too.
+  - package-ecosystem: nuget
+    directory: "/Sound/src"
+    target-branch: dev
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 2
+    groups:
+      deps:
+        patterns: ["*"]
+  - package-ecosystem: nuget
+    directory: "/Sound/tests/MacroGrid.Plugin.Sound.Tests"
+    target-branch: dev
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 2
+    groups:
+      deps:
+        patterns: ["*"]
   - package-ecosystem: github-actions
     directory: "/"
     target-branch: dev
