@@ -8,6 +8,10 @@
   ones in this repository.
 - **JavaScript plugins are sandboxed.** They have no .NET access and only the permissions you approve, with time and memory limits per
   call; the sandbox is described in [docs/plugin-authoring.md](docs/plugin-authoring.md#7-javascript-plugins).
+- **Plugins by other authors are not reviewed by this project.** Macro Grid can install plugins from other repositories and shows them as
+  third-party. Such a C# plugin can connect to the internet and send data, and Macro Grid cannot limit or check that. A JavaScript plugin can
+  only send web requests to the exact `http:<host>:<port>` addresses it declares, and the permission shown before you approve it says whether
+  each one is on this computer, your local network or the internet. Report a problem in another author's plugin to that author.
 - **Local network only.** Macro Grid is designed for a trusted local network (your PC and your phone). It is not meant to be exposed to
   the internet, and neither are the plugins that talk to it. Plugins that connect to other software (for example the OBS plugin
   connecting to OBS Studio) do so with the settings and passwords you enter; keep those services on your local machine or network too.
