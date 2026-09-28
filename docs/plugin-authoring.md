@@ -34,7 +34,7 @@ A plugin is loaded, reloaded and unloaded while the server runs. See [Lifecycle]
 ```json
 {
   "id": "obs",
-  "name": "OBS Control",
+  "name": "WebSocket Bridge for OBS",
   "version": "0.3.0",
   "macroGrid": "1.0.0",
   "entry": "MacroGrid.Plugin.Obs.dll",

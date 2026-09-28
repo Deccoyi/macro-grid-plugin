@@ -1,8 +1,10 @@
-# OBS plugin
+# WebSocket Bridge for OBS
 
 Controls [OBS Studio](https://obsproject.com/) from Macro Grid over obs-websocket v5, which is built into OBS 28 and newer. It adds
 22 actions (scenes, streaming, recording, audio, scene items, text sources) and about 45 live `obs.*` variables you can show on
 widgets. Kind: C# plugin. Id: `obs`.
+
+> This plugin is an independent, third-party project. It is not affiliated with, endorsed by or sponsored by the OBS Project. OBS and OBS Studio are trademarks of their owners. Get OBS Studio at https://obsproject.com/.
 
 ## Requirements
 

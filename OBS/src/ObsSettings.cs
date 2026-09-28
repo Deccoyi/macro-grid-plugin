@@ -77,12 +77,16 @@ public sealed class ObsSettings
 /// moments instead of waiting for the current backoff to expire.</summary>
 public sealed class ObsSettingsPage(IPluginHost host, ObsConnection connection) : IPluginSettingsPage
 {
+    /// <summary>Shown at the bottom of the settings window; the same wording is in the README, NOTICE and the Turkish locale.</summary>
+    public const string Disclaimer = "This plugin is an independent, third-party project. It is not affiliated with, endorsed by or sponsored by the OBS Project. OBS and OBS Studio are trademarks of their owners. Get OBS Studio at https://obsproject.com/.";
+
     public IReadOnlyList<SettingField> Fields =>
     [
         new("enabled", "Enabled", SettingFieldKind.Bool) { Default = true },
         new("host", "Host", SettingFieldKind.Text) { Default = "127.0.0.1", Placeholder = "127.0.0.1" },
         new("port", "Port", SettingFieldKind.Number) { Min = 1, Max = 65535, Step = 1, Default = 4455 },
         new("password", "Password", SettingFieldKind.Password),
+        new("disclaimer", Disclaimer, SettingFieldKind.Notice),
     ];
 
     public JsonObject Load()
