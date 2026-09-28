@@ -7,7 +7,7 @@ New features and fixes in the OBS plugin. For technical details, see [CHANGELOG-
 - **Saved password is protected:** The OBS password is now stored encrypted for your Windows account instead of as plain text. Your existing password is converted the next time you save the OBS settings.
 ### Changed
 - **New name:** The plugin is now called "WebSocketBridge For OBS" and says in its description and settings that it is an independent project, not affiliated with the OBS Project.
-- **Needs Macro Grid 1.1.0 or newer.**
+- **Needs Macro Grid editor 1.1.0 or newer.**
 
 ## 0.2.2 - 2026-09-25
 ### Changed
