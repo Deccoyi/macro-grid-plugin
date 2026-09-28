@@ -10,12 +10,12 @@ Status: **done** (OBS 0.3.0).
 
   > This plugin is an independent, third-party project. It is not affiliated with, endorsed by or sponsored by the OBS Project. OBS and OBS Studio are trademarks of their owners. Get OBS Studio at https://obsproject.com/.
 
-  The Turkish text is in `OBS/locales/tr.json` under the English sentence as its key.
+  The Turkish text is in `WebSocketBridge/locales/tr.json` under the English sentence as its key.
 - The Discover/store card uses a one-line version in the manifest `description`: "Independent project, not affiliated with the OBS Project."
 
 ## Where it appears
 
-`OBS/plugin.json` (name, description), the plugin's settings window (`ObsSettingsPage`, a `Notice` field), `OBS/README.md`, `OBS/NOTICE.md`, `OBS/locales/tr.json`, `docs/plugin-authoring.md` (the sample manifest), both OBS changelogs.
+`WebSocketBridge/plugin.json` (name, description), the plugin's settings window (`ObsSettingsPage`, a `Notice` field), `WebSocketBridge/README.md`, `WebSocketBridge/NOTICE.md`, `WebSocketBridge/locales/tr.json`, `docs/plugin-authoring.md` (the sample manifest), both OBS changelogs.
 
 ## Not in this repository
 

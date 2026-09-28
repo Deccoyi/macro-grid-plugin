@@ -40,7 +40,7 @@ jobs:
           $name = $Matches.name
           $version = $Matches.version
           $map = @{
-            'obs'       = @{ dir = 'OBS';      proj = 'OBS/src/MacroGrid.Plugin.Obs.csproj' }
+            'obs'       = @{ dir = 'WebSocketBridge';      proj = 'WebSocketBridge/src/MacroGrid.Plugin.Obs.csproj' }
             'plcicons'  = @{ dir = 'PLCIcons'; proj = 'PLCIcons/src/MacroGrid.Plugin.PlcIcons.csproj' }
             'plc-icons' = @{ dir = 'PLCIcons'; proj = 'PLCIcons/src/MacroGrid.Plugin.PlcIcons.csproj' }
             'hellojs'   = @{ dir = 'HelloJs';  proj = '' }

@@ -4,7 +4,7 @@ Her eklenti, `plugin.json` dosyasının yanında iki değişiklik günlüğü tu
 
 | Eklenti | Kısa (herkese açık) | Ayrıntılı (geliştirici) |
 |---|---|---|
-| OBS | [CHANGELOG.md](https://github.com/Deccoyi/macro-grid-plugin/blob/main/OBS/CHANGELOG.md) | [CHANGELOG-developer.md](https://github.com/Deccoyi/macro-grid-plugin/blob/main/OBS/CHANGELOG-developer.md) |
+| OBS | [CHANGELOG.md](https://github.com/Deccoyi/macro-grid-plugin/blob/main/WebSocketBridge/CHANGELOG.md) | [CHANGELOG-developer.md](https://github.com/Deccoyi/macro-grid-plugin/blob/main/WebSocketBridge/CHANGELOG-developer.md) |
 | PLC Icons | [CHANGELOG.md](https://github.com/Deccoyi/macro-grid-plugin/blob/main/PLCIcons/CHANGELOG.md) | [CHANGELOG-developer.md](https://github.com/Deccoyi/macro-grid-plugin/blob/main/PLCIcons/CHANGELOG-developer.md) |
 
 Eklenti SDK'sının ve sunucunun kendi değişiklik günlükleri

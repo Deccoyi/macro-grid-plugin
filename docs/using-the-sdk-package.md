@@ -25,8 +25,8 @@ If you have the server repo checked out next to this one (`..\macro-grid`) and a
 build against the sibling source instead of the package:
 
 ```powershell
-dotnet build OBS/src -p:UseLocalSdk=true
-dotnet test OBS/tests/MacroGrid.Plugin.Obs.Tests -p:UseLocalSdk=true
+dotnet build WebSocketBridge/src -p:UseLocalSdk=true
+dotnet test WebSocketBridge/tests/MacroGrid.Plugin.Obs.Tests -p:UseLocalSdk=true
 ```
 
 `UseLocalSdk` defaults to `false`. To make it stick on your machine, pass it from an environment variable
@@ -38,7 +38,7 @@ Pack the SDK into a folder and add that folder as a source:
 
 ```powershell
 dotnet pack ..\macro-grid\src\MacroGrid.Plugin.Abstractions -c Release -o C:\local-feed
-dotnet build OBS/src -p:RestoreSources=C:\local-feed
+dotnet build WebSocketBridge/src -p:RestoreSources=C:\local-feed
 ```
 
 Alternatively uncomment the `local-sdk` line in `nuget.config` (do not commit that).

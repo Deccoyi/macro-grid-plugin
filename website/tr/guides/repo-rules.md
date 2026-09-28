@@ -60,4 +60,4 @@ Bir değişiklik tamamlandığında, değiştirdiğiniz eklentinin her iki deği
 
 ## Testler
 
-Mantık içeren bir eklentinin yanında testleri olmalıdır (eklentiyi sahte bir obs-websocket sunucusuna karşı çalıştıran `OBS/tests` örneğine bakın). Çekme isteği açmadan önce eklentinin test projesinde `dotnet test` çalıştırın.
+Mantık içeren bir eklentinin yanında testleri olmalıdır (eklentiyi sahte bir obs-websocket sunucusuna karşı çalıştıran `WebSocketBridge/tests` örneğine bakın). Çekme isteği açmadan önce eklentinin test projesinde `dotnet test` çalıştırın.

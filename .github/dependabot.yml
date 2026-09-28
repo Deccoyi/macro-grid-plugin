@@ -2,7 +2,7 @@
 version: 2
 updates:
   - package-ecosystem: nuget
-    directory: "/OBS/src"
+    directory: "/WebSocketBridge/src"
     target-branch: dev
     schedule:
       interval: monthly
@@ -11,7 +11,7 @@ updates:
       deps:
         patterns: ["*"]
   - package-ecosystem: nuget
-    directory: "/OBS/tests/MacroGrid.Plugin.Obs.Tests"
+    directory: "/WebSocketBridge/tests/MacroGrid.Plugin.Obs.Tests"
     target-branch: dev
     schedule:
       interval: monthly

@@ -23,7 +23,7 @@ https://raw.githubusercontent.com/<owner>/<repo>/HEAD/macrogrid-index.json
       "name": "OBS",
       "description": "Keşfet'te gösterilen tek satır.",
       "author": "biri",
-      "homepage": "https://github.com/<owner>/<repo>/tree/main/OBS",
+      "homepage": "https://github.com/<owner>/<repo>/tree/main/WebSocketBridge",
       "kind": "csharp",
       "versions": [
         {

@@ -19,7 +19,7 @@ a replacement for those texts.
 
 Notes:
 
-- Versions are the ones resolved in `OBS/tests` at the time of writing; the `xunit.*` and `Microsoft.*` packages carry no license file in
+- Versions are the ones resolved in `WebSocketBridge/tests` at the time of writing; the `xunit.*` and `Microsoft.*` packages carry no license file in
   their NuGet package, so the texts in `licenses/` come from the upstream repositories. The Microsoft.CodeCoverage and
   Microsoft.TestPlatform.TestHost packages also include their own `ThirdPartyNotices.txt` for code bundled inside them.
 - **PLC Icons:** all 29 icons are original AI-generated artwork under this repository's MIT license. They were compared with the Lucide
