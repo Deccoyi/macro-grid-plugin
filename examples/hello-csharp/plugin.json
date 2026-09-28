@@ -2,7 +2,7 @@
   "id": "hellocsharp",
   "name": "Hello (C# example)",
   "version": "0.1.0",
-  "macroGrid": "1.0.0",
+  "minMacroGrid": "1.0.0",
   "entry": "HelloCSharp.dll",
   "kind": "csharp",
   "permissions": null

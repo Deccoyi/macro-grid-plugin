@@ -16,7 +16,7 @@ Read `CONTRIBUTING.md` first: it covers plugin versioning, isolation, the manife
 
 ## Versions, releases and signing
 - Any version, release, tag or signing work: read the central guide first, `docs/guides/release.md` in the server repository (`macro-grid`, https://github.com/Deccoyi/macro-grid/blob/main/docs/guides/release.md). It has the tag table, the order of a release and the signing keys. `docs/release.md` here only has the plugin release script steps; do not copy the shared content into it.
-- A plugin's `version` is its own; `macroGrid` in `plugin.json` is the oldest Macro Grid it runs on (three parts, same MAJOR as the SDK it is built against, never newer than it).
+- A plugin's `version` is its own; `minMacroGrid` in `plugin.json` is the oldest Macro Grid it runs on (three parts, same MAJOR as the SDK it is built against, never newer than it). Called `macroGrid` up to Macro Grid 1.2.x; that name is still read as a fallback.
 - A plugin release (`scripts/release-plugin.ps1 -Publish`) signs with a key that stays on the maintainer's PC and publishes outward: ask the owner before each one, and never print or copy the key.
 
 ## Commits

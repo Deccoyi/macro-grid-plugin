@@ -19,7 +19,9 @@ param(
     [Parameter(Mandatory)] [string]$Homepage,
     [Parameter(Mandatory)] [ValidateSet('csharp', 'js')] [string]$Kind,
     [Parameter(Mandatory)] [string]$Version,
-    [Parameter(Mandatory)] [ValidatePattern('^\d+\.\d+\.\d+$')] [string]$MacroGrid,
+    [Parameter(Mandatory)] [ValidatePattern('^\d+\.\d+\.\d+$')] [string]$MinMacroGrid,
+    # Legacy name of minMacroGrid, copied from plugin.json when it still has it: Macro Grid up to 1.2.x reads only this name.
+    [string]$MacroGrid = '',
     # Legacy pair, copied from plugin.json when it still has them: servers before 1.0.0 need both.
     [string]$SdkVersion = '',
     [string]$MinServerVersion = '',
@@ -49,7 +51,8 @@ if (Test-Path $IndexPath) {
     $index = Get-Content $IndexPath -Raw | ConvertFrom-Json
 } else {
     $index = [PSCustomObject]@{
-        # Stays 1 on purpose: a server before 1.0.0 refuses any other format. The 1.0.0 server reads "macroGrid" from a format 1 entry.
+        # Stays 1 on purpose: a server before 1.0.0 refuses any other format. Macro Grid 1.0.0 and newer read "macroGrid" (up to 1.2.x)
+        # and "minMacroGrid" (after the rename) from a format 1 entry.
         formatVersion = 1
         name          = 'Macro Grid Plugins'
         author        = $Author
@@ -81,7 +84,8 @@ if (-not $entry) {
 }
 
 $versions = @($entry.versions | Where-Object { $_.version -ne $Version })
-$fields = [ordered]@{ version = $Version; macroGrid = $MacroGrid }
+$fields = [ordered]@{ version = $Version; minMacroGrid = $MinMacroGrid }
+if ($MacroGrid) { $fields.macroGrid = $MacroGrid }
 if ($SdkVersion) { $fields.sdkVersion = $SdkVersion }
 if ($MinServerVersion) { $fields.minServerVersion = $MinServerVersion }
 $fields.url = $Url

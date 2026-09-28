@@ -17,13 +17,17 @@ import { data as v } from '../../.vitepress/versions.data'
 Her eklenti `plugin.json` içinde çalıştığı en eski Macro Grid editörü sürümünü bildirir:
 
 ```json
-{ "macroGrid": "1.3.0" }
+{ "minMacroGrid": "1.3.0" }
 ```
 
 Eklenti, **1.3.0'dan 2.0.0'a kadar (2.0.0 hariç)** her Macro Grid editöründe çalışır. Her zaman üç parça yazın (`1.3.0`; `1.3` kabul edilmez).
 
-**`macroGrid`, bir minimum değerdir, birebir eşleşme değil.** `"macroGrid": "1.2.1"` yazan bir eklenti, Macro Grid editörü `1.1.1`'de (istediğinden
+**`minMacroGrid`, bir minimum değerdir, birebir eşleşme değil.** `"minMacroGrid": "1.2.1"` yazan bir eklenti, Macro Grid editörü `1.1.1`'de (istediğinden
 daha eski) **çalışmaz** — yalnızca `1.2.1` ve aynı MAJOR'un sonraki her sürümünde çalışır.
+
+`minMacroGrid`, Macro Grid editörü 1.2.x'e kadar `macroGrid` adını taşıyordu. Bu ad hâlâ çalışır — yalnızca `minMacroGrid` yoksa okunur — ve
+yeniden adlandırmadan sonra en az bir MAJOR boyunca okunabilir kalır. Hâlâ yalnızca eski adı okuyan 1.2.x'te de çalışması gereken bir eklenti
+her iki alanı da aynı değerle yazar.
 
 | Eklenti şunu diyor | Editör 1.2.4 | 1.3.0 | 1.9.9 | 2.0.0 |
 |---|---|---|---|---|
@@ -33,14 +37,14 @@ daha eski) **çalışmaz** — yalnızca `1.2.1` ve aynı MAJOR'un sonraki her s
 Uymayan bir eklenti Düzenleyici'de sebebiyle birlikte **Uyumsuz** listelenir ("Macro Grid editörü 1.3.0 veya daha yenisi gerekir, bu 1.2.4", ya da başka bir
 MAJOR için "yeniden derlenmeli") ve yüklenmez. Keşfet ve Mağaza yalnızca uyan bir sürüm sunar.
 
-`macroGrid` değerini derlediğiniz SDK sürümüne ayarlayın; sonradan gelen bir şeyi kullanmıyorsanız daha eskisini yazın: düşük değer eklentinin daha çok
+`minMacroGrid` değerini derlediğiniz SDK sürümüne ayarlayın; sonradan gelen bir şeyi kullanmıyorsanız daha eskisini yazın: düşük değer eklentinin daha çok
 sunucuda çalışmasını sağlar. C# eklentisinde derleme, değerin SDK paketiyle aynı MAJOR'da olduğunu ve ondan yeni olmadığını denetler.
 
 ### Eski manifest'ler
 
-Macro Grid 1.0.0 öncesinde manifest'te `sdkVersion` ve `minServerVersion` vardı. `macroGrid` yoksa hâlâ okunurlar: `sdkVersion` `^0.4.x`,
-`macroGrid: 1.0.0` sayılır (0.4 eklentisinin kullandığı hiçbir şey değişmedi), daha eskisi yeniden derlenmelidir. Eklentiniz 1.0.0'dan eski sunucularda da
-yüklenecekse iki eski alanı `macroGrid` yanında tutun; Macro Grid 1.0.0 ve sonrası bunları yok sayar.
+Macro Grid 1.0.0 öncesinde manifest'te `sdkVersion` ve `minServerVersion` vardı. Ne `minMacroGrid` ne de `macroGrid` yoksa hâlâ okunurlar:
+`sdkVersion` `^0.4.x`, `minMacroGrid: 1.0.0` sayılır (0.4 eklentisinin kullandığı hiçbir şey değişmedi), daha eskisi yeniden derlenmelidir.
+Eklentiniz 1.0.0'dan eski sunucularda da yüklenecekse iki eski alanı `minMacroGrid` yanında tutun; Macro Grid 1.0.0 ve sonrası bunları yok sayar.
 
 ## Neler uyumsuzluk yaratan (breaking) değişiklik sayılır
 

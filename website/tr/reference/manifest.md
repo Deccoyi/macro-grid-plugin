@@ -11,8 +11,9 @@ Her eklenti klasörünün kökünde bir `plugin.json` bulunur. Aşağıdaki, OBS
 | `id` | evet | Benzersiz, sabit kimlik. Klasör adında, aksiyon türlerinde ve değişken adlarında, ayrıca onaylar için kullanılır. Sunucu aynı kimlikli ikinci bir eklentiyi reddeder. |
 | `name` | evet | Eklentiler penceresinde görünen ad. |
 | `version` | evet | Eklentinin kendi anlamsal sürümü, sunucununkinden bağımsız. |
-| `macroGrid` | evet | Eklentinin çalıştığı en eski Macro Grid, `1.3.0` gibi `MAJOR.MINOR.PATCH` biçiminde. **Bu bir minimum değerdir, birebir eşleşme değil:** eklenti, o sürümden bir sonraki MAJOR'a kadar (o hariç) her Macro Grid'de çalışır — daha eski bir sunucuda (örn. `1.2.1` yazıp sunucu `1.1.1` ise) **çalışmaz**. Macro Grid ve eklenti SDK'sı tek sürümü paylaşır; derlediğiniz SDK sürümünü, daha yenisini kullanmıyorsanız daha eskisini yazın. Uymayan bir sunucu eklentiyi *Incompatible* (uyumsuz) listeler ve yüklemez. |
-| `sdkVersion` | hayır | Macro Grid 1.0.0 öncesinden kalma alan. Yalnızca `macroGrid` yoksa okunur: `^0.4.x`, `macroGrid: 1.0.0` sayılır, daha eski aralıklar uyumsuzdur. Eklenti 1.0.0'dan eski sunucularda da yüklenecekse `macroGrid` yanında tutun. |
+| `minMacroGrid` | evet | Eklentinin çalıştığı en eski Macro Grid, `1.3.0` gibi `MAJOR.MINOR.PATCH` biçiminde. **Bu bir minimum değerdir, birebir eşleşme değil:** eklenti, o sürümden bir sonraki MAJOR'a kadar (o hariç) her Macro Grid'de çalışır — daha eski bir sunucuda (örn. `1.2.1` yazıp sunucu `1.1.1` ise) **çalışmaz**. Macro Grid ve eklenti SDK'sı tek sürümü paylaşır; derlediğiniz SDK sürümünü, daha yenisini kullanmıyorsanız daha eskisini yazın. Uymayan bir sunucu eklentiyi *Incompatible* (uyumsuz) listeler ve yüklemez. Macro Grid 1.2.x'e kadar adı `macroGrid` idi; o ad hâlâ çalışır — yalnızca `minMacroGrid` yoksa okunur — ve yeniden adlandırmadan sonra en az bir MAJOR boyunca okunabilir kalır. |
+| `macroGrid` | hayır | Eskisi: `minMacroGrid`'in önceki adı, aynı anlam ve biçimde. Yalnızca `minMacroGrid` yoksa okunur. Yalnızca eski adı okuyan Macro Grid 1.2.x'e kadar da çalışması gereken bir eklenti her iki alanı da aynı değerle yazar. |
+| `sdkVersion` | hayır | Macro Grid 1.0.0 öncesinden kalma alan. Yalnızca ne `minMacroGrid` ne de `macroGrid` varsa okunur: `^0.4.x`, `minMacroGrid: 1.0.0` sayılır, daha eski aralıklar uyumsuzdur. Eklenti 1.0.0'dan eski sunucularda da yüklenecekse `minMacroGrid` yanında tutun. |
 | `minServerVersion` | hayır | `sdkVersion` gibi eski alan. Macro Grid 1.0.0 ve sonrası bunu yok sayar. |
 | `entry` | evet | C#: giriş DLL'sinin dosya adı. JavaScript: betik (genellikle `index.js`). |
 | `kind` | evet | `"csharp"` veya `"js"`. |
@@ -30,11 +31,12 @@ Manifest, SDK'daki `PluginManifest` kaydına karşılık gelir (dosyada özellik
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
-  "required": ["id", "name", "version", "macroGrid", "entry", "kind"],
+  "required": ["id", "name", "version", "minMacroGrid", "entry", "kind"],
   "properties": {
     "id": { "type": "string" },
     "name": { "type": "string" },
     "version": { "type": "string" },
+    "minMacroGrid": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
     "macroGrid": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
     "sdkVersion": { "type": "string" },
     "minServerVersion": { "type": "string" },

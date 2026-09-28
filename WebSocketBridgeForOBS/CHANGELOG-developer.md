@@ -2,6 +2,10 @@
 
 This file tracks the version of this plugin only (independent of the main program — see the "Independent versions" section of `../CONTRIBUTING.md`). The short, public changelog is [CHANGELOG.md](CHANGELOG.md).
 
+## [Unreleased]
+### Changed
+- `plugin.json` declares `"minMacroGrid": "1.1.0"` (the field's new name, same value as the old `macroGrid`).
+
 ## [0.3.0] - 2026-09-28
 ### Changed
 - Display name is now "WebSocketBridge For OBS" (trademark compliance, see `../docs/done/obs-plugin-trademark-compliance.md`); `id`, DLL and namespace stay `obs`. A non-affiliation notice was added to the manifest description, the settings window (a `Notice` field), README and NOTICE. The catalog/index name changes with the release; a tool that matches the plugin by its old name "OBS Control" must use the id instead.

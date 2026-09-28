@@ -34,7 +34,7 @@ macro-grid-plugin/
 
 ## Manifest ve uyumluluk
 
-Her eklentinin kökünde bir `plugin.json` bulunur; alanlar [manifest başvurusunda](/tr/reference/manifest) yer alır. `macroGrid` (eklentinin çalıştığı en eski Macro Grid), sunucu eklentiyi yüklerken denetlenir. Bunu dürüstçe ayarlayın.
+Her eklentinin kökünde bir `plugin.json` bulunur; alanlar [manifest başvurusunda](/tr/reference/manifest) yer alır. `minMacroGrid` (eklentinin çalıştığı en eski Macro Grid), sunucu eklentiyi yüklerken denetlenir. Bunu dürüstçe ayarlayın.
 
 ## C# ve JavaScript eklentileri
 

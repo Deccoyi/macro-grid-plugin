@@ -41,7 +41,7 @@ Aksiyonlar ayrıca bir `IDeviceController` alır; böylece bir aksiyon, kendisin
 
 ## İhtiyaç duyacağınız fonksiyonlar, sırasıyla
 
-1. **Eklentiyi tanımlayın:** `id`, `name`, `version`, `macroGrid`, `entry`, `kind` içeren [`plugin.json`](/tr/reference/manifest).
+1. **Eklentiyi tanımlayın:** `id`, `name`, `version`, `minMacroGrid`, `entry`, `kind` içeren [`plugin.json`](/tr/reference/manifest).
 2. **Başlatın:** C# `IPlugin.Initialize(IPluginHost host)` her yüklemede bir kez çağrılır; bir JavaScript betiği baştan sona bir kez çalışır. Tüm kayıtları burada yapın.
 3. **İşi yapın:** bir widget olayı tetiklenince aksiyonun `ExecuteAsync(context, settings, token)` (C#) veya `run(context, settings)` (JS) metodu çalışır.
    `context` hangi cihaz, sayfa ve widget'ın tetiklediğini söyler.
@@ -60,11 +60,11 @@ Birbirinden bağımsız üç sürüm numarası vardır, hepsi [anlamsal sürümd
 |---|---|---|
 | Macro Grid düzenleyicisi **ve** eklenti SDK'sı | tek numara; sunucu deposundaki `<Version>` (NuGet paketi `MacroGrid.Plugin.Abstractions`) | Macro Grid sürümü |
 | Sizin eklentiniz | `plugin.json` içindeki `version` | siz |
-| İhtiyaç duyduğunuz en düşük Macro Grid | `plugin.json` içindeki `macroGrid` | siz |
+| İhtiyaç duyduğunuz en düşük Macro Grid | `plugin.json` içindeki `minMacroGrid` | siz |
 
 - **Bir MAJOR içinde SDK yalnızca büyür.** Üyeler eklenir, asla kaldırılmaz veya değiştirilmez; `1.0.0` için derlenmiş bir eklenti her `1.x` üzerinde çalışır.
   Yeni bir MAJOR eklentileri bozabilir ve her eklenti yeniden derlenmelidir.
-- **`macroGrid` bir alt sınırdır.** `"macroGrid": "1.2.0"`, 1.2.0'dan 2.0.0'a kadar (2.0.0 hariç) çalışır. Eklentinin mümkün olduğunca çok düzenleyicide çalışması için
+- **`minMacroGrid` bir alt sınırdır.** `"minMacroGrid": "1.2.0"`, 1.2.0'dan 2.0.0'a kadar (2.0.0 hariç) çalışır. Eklentinin mümkün olduğunca çok düzenleyicide çalışması için
   kullandığınız her şeyi içeren en eski sürümü yazın.
 - **Kendi MAJOR'unuzu** yalnızca kayıtlı bir profil sessizce çalışmaz hale geliyorsa artırın: adı değişen bir aksiyon `type`'ı, değişken adı veya anlamı değişen bir ayar.
 - Uyumsuz bir eklenti nedeni belirtilerek *Incompatible* olarak listelenir ve yüklenmez.

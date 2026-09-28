@@ -41,7 +41,7 @@ Actions also receive an `IDeviceController`, so an action can switch page or pro
 
 ## The functions you need, in the order you need them
 
-1. **Describe the plugin:** [`plugin.json`](/reference/manifest) with `id`, `name`, `version`, `macroGrid`, `entry`, `kind`.
+1. **Describe the plugin:** [`plugin.json`](/reference/manifest) with `id`, `name`, `version`, `minMacroGrid`, `entry`, `kind`.
 2. **Start:** C# `IPlugin.Initialize(IPluginHost host)` is called once per load; a JavaScript script runs top to bottom once. Register everything here.
 3. **Do work:** an action's `ExecuteAsync(context, settings, token)` (C#) or `run(context, settings)` (JS) runs when a widget event fires.
    `context` says which device, page and widget triggered it.
@@ -60,11 +60,11 @@ There are three independent version numbers, all [semantic versions](https://sem
 |---|---|---|
 | Macro Grid editor **and** the plugin SDK | one number, `<Version>` in the server repository (NuGet package `MacroGrid.Plugin.Abstractions`) | the Macro Grid release |
 | Your plugin | `version` in your `plugin.json` | you |
-| Minimum Macro Grid you need | `macroGrid` in your `plugin.json` | you |
+| Minimum Macro Grid you need | `minMacroGrid` in your `plugin.json` | you |
 
 - **Within one MAJOR the SDK only grows.** Members are added, never removed or changed, so a plugin built for `1.0.0` runs on every `1.x`.
   A new MAJOR may break plugins and every plugin must be rebuilt.
-- **`macroGrid` is a minimum.** `"macroGrid": "1.2.0"` runs on 1.2.0 up to, not including, 2.0.0. Set it to the oldest version that has everything
+- **`minMacroGrid` is a minimum.** `"minMacroGrid": "1.2.0"` runs on 1.2.0 up to, not including, 2.0.0. Set it to the oldest version that has everything
   you use, so the plugin runs on as many editors as possible.
 - **Bump your own MAJOR** only when a saved profile would silently stop working: a renamed action `type`, a variable name or a setting that changed meaning.
 - An incompatible plugin is listed as *Incompatible* with the reason and is not loaded.
