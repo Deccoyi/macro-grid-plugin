@@ -23,14 +23,28 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Checkout this repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           path: macro-grid-plugin
 
       - name: Set up .NET
-        uses: actions/setup-dotnet@v6
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           dotnet-version: 10.0.x
+
+      - name: Stop on known vulnerable dependencies
+        working-directory: macro-grid-plugin
+        shell: pwsh
+        run: |
+          $failed = @()
+          foreach ($proj in 'WebSocketBridgeForOBS/src/MacroGrid.Plugin.Obs.csproj', 'PLCIcons/src/MacroGrid.Plugin.PlcIcons.csproj', 'SoundBoard/src/MacroGrid.Plugin.SoundBoard.csproj') {
+            dotnet restore $proj --verbosity quiet
+            if ($LASTEXITCODE -ne 0) { throw "restore failed: $proj" }
+            $report = dotnet list $proj package --vulnerable --include-transitive 2>&1 | Out-String
+            Write-Host $report
+            if ($report -match 'has the following vulnerable packages') { $failed += $proj }
+          }
+          if ($failed.Count) { throw "Known vulnerable packages in: $($failed -join ', ')" }
 
       - name: Build OBS plugin
         working-directory: macro-grid-plugin
@@ -51,3 +65,13 @@ jobs:
       - name: Test SoundBoard plugin
         working-directory: macro-grid-plugin
         run: dotnet test SoundBoard/tests/MacroGrid.Plugin.SoundBoard.Tests/MacroGrid.Plugin.SoundBoard.Tests.csproj -c Release
+
+  dependency-review:
+    name: Dependencies added by this pull request
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      # Pinned to a commit: a moved tag cannot change what runs here.
+      - uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          fail-on-severity: moderate
