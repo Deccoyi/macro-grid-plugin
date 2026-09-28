@@ -46,7 +46,7 @@ const en = {
 
   statVersion: 'Version',
   statKind: 'Type',
-  statServer: 'Needs server',
+  statServer: 'Needs Macro Grid editor',
   statAccess: 'Access',
   statFull: 'Full',
   statPermissions: 'Permissions',
@@ -66,7 +66,7 @@ const en = {
   detailRelease: 'Release date',
   detailId: 'ID',
   detailType: 'Type',
-  detailServer: 'Needs server',
+  detailServer: 'Needs Macro Grid editor',
 
   releaseNotes: 'Release notes',
   noReleaseInfo: 'Release information is not available right now.',
@@ -117,7 +117,7 @@ const tr: typeof en = {
 
   statVersion: 'Sürüm',
   statKind: 'Tür',
-  statServer: 'Gerekli sunucu',
+  statServer: 'Gerekli Macro Grid editörü',
   statAccess: 'Yetki',
   statFull: 'Tam',
   statPermissions: 'İzin',
@@ -137,7 +137,7 @@ const tr: typeof en = {
   detailRelease: 'Yayın tarihi',
   detailId: 'Kimlik',
   detailType: 'Tür',
-  detailServer: 'Gerekli sunucu',
+  detailServer: 'Gerekli Macro Grid editörü',
 
   releaseNotes: 'Sürüm notları',
   noReleaseInfo: 'Sürüm bilgisi şu an kullanılamıyor.',
