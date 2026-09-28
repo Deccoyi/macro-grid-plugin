@@ -6,7 +6,7 @@ Behavior is unchanged. Manifest ids, entry DLLs, namespaces, action type ids, va
 - Added `.editorconfig` and `docs/engineering-guidelines.md`.
 - Removed `ObsState.AllInputNames` and the never-read scene collection name list in `ObsState` (the request is still sent, the current name is still read).
 - Removed unused usings (IDE0005) in OBS, its tests and PLCIcons.
-- Split `WebSocketBridge/src/ObsActions.cs` into `WebSocketBridge/src/Actions/` (`SceneActions`, `OutputActions`, `AudioActions`, `SourceActions`, `ObsActionHelpers`, `ObsActionBase`). Registration order in `ObsPlugin.cs` is unchanged.
+- Split `WebSocketBridgeForOBS/src/ObsActions.cs` into `WebSocketBridgeForOBS/src/Actions/` (`SceneActions`, `OutputActions`, `AudioActions`, `SourceActions`, `ObsActionHelpers`, `ObsActionBase`). Registration order in `ObsPlugin.cs` is unchanged.
 - Split `ObsConnection` into partial files: connect loop, polling, events, variables, status.
 - New shared base classes: `ObsActionBase`, `ObsOptionsAction`, `ObsRequestAction`, `ObsModeAction`, `ObsSceneAction`, `ObsNamedChoiceAction`.
 - Plugin csproj boilerplate moved to `build/Plugin.props`, imported explicitly by OBS and PLCIcons only. `examples/hello-csharp` stays standalone.

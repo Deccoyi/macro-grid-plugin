@@ -1,4 +1,4 @@
-# License notice: WebSocket Bridge for OBS
+# License notice: WebSocketBridge For OBS
 
 This plugin is licensed under the MIT License, see [LICENSE](LICENSE). Copyright (c) 2026 Deccoyi. It is provided "as is", without warranty.
 

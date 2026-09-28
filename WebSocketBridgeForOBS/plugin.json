@@ -1,9 +1,9 @@
 {
   "id": "obs",
-  "name": "WebSocket Bridge for OBS",
+  "name": "WebSocketBridge For OBS",
   "description": "Controls OBS Studio over obs-websocket: scenes, streaming, recording, audio, sources and live variables. Independent project, not affiliated with the OBS Project.",
   "author": "Deccoyi",
-  "homepage": "https://github.com/Deccoyi/macro-grid-plugin/tree/main/WebSocketBridge",
+  "homepage": "https://github.com/Deccoyi/macro-grid-plugin/tree/main/WebSocketBridgeForOBS",
   "defaultLanguage": "en",
   "version": "0.3.0",
   "macroGrid": "1.1.0",

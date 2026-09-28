@@ -92,7 +92,7 @@
   "Enabled": "Etkin",
   "Host": "Sunucu",
   "Password": "Şifre",
-  "WebSocket Bridge for OBS": "OBS için WebSocket Köprüsü",
+  "WebSocketBridge For OBS": "OBS için WebSocket Köprüsü",
   "This plugin is an independent, third-party project. It is not affiliated with, endorsed by or sponsored by the OBS Project. OBS and OBS Studio are trademarks of their owners. Get OBS Studio at https://obsproject.com/.": "Bu eklenti bağımsız, üçüncü taraf bir projedir. OBS Project ile bağlantılı değildir; OBS Project tarafından onaylanmamış veya desteklenmemiştir. OBS ve OBS Studio, sahiplerinin ticari markalarıdır. OBS Studio'yu https://obsproject.com/ adresinden edinebilirsiniz.",
   "{0} › {1} — visible": "{0} › {1} — görünür mü",
   "OBS · retrying in {0}s": "OBS · {0}s sonra tekrar denenecek",

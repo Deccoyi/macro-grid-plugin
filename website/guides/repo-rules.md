@@ -71,5 +71,5 @@ example `feat(obs): pause reconnecting while OBS is not running`.
 
 ## Tests
 
-A plugin with logic should have tests next to it (see `WebSocketBridge/tests`, which drives the plugin against a fake obs-websocket server). Run
+A plugin with logic should have tests next to it (see `WebSocketBridgeForOBS/tests`, which drives the plugin against a fake obs-websocket server). Run
 `dotnet test` on the plugin's test project before you open a pull request.

@@ -28,7 +28,7 @@ $repoRoot = Split-Path -Parent $PSScriptRoot
 Set-Location $repoRoot
 
 $plugins = @{
-    'obs'       = @{ dir = 'WebSocketBridge'; proj = 'WebSocketBridge/src/MacroGrid.Plugin.Obs.csproj' }
+    'obs'       = @{ dir = 'WebSocketBridgeForOBS'; proj = 'WebSocketBridgeForOBS/src/MacroGrid.Plugin.Obs.csproj' }
     'plc-icons' = @{ dir = 'PLCIcons'; proj = 'PLCIcons/src/MacroGrid.Plugin.PlcIcons.csproj' }
     'hellojs'   = @{ dir = 'HelloJs';  proj = '' }
     'soundboard' = @{ dir = 'SoundBoard'; proj = 'SoundBoard/src/MacroGrid.Plugin.SoundBoard.csproj' }

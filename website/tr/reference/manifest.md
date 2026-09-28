@@ -2,7 +2,7 @@
 
 Her eklenti klasörünün kökünde bir `plugin.json` bulunur. Aşağıdaki, OBS eklentisinin dosyasıdır:
 
-<<< @/../WebSocketBridge/plugin.json
+<<< @/../WebSocketBridgeForOBS/plugin.json
 
 ## Alanlar
 

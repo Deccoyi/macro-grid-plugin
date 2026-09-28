@@ -9,7 +9,7 @@ on:
       - "website/**"
       - "examples/**"
       - "HelloJs/**"
-      - "WebSocketBridge/src/ObsPlugin.cs"
+      - "WebSocketBridgeForOBS/src/ObsPlugin.cs"
       - "PLCIcons/**"
       # Every plugin's Store page is built from these files.
       - "*/plugin.json"
@@ -21,7 +21,7 @@ on:
       - "website/**"
       - "examples/**"
       - "HelloJs/**"
-      - "WebSocketBridge/src/ObsPlugin.cs"
+      - "WebSocketBridgeForOBS/src/ObsPlugin.cs"
       - "PLCIcons/**"
       # Every plugin's Store page is built from these files.
       - "*/plugin.json"
@@ -62,7 +62,7 @@ jobs:
         run: npm ci
 
       # VitePress fails the build on a dead internal link, and the code samples are imported from the real projects
-      # (examples/, HelloJs/, WebSocketBridge/, PLCIcons/), so a missing file or region fails here too.
+      # (examples/, HelloJs/, WebSocketBridgeForOBS/, PLCIcons/), so a missing file or region fails here too.
       - name: Build the site
         working-directory: website
         env:

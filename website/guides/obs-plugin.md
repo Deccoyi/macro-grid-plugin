@@ -1,6 +1,6 @@
 # A real-world plugin: OBS
 
-The [OBS plugin](https://github.com/Deccoyi/macro-grid-plugin/tree/main/WebSocketBridge) (id `obs`) controls
+The [OBS plugin](https://github.com/Deccoyi/macro-grid-plugin/tree/main/WebSocketBridgeForOBS) (id `obs`) controls
 [OBS Studio](https://obsproject.com/) over obs-websocket v5, which is built into OBS 28 and newer. It is the largest plugin in the
 repository and uses almost everything the SDK offers, so it is the best example to read after the tutorials.
 
@@ -17,7 +17,7 @@ plugin lists every variable and action.
 
 ## The entry point
 
-<<< @/../WebSocketBridge/src/ObsPlugin.cs
+<<< @/../WebSocketBridgeForOBS/src/ObsPlugin.cs
 
 One object, `ObsConnection`, owns the connection. It is registered as the variable provider, handed to the settings page and to
 every action.
@@ -44,11 +44,11 @@ every action.
   message. The server shows it on the phone and in the editor's status bar, so a stale button is never silent.
 - **Settings apply immediately.** The settings page's `Save` writes `settings.json` and signals the connection, so a corrected host,
   port or password reconnects within moments.
-- **Tests without OBS.** `WebSocketBridge/tests` drives the plugin against a fake obs-websocket server (`FakeObsServer.cs`). Run `dotnet test` on
-  `WebSocketBridge/tests/MacroGrid.Plugin.Obs.Tests`.
+- **Tests without OBS.** `WebSocketBridgeForOBS/tests` drives the plugin against a fake obs-websocket server (`FakeObsServer.cs`). Run `dotnet test` on
+  `WebSocketBridgeForOBS/tests/MacroGrid.Plugin.Obs.Tests`.
 
 The plugin's user-visible strings (action names, form labels, status text) are written in English and translated to Turkish through
-`WebSocketBridge/locales/tr.json`; the code, comments and docs are in English, which is the rule for every plugin in the repository.
+`WebSocketBridgeForOBS/locales/tr.json`; the code, comments and docs are in English, which is the rule for every plugin in the repository.
 
 ## Using it in a layout
 
