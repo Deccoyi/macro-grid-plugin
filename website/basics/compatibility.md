@@ -4,34 +4,37 @@ import { data as v } from '../.vitepress/versions.data'
 
 # Compatibility and versioning
 
-**Macro Grid (the server) and the plugin SDK share one version number.** The phone app and every plugin have their own.
+**The Macro Grid editor and the plugin SDK share one version number** (the editor includes the server that runs on your PC). The phone app and every plugin have their own.
 
 | What | Where the version lives | Now |
 |---|---|---|
-| Macro Grid: server and plugin SDK (`MacroGrid.Plugin.Abstractions`) | `<Version>` in the server repository's `Directory.Build.props` | `{{ v.macroGrid ?? 'see the latest release' }}` |
+| Macro Grid editor and plugin SDK (`MacroGrid.Plugin.Abstractions`) | `<Version>` in the server repository's `Directory.Build.props` | `{{ v.macroGrid ?? 'see the latest release' }}` |
 | Each plugin | `version` in its own `plugin.json` | per plugin |
 | Phone app | its own `package.json` | see its releases |
 
-## What the server checks
+## What the editor checks
 
-Every plugin declares in `plugin.json` the oldest Macro Grid it runs on:
+Every plugin declares in `plugin.json` the oldest Macro Grid editor version it runs on:
 
 ```json
 { "macroGrid": "1.3.0" }
 ```
 
-The plugin runs on every Macro Grid from **1.3.0 up to, but not including, 2.0.0**. Always write three parts (`1.3.0`, not `1.3`).
+The plugin runs on every Macro Grid editor from **1.3.0 up to, but not including, 2.0.0**. Always write three parts (`1.3.0`, not `1.3`).
 
-| Plugin says | Macro Grid 1.2.4 | 1.3.0 | 1.9.9 | 2.0.0 |
+**`macroGrid` is a minimum, not an exact match.** A plugin declaring `"macroGrid": "1.2.1"` does **not** run on Macro Grid editor `1.1.1` (older
+than what it asks for) — only on `1.2.1` and every later version of the same MAJOR.
+
+| Plugin says | Editor 1.2.4 | 1.3.0 | 1.9.9 | 2.0.0 |
 |---|---|---|---|---|
 | `1.0.0` | runs | runs | runs | rebuild |
 | `1.3.0` | needs 1.3.0 | runs | runs | rebuild |
 
-A plugin that does not fit is listed as **Incompatible** in the editor, with the reason ("Needs Macro Grid 1.3.0 or newer, this is 1.2.4",
+A plugin that does not fit is listed as **Incompatible** in the editor, with the reason ("Needs Macro Grid editor 1.3.0 or newer, this is 1.2.4",
 or "must be rebuilt" for another MAJOR), and is not loaded. Discover and the Store only offer a version that fits.
 
 Set `macroGrid` to the SDK version you build against, or older if you use nothing that came later: a lower value lets the plugin run on more
-servers. For a C# plugin the build checks that it has the same MAJOR as the SDK package and is not newer than it.
+editor versions. For a C# plugin the build checks that it has the same MAJOR as the SDK package and is not newer than it.
 
 ### Older manifests
 

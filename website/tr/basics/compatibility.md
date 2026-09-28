@@ -4,30 +4,33 @@ import { data as v } from '../../.vitepress/versions.data'
 
 # Uyumluluk ve sürümleme
 
-**Macro Grid (sunucu) ve eklenti SDK'sı tek bir sürüm numarasını paylaşır.** Telefon uygulamasının ve her eklentinin kendi sürümü vardır.
+**Macro Grid editörü ve eklenti SDK'sı tek bir sürüm numarasını paylaşır** (editör, bilgisayarınızda çalışan sunucuyu da içerir). Telefon uygulamasının ve her eklentinin kendi sürümü vardır.
 
 | Ne | Sürüm nerede | Şimdi |
 |---|---|---|
-| Macro Grid: sunucu ve eklenti SDK'sı (`MacroGrid.Plugin.Abstractions`) | Sunucu deposunun `Directory.Build.props` dosyasındaki `<Version>` | `{{ v.macroGrid ?? 'son sürüme bakın' }}` |
+| Macro Grid editörü ve eklenti SDK'sı (`MacroGrid.Plugin.Abstractions`) | Sunucu deposunun `Directory.Build.props` dosyasındaki `<Version>` | `{{ v.macroGrid ?? 'son sürüme bakın' }}` |
 | Her eklenti | Kendi `plugin.json` dosyasındaki `version` | eklentiye göre |
 | Telefon uygulaması | Kendi `package.json` dosyası | sürümlerine bakın |
 
-## Sunucu neyi denetler
+## Editör neyi denetler
 
-Her eklenti `plugin.json` içinde çalıştığı en eski Macro Grid'i bildirir:
+Her eklenti `plugin.json` içinde çalıştığı en eski Macro Grid editörü sürümünü bildirir:
 
 ```json
 { "macroGrid": "1.3.0" }
 ```
 
-Eklenti, **1.3.0'dan 2.0.0'a kadar (2.0.0 hariç)** her Macro Grid'de çalışır. Her zaman üç parça yazın (`1.3.0`; `1.3` kabul edilmez).
+Eklenti, **1.3.0'dan 2.0.0'a kadar (2.0.0 hariç)** her Macro Grid editöründe çalışır. Her zaman üç parça yazın (`1.3.0`; `1.3` kabul edilmez).
 
-| Eklenti şunu diyor | Macro Grid 1.2.4 | 1.3.0 | 1.9.9 | 2.0.0 |
+**`macroGrid`, bir minimum değerdir, birebir eşleşme değil.** `"macroGrid": "1.2.1"` yazan bir eklenti, Macro Grid editörü `1.1.1`'de (istediğinden
+daha eski) **çalışmaz** — yalnızca `1.2.1` ve aynı MAJOR'un sonraki her sürümünde çalışır.
+
+| Eklenti şunu diyor | Editör 1.2.4 | 1.3.0 | 1.9.9 | 2.0.0 |
 |---|---|---|---|---|
 | `1.0.0` | çalışır | çalışır | çalışır | yeniden derle |
 | `1.3.0` | 1.3.0 gerekir | çalışır | çalışır | yeniden derle |
 
-Uymayan bir eklenti Düzenleyici'de sebebiyle birlikte **Uyumsuz** listelenir ("Macro Grid 1.3.0 veya daha yenisi gerekir, bu 1.2.4", ya da başka bir
+Uymayan bir eklenti Düzenleyici'de sebebiyle birlikte **Uyumsuz** listelenir ("Macro Grid editörü 1.3.0 veya daha yenisi gerekir, bu 1.2.4", ya da başka bir
 MAJOR için "yeniden derlenmeli") ve yüklenmez. Keşfet ve Mağaza yalnızca uyan bir sürüm sunar.
 
 `macroGrid` değerini derlediğiniz SDK sürümüne ayarlayın; sonradan gelen bir şeyi kullanmıyorsanız daha eskisini yazın: düşük değer eklentinin daha çok

@@ -1,10 +1,13 @@
-# Changelog (developer) — OBS Control
+# Changelog (developer) — WebSocketBridge For OBS
 
 This file tracks the version of this plugin only (independent of the main program — see the "Independent versions" section of `../CONTRIBUTING.md`). The short, public changelog is [CHANGELOG.md](CHANGELOG.md).
 
-## [Unreleased]
+## [0.3.0] - 2026-09-28
 ### Changed
-- `plugin.json` declares `"macroGrid": "1.0.0"` (built against SDK 1.0.0). The old `sdkVersion` / `minServerVersion` stay so servers before 1.0.0 still load it.
+- Display name is now "WebSocketBridge For OBS" (trademark compliance, see `../docs/done/obs-plugin-trademark-compliance.md`); `id`, DLL and namespace stay `obs`. A non-affiliation notice was added to the manifest description, the settings window (a `Notice` field), README and NOTICE. The catalog/index name changes with the release; a tool that matches the plugin by its old name "OBS Control" must use the id instead.
+- Version 0.3.0. `plugin.json` declares `"macroGrid": "1.1.0"` (built against SDK 1.1.0, needed for `IPluginHost.Secrets`); the repository's default `MacroGridSdkVersion` is now 1.1.0.
+- `settings.json` stores the password as `protectedPassword` (`IPluginHost.Secrets.Protect`). A legacy plain `password` is read once and rewritten protected on the next save; downgrading the plugin loses the saved password.
+- Formerly: `plugin.json` declared `"macroGrid": "1.0.0"` (built against SDK 1.0.0). The old `sdkVersion` / `minServerVersion` stay so servers before 1.0.0 still load it.
 
 ## [0.2.2] - 2026-09-25
 ### Changed

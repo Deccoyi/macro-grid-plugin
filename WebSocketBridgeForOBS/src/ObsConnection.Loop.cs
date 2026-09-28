@@ -20,7 +20,7 @@ public sealed partial class ObsConnection
         {
             // Settings are re-read right below, so any save signal raised before this point is already covered.
             while (_settingsSignal.Wait(0)) { }
-            var settings = ObsSettings.LoadOrCreate(host.DataDirectory);
+            var settings = ObsSettings.LoadOrCreate(host);
             if (!settings.Enabled)
             {
                 SetState(store, ObsConnectionState.Disabled);

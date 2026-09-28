@@ -34,7 +34,7 @@ const en = {
   changelog: 'Changelog',
   whatItDoes: 'What it does',
   requirements: 'Requirements',
-  server: 'Macro Grid server',
+  server: 'Macro Grid Editor',
   orNewer: 'or newer',
   permissions: 'Permissions',
   permissionsIntro: 'This is a JavaScript plugin. It runs in a sandbox and starts once you approve these permissions.',
@@ -46,7 +46,7 @@ const en = {
 
   statVersion: 'Version',
   statKind: 'Type',
-  statServer: 'Needs server',
+  statServer: 'Needs Macro Grid Editor',
   statAccess: 'Access',
   statFull: 'Full',
   statPermissions: 'Permissions',
@@ -66,7 +66,7 @@ const en = {
   detailRelease: 'Release date',
   detailId: 'ID',
   detailType: 'Type',
-  detailServer: 'Needs server',
+  detailServer: 'Needs Macro Grid Editor',
 
   releaseNotes: 'Release notes',
   noReleaseInfo: 'Release information is not available right now.',
@@ -105,7 +105,7 @@ const tr: typeof en = {
   changelog: 'Değişiklik günlüğü',
   whatItDoes: 'Ne yapar',
   requirements: 'Gereksinimler',
-  server: 'Macro Grid sunucusu',
+  server: 'Macro Grid Editor',
   orNewer: 'veya üstü',
   permissions: 'İzinler',
   permissionsIntro: 'Bu bir JavaScript eklentisidir. Korumalı alanda çalışır ve aşağıdaki izinleri siz onaylayınca başlar.',
@@ -117,7 +117,7 @@ const tr: typeof en = {
 
   statVersion: 'Sürüm',
   statKind: 'Tür',
-  statServer: 'Gerekli sunucu',
+  statServer: 'Macro Grid Editor',
   statAccess: 'Yetki',
   statFull: 'Tam',
   statPermissions: 'İzin',
@@ -137,7 +137,7 @@ const tr: typeof en = {
   detailRelease: 'Yayın tarihi',
   detailId: 'Kimlik',
   detailType: 'Tür',
-  detailServer: 'Gerekli sunucu',
+  detailServer: 'Macro Grid Editor',
 
   releaseNotes: 'Sürüm notları',
   noReleaseInfo: 'Sürüm bilgisi şu an kullanılamıyor.',

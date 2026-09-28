@@ -37,7 +37,7 @@ jobs:
         shell: pwsh
         run: |
           $failed = @()
-          foreach ($proj in 'OBS/src/MacroGrid.Plugin.Obs.csproj', 'PLCIcons/src/MacroGrid.Plugin.PlcIcons.csproj', 'SoundBoard/src/MacroGrid.Plugin.SoundBoard.csproj') {
+          foreach ($proj in 'WebSocketBridgeForOBS/src/MacroGrid.Plugin.Obs.csproj', 'PLCIcons/src/MacroGrid.Plugin.PlcIcons.csproj', 'SoundBoard/src/MacroGrid.Plugin.SoundBoard.csproj') {
             dotnet restore $proj --verbosity quiet
             if ($LASTEXITCODE -ne 0) { throw "restore failed: $proj" }
             $report = dotnet list $proj package --vulnerable --include-transitive 2>&1 | Out-String
@@ -48,7 +48,7 @@ jobs:
 
       - name: Build OBS plugin
         working-directory: macro-grid-plugin
-        run: dotnet build OBS/src/MacroGrid.Plugin.Obs.csproj -c Release
+        run: dotnet build WebSocketBridgeForOBS/src/MacroGrid.Plugin.Obs.csproj -c Release
 
       - name: Build PLC Icons plugin
         working-directory: macro-grid-plugin
@@ -56,7 +56,7 @@ jobs:
 
       - name: Test OBS plugin
         working-directory: macro-grid-plugin
-        run: dotnet test OBS/tests/MacroGrid.Plugin.Obs.Tests/MacroGrid.Plugin.Obs.Tests.csproj -c Release
+        run: dotnet test WebSocketBridgeForOBS/tests/MacroGrid.Plugin.Obs.Tests/MacroGrid.Plugin.Obs.Tests.csproj -c Release
 
       - name: Build SoundBoard plugin
         working-directory: macro-grid-plugin

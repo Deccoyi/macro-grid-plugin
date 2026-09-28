@@ -1,4 +1,4 @@
-# License notice: OBS Control
+# License notice: WebSocketBridge For OBS
 
 This plugin is licensed under the MIT License, see [LICENSE](LICENSE). Copyright (c) 2026 Deccoyi. It is provided "as is", without warranty.
 
@@ -8,3 +8,7 @@ running OBS Studio; it contains no OBS code and no obs-websocket client library.
 packages only for testing; they are not part of the plugin.
 
 The full list of components and license texts is in the repository: `THIRD_PARTY_NOTICES.md` and the `licenses/` folder.
+
+## Not affiliated with OBS
+
+This plugin is an independent, third-party project. It is not affiliated with, endorsed by or sponsored by the OBS Project. OBS and OBS Studio are trademarks of their owners. Get OBS Studio at https://obsproject.com/.

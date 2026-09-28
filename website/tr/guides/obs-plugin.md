@@ -1,6 +1,6 @@
 # Gerçek dünyadan bir eklenti: OBS
 
-[OBS eklentisi](https://github.com/Deccoyi/macro-grid-plugin/tree/main/OBS) (id `obs`), OBS 28 ve üzerinde yerleşik gelen obs-websocket v5
+[OBS eklentisi](https://github.com/Deccoyi/macro-grid-plugin/tree/main/WebSocketBridgeForOBS) (id `obs`), OBS 28 ve üzerinde yerleşik gelen obs-websocket v5
 üzerinden [OBS Studio](https://obsproject.com/)'yu kontrol eder. Depodaki en büyük eklentidir ve SDK'nın sunduğu neredeyse her şeyi
 kullanır; bu yüzden eğitimlerden sonra okunacak en iyi örnektir.
 
@@ -17,7 +17,7 @@ aksiyonu listeler.
 
 ## Giriş noktası
 
-<<< @/../OBS/src/ObsPlugin.cs
+<<< @/../WebSocketBridgeForOBS/src/ObsPlugin.cs
 
 `ObsConnection` adlı tek bir nesne bağlantıyı yönetir. Değişken sağlayıcı olarak kaydedilir, ayar sayfasına ve
 her aksiyona verilir.
@@ -44,10 +44,10 @@ her aksiyona verilir.
   mesajla başarısız olur. Sunucu bunu telefonda ve Düzenleyici'nin durum çubuğunda gösterir, böylece eskimiş bir düğme asla sessiz kalmaz.
 - **Ayarlar hemen uygulanır.** Ayar sayfasının `Save` yöntemi `settings.json` dosyasını yazar ve bağlantıyı uyarır; böylece düzeltilmiş bir sunucu,
   port veya parola kısa süre içinde yeniden bağlanır.
-- **OBS olmadan testler.** `OBS/tests`, eklentiyi sahte bir obs-websocket sunucusuna (`FakeObsServer.cs`) karşı çalıştırır. `OBS/tests/MacroGrid.Plugin.Obs.Tests`
+- **OBS olmadan testler.** `WebSocketBridgeForOBS/tests`, eklentiyi sahte bir obs-websocket sunucusuna (`FakeObsServer.cs`) karşı çalıştırır. `WebSocketBridgeForOBS/tests/MacroGrid.Plugin.Obs.Tests`
   üzerinde `dotnet test` çalıştırın.
 
-Eklentinin kullanıcıya görünen metinleri (aksiyon adları, form etiketleri, durum metni) İngilizce yazılmıştır ve `OBS/locales/tr.json`
+Eklentinin kullanıcıya görünen metinleri (aksiyon adları, form etiketleri, durum metni) İngilizce yazılmıştır ve `WebSocketBridgeForOBS/locales/tr.json`
 aracılığıyla Türkçeye çevrilir; kod, yorumlar ve dokümanlar İngilizcedir. Bu, depodaki her eklenti için geçerli kuraldır.
 
 ## Bir düzende kullanmak

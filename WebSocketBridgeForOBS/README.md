@@ -1,8 +1,10 @@
-# OBS plugin
+# WebSocketBridge For OBS
 
 Controls [OBS Studio](https://obsproject.com/) from Macro Grid over obs-websocket v5, which is built into OBS 28 and newer. It adds
 22 actions (scenes, streaming, recording, audio, scene items, text sources) and about 45 live `obs.*` variables you can show on
 widgets. Kind: C# plugin. Id: `obs`.
+
+> This plugin is an independent, third-party project. It is not affiliated with, endorsed by or sponsored by the OBS Project. OBS and OBS Studio are trademarks of their owners. Get OBS Studio at https://obsproject.com/.
 
 ## Requirements
 
@@ -12,9 +14,9 @@ widgets. Kind: C# plugin. Id: `obs`.
 
 ## Installation
 
-1. Build: `dotnet build OBS\src\MacroGrid.Plugin.Obs.csproj` (add `-c Release` for a release build). This needs the `macro-grid`
+1. Build: `dotnet build WebSocketBridgeForOBS\src\MacroGrid.Plugin.Obs.csproj` (add `-c Release` for a release build). This needs the `macro-grid`
    repository next to this one, see the [top-level README](../README.md#building).
-2. In the Macro Grid editor open **Plugins → Manage Plugins… → Install from Folder…** and pick `OBS\src\bin\Debug\net10.0\` (or
+2. In the Macro Grid editor open **Plugins → Manage Plugins… → Install from Folder…** and pick `WebSocketBridgeForOBS\src\bin\Debug\net10.0\` (or
    `Release\net10.0\`). The build copies `plugin.json` next to the DLL. The plugin is loaded immediately.
 
 ## Settings
@@ -85,7 +87,7 @@ the message is shown on the phone and in the editor's status bar.
 
 ## Tests
 
-`dotnet test OBS\tests\MacroGrid.Plugin.Obs.Tests\MacroGrid.Plugin.Obs.Tests.csproj` runs the connection layer against a fake
+`dotnet test WebSocketBridgeForOBS\tests\MacroGrid.Plugin.Obs.Tests\MacroGrid.Plugin.Obs.Tests.csproj` runs the connection layer against a fake
 obs-websocket server (handshake, wrong password, timeouts, sudden disconnects, OBS shutting down, input removal).
 
 ## License

@@ -94,8 +94,9 @@ public sealed class ObsConnectionTests
     private static (string DataDir, FakePluginHost Host, FakeVariableStore Store) NewFixture(int port, string password = "")
     {
         var dataDir = Directory.CreateTempSubdirectory("obs-plugin-test-").FullName;
-        new ObsSettings { Enabled = true, Host = "127.0.0.1", Port = port, Password = password }.Save(dataDir);
-        return (dataDir, new FakePluginHost(dataDir), new FakeVariableStore());
+        var host = new FakePluginHost(dataDir);
+        new ObsSettings { Enabled = true, Host = "127.0.0.1", Port = port, Password = password }.Save(host);
+        return (dataDir, host, new FakeVariableStore());
     }
 
     [Fact(Timeout = 10_000)]

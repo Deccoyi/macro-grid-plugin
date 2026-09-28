@@ -12,7 +12,7 @@ plugin-<name>-v<version>
 
 | Plugin | `<name>` (also the release script's `-Name`) | Example tag |
 |---|---|---|
-| `OBS/` | `obs` | `plugin-obs-v0.2.2` |
+| `WebSocketBridgeForOBS/` | `obs` | `plugin-obs-v0.2.2` |
 | `PLCIcons/` | `plc-icons` | `plugin-plc-icons-v0.1.3` |
 | `SoundBoard/` | `soundboard` | `plugin-soundboard-v0.1.1` |
 | `HelloJs/` | `hellojs` | `plugin-hellojs-v0.1.1` |
