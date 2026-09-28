@@ -1,7 +1,7 @@
 # Macro Grid plugins
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-![Status: alpha](https://img.shields.io/badge/status-alpha-orange.svg)
+![Status: beta](https://img.shields.io/badge/status-beta-yellow.svg)
 [![CI](https://github.com/Deccoyi/macro-grid-plugin/actions/workflows/ci.yml/badge.svg)](https://github.com/Deccoyi/macro-grid-plugin/actions/workflows/ci.yml)
 
 Plugins for [Macro Grid](https://github.com/Deccoyi/macro-grid), the Windows server that turns a phone or tablet on your

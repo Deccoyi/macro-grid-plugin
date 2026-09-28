@@ -59,4 +59,4 @@ Henüz `async`/`await` host API'si yoktur ve bir eklentinin kendi widget'ını �
 
 `fields` (bir aksiyon veya ayar sayfası için) C# `SettingField` ile aynı biçimi kullanır; bkz.
 [Ayar sayfaları](/tr/guides/settings-pages). `kind`, `Text`, `Password`, `Number`, `Slider`, `Bool`,
-`Select`, `Segmented` değerlerinden biridir.
+`Select`, `Segmented`, `File`, `List`, `Button`, `Notice` değerlerinden biridir. `Button` bir C# `ISettingsCommandHandler` gerektirir, bu yüzden yalnızca C# eklentilerinde işe yarar.

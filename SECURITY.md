@@ -15,7 +15,7 @@
 - **Local network only.** Macro Grid is designed for a trusted local network (your PC and your phone). It is not meant to be exposed to
   the internet, and neither are the plugins that talk to it. Plugins that connect to other software (for example the OBS plugin
   connecting to OBS Studio) do so with the settings and passwords you enter; keep those services on your local machine or network too.
-- **No warranty, no liability.** This software was created entirely by AI tools, is alpha-stage and has not been independently audited or security-reviewed (see the [README](README.md)). It is provided "as is", without warranty of any kind, and the authors and contributors accept no responsibility or liability for it, including for security problems and their consequences (see the [MIT license](LICENSE)). You use it entirely at your own risk. Security reports are welcome, but they create no obligation to fix and are not a promise of support or of a response time.
+- **No warranty, no liability.** This software was created entirely by AI tools, is beta-stage and has not been independently audited or security-reviewed (see the [README](README.md)). It is provided "as is", without warranty of any kind, and the authors and contributors accept no responsibility or liability for it, including for security problems and their consequences (see the [MIT license](LICENSE)). You use it entirely at your own risk. Security reports are welcome, but they create no obligation to fix and are not a promise of support or of a response time.
 
 ## Reporting a vulnerability
 

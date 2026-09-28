@@ -1,9 +1,8 @@
 # C# SDK interfaces
 
-The SDK is the NuGet package `MacroGrid.Plugin.Abstractions` (namespace `MacroGrid.Plugin.Abstractions`, version `1.0.0`, the same number as Macro Grid, exposed at
+The SDK is the NuGet package `MacroGrid.Plugin.Abstractions` (namespace `MacroGrid.Plugin.Abstractions`, version `1.2.0` at the time of writing, the same number as Macro Grid, exposed at
 run time as `PluginSdk.Version`). The signatures below are those of the SDK source in the
-[server repository](https://github.com/Deccoyi/macro-grid/tree/main/src/MacroGrid.Plugin.Abstractions). The SDK is `0.x`: a minor
-version may change them.
+[server repository](https://github.com/Deccoyi/macro-grid/tree/main/src/MacroGrid.Plugin.Abstractions). Within one MAJOR the SDK only grows: members are added, never removed or changed (see [Compatibility](/basics/compatibility)).
 
 ## Entry point
 
@@ -29,6 +28,13 @@ public interface IPluginHost
     void RegisterSettingsPage(IPluginSettingsPage page);
     IPluginStatusItem CreateStatusItem(string id);
     void RegisterIconPack(IIconPackSource iconPack);
+    IPluginSecrets Secrets { get; }
+}
+
+public interface IPluginSecrets
+{
+    string Protect(string secret);
+    string? Unprotect(string protectedSecret);
 }
 ```
 
@@ -42,6 +48,7 @@ public interface IPluginHost
 | `RegisterSettingsPage` | Adds a settings form to the Plugins window. |
 | `CreateStatusItem(id)` | Creates an entry you own in the editor's status bar. Call once per logical status and reuse it. |
 | `RegisterIconPack` | Adds icons to the editor's icon picker. |
+| `Secrets` | `Protect` encrypts a secret (for example a password) before you write it to your own settings file, `Unprotect` reads it back. It uses the server's own protection (DPAPI for the current Windows user): a copied data folder no longer carries a usable secret. Optional: plugins that store plain JSON keep working. |
 
 ## Actions
 
@@ -78,13 +85,24 @@ public interface IDeviceController      // ActionContext.Device: the one phone t
 }
 ```
 
+```csharp
+public interface IReleaseAwareAction   // optional, on the same class as IActionHandler
+{
+    Task ReleaseAsync(ActionContext context, JsonObject settings, CancellationToken cancellationToken);
+}
+```
+
+An action that implements `IReleaseAwareAction` is told when the button it was pressed with is let go: the server calls `ReleaseAsync`, with the
+settings the `press` binding ran with, when the widget's `release` event fires, before that event's own bindings run. Use it for "play while held" or
+"hold to talk".
+
 An action's exceptions are caught by the server: the failure is logged and its message is shown on the phone and in the editor's
 status bar. Actions of one phone run one after the other.
 
 ## Forms
 
 ```csharp
-public enum SettingFieldKind { Text, Password, Number, Slider, Bool, Select, Segmented }
+public enum SettingFieldKind { Text, Password, Number, Slider, Bool, Select, Segmented, File, List, Button, Notice }
 
 public sealed record SettingField(string Key, string Label, SettingFieldKind Kind)
 {
@@ -99,6 +117,9 @@ public sealed record SettingField(string Key, string Label, SettingFieldKind Kin
     public string[]? DependsOn { get; init; }
     public bool AllowVariables { get; init; }
     public string? VisibleWhen { get; init; }
+    public string? FileFilter { get; init; }         // File: a WinForms file filter
+    public SettingField[]? ItemFields { get; init; } // List: the schema of one row
+    public string? Command { get; init; }            // Button: the command id
 }
 
 public sealed record SettingOption(string Value, string Label, string? Group = null, string? Icon = null);
@@ -114,6 +135,11 @@ public interface IPluginSettingsPage
     IReadOnlyList<SettingField> Fields { get; }
     JsonObject Load();
     void Save(JsonObject values);
+}
+
+public interface ISettingsCommandHandler   // optional, on the same class as IPluginSettingsPage
+{
+    Task<string?> RunCommandAsync(string command, JsonObject values, CancellationToken cancellationToken);
 }
 ```
 
@@ -134,7 +160,14 @@ public interface IVariableProvider
     Task RunAsync(IVariableStore store, CancellationToken cancellationToken);
 }
 
-public sealed record VariableInfo(string Name, string Description, string Example, string Category);
+public enum VariableType { Text, Number, Boolean, Duration, DateTime }
+
+public sealed record VariableInfo(string Name, string Description, string Example, string Category)
+{
+    public VariableType Type { get; init; } = VariableType.Text;   // what the live value is
+    public string? Unit { get; init; }                             // unit of a number, such as "%"
+    public IReadOnlyList<string>? Values { get; init; }            // allowed values of a fixed-choice text variable
+}
 
 public interface IVariableCatalogSource
 {

@@ -23,7 +23,7 @@ geçerli değerleri bir `JsonObject` olarak döndürür, `Save` kullanıcının 
 
 ## Alan türleri ve seçenekler
 
-`SettingFieldKind` değeri `Text`, `Password`, `Number`, `Slider`, `Bool`, `Select` veya `Segmented` olabilir. Kullanışlı `SettingField` seçenekleri:
+`SettingFieldKind` değeri `Text`, `Password`, `Number`, `Slider`, `Bool`, `Select`, `Segmented`, `File`, `List`, `Button` veya `Notice` olabilir. `File` Gözat düğmeli bir yol kutusudur, `List` tekrarlanan satırlardır, `Button` eklentinizde bir komut çalıştırır, `Notice` salt okunur uyarı metnidir (`Button` ve `Notice` değer olarak kaydedilmez). Kullanışlı `SettingField` seçenekleri:
 
 | Seçenek | Anlamı |
 |---|---|
@@ -33,7 +33,10 @@ geçerli değerleri bir `JsonObject` olarak döndürür, `Save` kullanıcının 
 | `OptionsSource` | `IOptionsSource` tarafından sunulan dinamik bir listenin kimliği. |
 | `DependsOn` | Geçerli form değerleri `GetOptionsAsync` yöntemine iletilen anahtarlar; bir değişiklik listeyi yeniden getirir. |
 | `AllowVariables` | Bir metin alanında `{var}` ekleme düğmesini gösterir. Ham şablonu siz alırsınız. |
-| `VisibleWhen` | Alanı yalnızca başka bir alan bir değere eşitken gösterir, örneğin `"mode=pause"`. |
+| `VisibleWhen` | Alanı yalnızca başka bir alan bir değere eşitken gösterir, örneğin `"mode=pause"`. `List` satırı içinde satırın kendi değerlerine bakılır. |
+| `FileFilter` | `File` için zorunlu: yerel dosya seçiciye olduğu gibi verilen bir WinForms dosya filtresi, örneğin `"Audio files (*.wav;*.mp3)\|*.wav;*.mp3"`. |
+| `ItemFields` | `List` için zorunlu: bir satırın alanları. Değer, nesnelerden oluşan bir JSON dizisidir; şema dışı anahtarlar kayıtta korunur. |
+| `Command` | `Button` için zorunlu: ayar sayfanızla aynı sınıftaki `ISettingsCommandHandler.RunCommandAsync(command, values, token)` metoduna geçirilen komut kimliği. Dönen metin kısa bir ileti olarak gösterilir. |
 
 ## Dinamik açılır listeler
 
@@ -49,5 +52,6 @@ eklentisi sahne, ses girişi ve sahne öğesi listelerini bu yolla, OBS'in bildi
 
 ## Gizli bilgiler
 
-`SettingFieldKind.Password` girdiyi gizler, ancak kaydettiğiniz değer sizin sorumluluğunuzdadır: OBS eklentisi parolasını `settings.json`
-dosyasında düz metin olarak saklar. Bunu README'nizde belirtin.
+`SettingFieldKind.Password` girdiyi gizler, ancak kaydettiğiniz değer sizin sorumluluğunuzdadır. C#'ta değeri ayar dosyanıza yazmadan önce
+`host.Secrets.Protect(...)` ile geçirin, okurken `Unprotect` kullanın (geçerli Windows kullanıcısı için korunur; kopyalanan bir veri klasörü kullanılabilir sır
+taşımaz). OBS eklentisi parolası için bunu yapar. Kullanmazsanız değer `settings.json` içinde düz metindir; bunu README'nizde belirtin.
