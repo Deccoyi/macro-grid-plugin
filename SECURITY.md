@@ -8,6 +8,10 @@
   ones in this repository.
 - **JavaScript plugins are sandboxed.** They have no .NET access and only the permissions you approve, with time and memory limits per
   call; the sandbox is described in [docs/plugin-authoring.md](docs/plugin-authoring.md#7-javascript-plugins).
+- **Plugins by other authors are not reviewed by this project.** Macro Grid can install plugins from other repositories and shows them as
+  third-party. Such a C# plugin can connect to the internet and send data, and Macro Grid cannot limit or check that. A JavaScript plugin can
+  only send web requests to the exact `http:<host>:<port>` addresses it declares, and the permission shown before you approve it says whether
+  each one is on this computer, your local network or the internet. Report a problem in another author's plugin to that author.
 - **Local network only.** Macro Grid is designed for a trusted local network (your PC and your phone). It is not meant to be exposed to
   the internet, and neither are the plugins that talk to it. Plugins that connect to other software (for example the OBS plugin
   connecting to OBS Studio) do so with the settings and passwords you enter; keep those services on your local machine or network too.
@@ -29,6 +33,18 @@ Macro Grid is a hobby project maintained in spare time, not a full-time job or a
 maintainer will try to fix real problems, but there is no guaranteed response time, no guaranteed fix, no support schedule and no bug
 bounty. Fixes land when there is time for them. If that is not acceptable for how you use the software, do not rely on it.
 
+## How fixes are announced
+
+This is a hobby project, so nothing here is a promise. If a reported vulnerability gets fixed, the fix may be described in a GitHub
+security advisory on this repository and under "Security" in the plugin's changelog.
+
 ## Supported versions
 
-Only the latest released version of each plugin (or, before the first release, the `dev` branch) receives fixes.
+There is no support period and no promise of fixes: these plugins are a hobby project maintained in spare time. If a fix is made, it only
+goes into a new version of that plugin; older versions are not updated. Before the first release, fixes land on the `dev` branch.
+
+## What a release contains
+
+Each C# plugin release has a software bill of materials (SBOM) attached, `<id>-<version>.cdx.json` (CycloneDX), listing the packages inside
+the zip (the plugin SDK is not in the zip; the server supplies it). JavaScript plugins contain no packages. A release is refused when one of
+those packages has a known vulnerability, and every pull request runs the same check.
