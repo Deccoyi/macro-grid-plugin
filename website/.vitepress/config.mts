@@ -47,6 +47,7 @@ export default defineConfig({
             text: 'Eklenti temelleri',
             items: [
               { text: 'Türler, klasörler ve kurulum', link: '/tr/basics/' },
+              { text: 'SDK neler yapabilir', link: '/tr/basics/capabilities' },
               { text: 'Uyumluluk ve sürümleme', link: '/tr/basics/compatibility' },
             ],
           },
@@ -119,6 +120,7 @@ export default defineConfig({
         text: 'Plugin basics',
         items: [
           { text: 'Kinds, folders and install', link: '/basics/' },
+          { text: 'What the SDK can do', link: '/basics/capabilities' },
           { text: 'Compatibility and versioning', link: '/basics/compatibility' },
         ],
       },

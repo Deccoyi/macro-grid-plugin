@@ -4,7 +4,7 @@ title: Macro Grid Plugins
 hero:
   name: Macro Grid
   text: Plugins for your macro deck
-  tagline: Write actions, live variables, settings pages and icon packs for Macro Grid, in JavaScript or C#. Alpha software.
+  tagline: Write actions, live variables, settings pages and icon packs for Macro Grid, in JavaScript or C#. Beta software.
   actions:
     - theme: brand
       text: Browse plugins

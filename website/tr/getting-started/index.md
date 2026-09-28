@@ -11,8 +11,10 @@ Bu sayfa sizi sıfırdan telefonunuzda çalışan bir düğmeye götürür. Kull
 
 ## 1. Sunucuyu kurun
 
-Proje alfa aşamasında olduğu için henüz yayımlanmış sürüm yok. İlk sürüme kadar sunucuyu kaynaktan derlersiniz
-([.NET 10 SDK](https://dotnet.microsoft.com/download) ve [Node.js](https://nodejs.org/) 20 veya üzeri gerekir):
+Sunucu deposunun [Sürümler sayfasından](https://github.com/Deccoyi/macro-grid/releases) (veya [indirme sayfasından](https://deccoyi.github.io/macro-grid/tr/download)) Windows yükleyicisini (`MacroGrid-Setup-<version>.exe`) indirin. `Program Files\Macro Grid` altına kurulur,
+özel ağlar için TCP 9820 portunu açar ve kaldırıldığında verilerinizi `%AppData%\MacroGrid` içinde bırakır.
+
+Sunucuyu bunun yerine kaynaktan derlemek isterseniz ([.NET 10 SDK](https://dotnet.microsoft.com/download) ve [Node.js](https://nodejs.org/) 20 veya üzeri gerekir):
 
 ```powershell
 cd editor;    npm install; npm run build; cd ..
@@ -22,10 +24,6 @@ New-Item -ItemType Directory -Force src\MacroGrid.Host\wwwroot\deck | Out-Null
 Copy-Item webclient\dist\* src\MacroGrid.Host\wwwroot\deck -Recurse -Force
 dotnet run --project src/MacroGrid.Host
 ```
-
-Bir sürüm yayımlandığında sunucu bir Windows yükleyicisi (`MacroGrid-Setup-<version>.exe`) olarak gelir; `Program Files\Macro Grid` altına kurulur,
-özel ağlar için TCP 9820 portunu açar ve kaldırıldığında verilerinizi `%AppData%\MacroGrid` içinde bırakır.
-Sunucu deposunun [Sürümler sayfasına](https://github.com/Deccoyi/macro-grid/releases) bakın.
 
 Sunucu bir **sistem tepsisi simgesi** olarak görünür; menüsü Düzenleyici'yi açar.
 
@@ -56,5 +54,5 @@ Aynı olaya bağlanan birden çok aksiyon art arda çalışır; bu da bir makro 
 ## 4. Eklentiler
 
 Eklenti kurmak için Düzenleyici'de **Eklentiler, Eklentileri Yönet…** yolunu açın. Eklentiler, aksiyon seçiciye yeni aksiyonlar ve metin alanlarındaki
-`{...}` seçiciye yeni değişkenler ekler. Bu depodaki eklentiler (OBS kontrolü, PLC simgeleri, bir JavaScript hello
+`{...}` seçiciye yeni değişkenler ekler. Bu depodaki eklentiler (OBS kontrolü, PLC simgeleri, SoundBoard, bir JavaScript hello
 world) [Kılavuzlar](/tr/guides/obs-plugin) bölümünde anlatılır ve [kendinizinkini yazabilirsiniz](/tr/tutorials/js-hello-world).

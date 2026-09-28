@@ -4,7 +4,7 @@ title: Macro Grid Eklentileri
 hero:
   name: Macro Grid
   text: Makro deck'iniz için eklentiler
-  tagline: Macro Grid için JavaScript veya C# ile aksiyonlar, canlı değişkenler, ayar sayfaları ve simge paketleri yazın. Alfa yazılımdır.
+  tagline: Macro Grid için JavaScript veya C# ile aksiyonlar, canlı değişkenler, ayar sayfaları ve simge paketleri yazın. Beta yazılımdır.
   actions:
     - theme: brand
       text: Eklentilere göz at

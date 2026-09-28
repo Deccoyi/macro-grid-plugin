@@ -11,8 +11,10 @@ This page takes you from nothing to a working button on your phone. The full use
 
 ## 1. Install the server
 
-There are no published releases yet while the project is in alpha. Until the first release you build the server from source
-(you need the [.NET 10 SDK](https://dotnet.microsoft.com/download) and [Node.js](https://nodejs.org/) 20 or newer):
+Download the Windows installer (`MacroGrid-Setup-<version>.exe`) from the [Releases page](https://github.com/Deccoyi/macro-grid/releases) of the server repository (or the [download page](https://deccoyi.github.io/macro-grid/download)). It installs to
+`Program Files\Macro Grid`, opens TCP port 9820 for private networks and leaves your data in `%AppData%\MacroGrid` on uninstall.
+
+To build the server from source instead (you need the [.NET 10 SDK](https://dotnet.microsoft.com/download) and [Node.js](https://nodejs.org/) 20 or newer):
 
 ```powershell
 cd editor;    npm install; npm run build; cd ..
@@ -22,10 +24,6 @@ New-Item -ItemType Directory -Force src\MacroGrid.Host\wwwroot\deck | Out-Null
 Copy-Item webclient\dist\* src\MacroGrid.Host\wwwroot\deck -Recurse -Force
 dotnet run --project src/MacroGrid.Host
 ```
-
-Once a release exists, the server ships as a Windows installer (`MacroGrid-Setup-<version>.exe`) that installs to
-`Program Files\Macro Grid`, opens TCP port 9820 for private networks and leaves your data in `%AppData%\MacroGrid` on uninstall.
-Check the [Releases page](https://github.com/Deccoyi/macro-grid/releases) of the server repository.
 
 The server appears as a **tray icon**; its menu opens the editor.
 
@@ -56,5 +54,5 @@ Several actions bound to the same event run one after the other, which makes a m
 ## 4. Plugins
 
 Open **Plugins, Manage Plugins** in the editor to install plugins. Plugins add new actions to the action picker and new
-variables to the `{...}` picker in text fields. The plugins in this repository (OBS control, PLC icons, a JavaScript hello
+variables to the `{...}` picker in text fields. The plugins in this repository (OBS control, PLC icons, SoundBoard, a JavaScript hello
 world) are described in the [Guides](/guides/obs-plugin), and you can [write your own](/tutorials/js-hello-world).

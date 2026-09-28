@@ -5,13 +5,13 @@ kendi tasarladığınız bir donanım makro tuş takımı gibi. Düzenleyicide b
 yerleştirirsiniz. Deck, bilgisayardan canlı değerleri (CPU, RAM, saat, OBS yayın süresi, ...) gösterir; tuşlara basar, metin yazar,
 programları açar, sesi değiştirir ve diğer yazılımları eklentiler aracılığıyla kontrol eder.
 
-::: warning Alfa, tamamen yapay zekâ tarafından yazıldı, kullanım riski size aittir
-Macro Grid herkese açık alfa aşamasındadır. **Bu site dahil tüm kod, tasarım, dokümantasyon ve görseller yapay zekâ tarafından
+::: warning Beta, tamamen yapay zekâ tarafından yazıldı, kullanım riski size aittir
+Macro Grid herkese açık beta aşamasındadır. **Bu site dahil tüm kod, tasarım, dokümantasyon ve görseller yapay zekâ tarafından
 (bakımcının yönlendirmesiyle çalışan bir yapay zekâ asistanı) üretilmiştir.** Hiçbir şey bir insan tarafından satır satır incelenmemiş,
 güvenlik denetiminden geçirilmemiş ya da herhangi bir amaç için sertifikalandırılmamıştır.
 Her şey "olduğu gibi" sunulur, hiçbir tür garanti verilmez. Yazarlar ve katkıda bulunanlar; zarar, veri kaybı, kötüye kullanım veya güvenlik
 sorunları dahil hiçbir konuda sorumluluk kabul etmez. **Tüm risk size aittir**: hangi yazılımı kurduğunuz, hangi cihazları eşleştirdiğiniz, hangi eklentileri
-çalıştırdığınız ve hangi düğmelere bastığınız. API'ler ve eklenti manifest'leri hâlâ değişebilir; eklenti SDK'sı `0.x` sürümündedir, yani bir minor sürüm eklentileri bozabilir.
+çalıştırdığınız ve hangi düğmelere bastığınız. API'ler ve eklenti manifest'leri hâlâ değişebilir; eklenti SDK'sı anlamsal sürümlemeyi izler ([Uyumluluk](/tr/basics/compatibility)): bir minor sürüm yalnızca ekleme yapar, yeni bir major sürüm eklentileri bozabilir.
 :::
 
 ## Mimari

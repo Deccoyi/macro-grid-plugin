@@ -1,6 +1,6 @@
 # C# SDK arayüzleri
 
-SDK, `MacroGrid.Plugin.Abstractions` NuGet paketidir (ad alanı `MacroGrid.Plugin.Abstractions`, sürüm `1.0.0`, Macro Grid ile aynı numara, çalışma zamanında `PluginSdk.Version` olarak sunulur). Aşağıdaki imzalar,
+SDK, `MacroGrid.Plugin.Abstractions` NuGet paketidir (ad alanı `MacroGrid.Plugin.Abstractions`, sürüm yazıldığı sırada `1.2.0`, Macro Grid ile aynı numara, çalışma zamanında `PluginSdk.Version` olarak sunulur). Aşağıdaki imzalar,
 [sunucu deposundaki](https://github.com/Deccoyi/macro-grid/tree/main/src/MacroGrid.Plugin.Abstractions) SDK kaynağının imzalarıdır. Bir MAJOR içinde SDK yalnızca büyür.
 
 ## Giriş noktası
@@ -26,6 +26,13 @@ public interface IPluginHost
     void RegisterSettingsPage(IPluginSettingsPage page);
     IPluginStatusItem CreateStatusItem(string id);
     void RegisterIconPack(IIconPackSource iconPack);
+    IPluginSecrets Secrets { get; }
+}
+
+public interface IPluginSecrets
+{
+    string Protect(string secret);
+    string? Unprotect(string protectedSecret);
 }
 ```
 
@@ -39,6 +46,7 @@ public interface IPluginHost
 | `RegisterSettingsPage` | Eklentiler penceresine bir ayar formu ekler. |
 | `CreateStatusItem(id)` | Düzenleyicinin durum çubuğunda size ait bir girdi oluşturur. Her mantıksal durum için bir kez çağırın ve yeniden kullanın. |
 | `RegisterIconPack` | Düzenleyicinin simge seçicisine simgeler ekler. |
+| `Secrets` | `Protect`, bir sırrı (örneğin parolayı) kendi ayar dosyanıza yazmadan önce şifreler, `Unprotect` geri okur. Sunucunun kendi korumasını (geçerli Windows kullanıcısı için DPAPI) kullanır: kopyalanan bir veri klasörü kullanılabilir sır taşımaz. İsteğe bağlıdır. |
 
 ## Aksiyonlar
 
@@ -75,12 +83,21 @@ public interface IDeviceController      // ActionContext.Device: aksiyonu tetikl
 }
 ```
 
+```csharp
+public interface IReleaseAwareAction   // isteğe bağlı, IActionHandler ile aynı sınıfta
+{
+    Task ReleaseAsync(ActionContext context, JsonObject settings, CancellationToken cancellationToken);
+}
+```
+
+`IReleaseAwareAction` uygulayan bir aksiyon, bastığı düğme bırakıldığında haberdar edilir: widget'ın `release` olayı tetiklendiğinde, o olayın kendi bağlamalarından önce, sunucu `press` bağlamasının çalıştığı ayarlarla `ReleaseAsync` çağırır. "Basılı tutarken çal" veya "basılı tutarak konuş" için kullanın.
+
 Bir aksiyonun istisnaları sunucu tarafından yakalanır: hata günlüğe yazılır ve iletisi telefonda ve düzenleyicinin durum çubuğunda gösterilir. Bir telefonun aksiyonları birbiri ardına çalışır.
 
 ## Formlar
 
 ```csharp
-public enum SettingFieldKind { Text, Password, Number, Slider, Bool, Select, Segmented }
+public enum SettingFieldKind { Text, Password, Number, Slider, Bool, Select, Segmented, File, List, Button, Notice }
 
 public sealed record SettingField(string Key, string Label, SettingFieldKind Kind)
 {
@@ -95,6 +112,9 @@ public sealed record SettingField(string Key, string Label, SettingFieldKind Kin
     public string[]? DependsOn { get; init; }
     public bool AllowVariables { get; init; }
     public string? VisibleWhen { get; init; }
+    public string? FileFilter { get; init; }         // File: a WinForms file filter
+    public SettingField[]? ItemFields { get; init; } // List: the schema of one row
+    public string? Command { get; init; }            // Button: the command id
 }
 
 public sealed record SettingOption(string Value, string Label, string? Group = null, string? Icon = null);
@@ -110,6 +130,11 @@ public interface IPluginSettingsPage
     IReadOnlyList<SettingField> Fields { get; }
     JsonObject Load();
     void Save(JsonObject values);
+}
+
+public interface ISettingsCommandHandler   // isteğe bağlı, IPluginSettingsPage ile aynı sınıfta
+{
+    Task<string?> RunCommandAsync(string command, JsonObject values, CancellationToken cancellationToken);
 }
 ```
 
@@ -130,7 +155,14 @@ public interface IVariableProvider
     Task RunAsync(IVariableStore store, CancellationToken cancellationToken);
 }
 
-public sealed record VariableInfo(string Name, string Description, string Example, string Category);
+public enum VariableType { Text, Number, Boolean, Duration, DateTime }
+
+public sealed record VariableInfo(string Name, string Description, string Example, string Category)
+{
+    public VariableType Type { get; init; } = VariableType.Text;   // canlı değerin türü
+    public string? Unit { get; init; }                             // sayının birimi, örneğin "%"
+    public IReadOnlyList<string>? Values { get; init; }            // sabit seçenekli metin değişkeninin izinli değerleri
+}
 
 public interface IVariableCatalogSource
 {

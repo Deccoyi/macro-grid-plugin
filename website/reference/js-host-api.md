@@ -66,4 +66,4 @@ There is no `async`/`await` host API yet and no way for a plugin to draw its own
 
 `fields` (for an action or a settings page) use the same shape as the C# `SettingField`; see
 [Settings pages](/guides/settings-pages#field-kinds-and-options). `kind` is one of `Text`, `Password`, `Number`, `Slider`, `Bool`,
-`Select`, `Segmented`.
+`Select`, `Segmented`, `File`, `List`, `Button`, `Notice`. `Button` needs a C# `ISettingsCommandHandler`, so it is only useful in C# plugins.
