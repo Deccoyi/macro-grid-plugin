@@ -22,6 +22,9 @@ Her eklenti `plugin.json` içinde çalıştığı en eski Macro Grid'i bildirir:
 
 Eklenti, **1.3.0'dan 2.0.0'a kadar (2.0.0 hariç)** her Macro Grid'de çalışır. Her zaman üç parça yazın (`1.3.0`; `1.3` kabul edilmez).
 
+**`macroGrid`, bir minimum değerdir, birebir eşleşme değil.** `"macroGrid": "1.2.1"` yazan bir eklenti, Macro Grid `1.1.1`'de (istediğinden
+daha eski) **çalışmaz** — yalnızca `1.2.1` ve aynı MAJOR'un sonraki her sürümünde çalışır.
+
 | Eklenti şunu diyor | Macro Grid 1.2.4 | 1.3.0 | 1.9.9 | 2.0.0 |
 |---|---|---|---|---|
 | `1.0.0` | çalışır | çalışır | çalışır | yeniden derle |

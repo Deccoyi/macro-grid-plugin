@@ -22,6 +22,9 @@ Every plugin declares in `plugin.json` the oldest Macro Grid it runs on:
 
 The plugin runs on every Macro Grid from **1.3.0 up to, but not including, 2.0.0**. Always write three parts (`1.3.0`, not `1.3`).
 
+**`macroGrid` is a minimum, not an exact match.** A plugin declaring `"macroGrid": "1.2.1"` does **not** run on Macro Grid `1.1.1` (older
+than what it asks for) — only on `1.2.1` and every later version of the same MAJOR.
+
 | Plugin says | Macro Grid 1.2.4 | 1.3.0 | 1.9.9 | 2.0.0 |
 |---|---|---|---|---|
 | `1.0.0` | runs | runs | runs | rebuild |

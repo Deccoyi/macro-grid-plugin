@@ -11,7 +11,7 @@ Her eklenti klasörünün kökünde bir `plugin.json` bulunur. Aşağıdaki, OBS
 | `id` | evet | Benzersiz, sabit kimlik. Klasör adında, aksiyon türlerinde ve değişken adlarında, ayrıca onaylar için kullanılır. Sunucu aynı kimlikli ikinci bir eklentiyi reddeder. |
 | `name` | evet | Eklentiler penceresinde görünen ad. |
 | `version` | evet | Eklentinin kendi anlamsal sürümü, sunucununkinden bağımsız. |
-| `macroGrid` | evet | Eklentinin çalıştığı en eski Macro Grid, `1.3.0` gibi `MAJOR.MINOR.PATCH` biçiminde. Eklenti, o sürümden bir sonraki MAJOR'a kadar (o hariç) her Macro Grid'de çalışır. Macro Grid ve eklenti SDK'sı tek sürümü paylaşır; derlediğiniz SDK sürümünü, daha yenisini kullanmıyorsanız daha eskisini yazın. Uymayan bir sunucu eklentiyi *Incompatible* (uyumsuz) listeler ve yüklemez. |
+| `macroGrid` | evet | Eklentinin çalıştığı en eski Macro Grid, `1.3.0` gibi `MAJOR.MINOR.PATCH` biçiminde. **Bu bir minimum değerdir, birebir eşleşme değil:** eklenti, o sürümden bir sonraki MAJOR'a kadar (o hariç) her Macro Grid'de çalışır — daha eski bir sunucuda (örn. `1.2.1` yazıp sunucu `1.1.1` ise) **çalışmaz**. Macro Grid ve eklenti SDK'sı tek sürümü paylaşır; derlediğiniz SDK sürümünü, daha yenisini kullanmıyorsanız daha eskisini yazın. Uymayan bir sunucu eklentiyi *Incompatible* (uyumsuz) listeler ve yüklemez. |
 | `sdkVersion` | hayır | Macro Grid 1.0.0 öncesinden kalma alan. Yalnızca `macroGrid` yoksa okunur: `^0.4.x`, `macroGrid: 1.0.0` sayılır, daha eski aralıklar uyumsuzdur. Eklenti 1.0.0'dan eski sunucularda da yüklenecekse `macroGrid` yanında tutun. |
 | `minServerVersion` | hayır | `sdkVersion` gibi eski alan. Macro Grid 1.0.0 ve sonrası bunu yok sayar. |
 | `entry` | evet | C#: giriş DLL'sinin dosya adı. JavaScript: betik (genellikle `index.js`). |
