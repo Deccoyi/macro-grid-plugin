@@ -4,7 +4,9 @@ This file tracks the version of this plugin only (independent of the main progra
 
 ## [Unreleased]
 ### Changed
-- `plugin.json` declares `"macroGrid": "1.0.0"` (built against SDK 1.0.0). The old `sdkVersion` / `minServerVersion` stay so servers before 1.0.0 still load it.
+- Version 0.3.0. `plugin.json` declares `"macroGrid": "1.1.0"` (built against SDK 1.1.0, needed for `IPluginHost.Secrets`); the repository's default `MacroGridSdkVersion` is now 1.1.0.
+- `settings.json` stores the password as `protectedPassword` (`IPluginHost.Secrets.Protect`). A legacy plain `password` is read once and rewritten protected on the next save; downgrading the plugin loses the saved password.
+- Formerly: `plugin.json` declared `"macroGrid": "1.0.0"` (built against SDK 1.0.0). The old `sdkVersion` / `minServerVersion` stay so servers before 1.0.0 still load it.
 
 ## [0.2.2] - 2026-09-25
 ### Changed
