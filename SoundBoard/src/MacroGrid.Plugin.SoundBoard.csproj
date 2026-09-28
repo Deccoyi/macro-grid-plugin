@@ -18,7 +18,7 @@
   <ItemGroup>
     <!-- MIT. The only plugin so far that ships a third-party dependency in its output — see
          THIRD_PARTY_NOTICES.md and licenses/naudio/. -->
-    <PackageReference Include="NAudio" Version="2.2.1" />
+    <PackageReference Include="NAudio" Version="3.1.0" />
   </ItemGroup>
 
 </Project>
