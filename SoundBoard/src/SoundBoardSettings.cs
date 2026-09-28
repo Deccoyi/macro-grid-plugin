@@ -86,18 +86,6 @@ public sealed class SoundBoardSettingsPage(IPluginHost host, SoundBoardEngine en
     public IReadOnlyList<SettingField> Fields =>
     [
         new("outputDevice", "Output device", SettingFieldKind.Select) { OptionsSource = "devices" },
-        new("sounds", "Sounds", SettingFieldKind.List)
-        {
-            ItemFields =
-            [
-                new("file", "File", SettingFieldKind.File) { FileFilter = AudioFileFilter },
-                new("name", "Name", SettingFieldKind.Text),
-                new("volume", "Volume (%)", SettingFieldKind.Slider) { Min = 0, Max = 100, Step = 1, Default = 100 },
-                new("loop", "Loop", SettingFieldKind.Bool),
-                new("preview", "Preview", SettingFieldKind.Button) { Command = "preview" },
-                new("missingNotice", "File not found, pick it again.", SettingFieldKind.Notice) { VisibleWhen = "missing=true" },
-            ],
-        },
         new("masterVolume", "Master volume (%)", SettingFieldKind.Slider) { Min = 0, Max = 100, Step = 1, Default = 100 },
         new("overlapMode", "When the same sound plays again", SettingFieldKind.Segmented)
         {
@@ -111,6 +99,23 @@ public sealed class SoundBoardSettingsPage(IPluginHost host, SoundBoardEngine en
         },
         new("fadeInMs", "Fade in (ms)", SettingFieldKind.Number) { Min = 0, Step = 50, Default = 0 },
         new("fadeOutMs", "Fade out (ms)", SettingFieldKind.Number) { Min = 0, Step = 50, Default = 500 },
+        // Last: the list can get long, and it is the one field here a person opens this window for most
+        // often, so it stays the last thing to scroll past rather than pushing the rest of the settings
+        // down every time a sound is added.
+        new("sounds", "Sounds", SettingFieldKind.List)
+        {
+            ItemFields =
+            [
+                // Name first: it is what a collapsed row shows (the editor's List field titles a collapsed
+                // row by its "name" value), so it is also the first thing typed when adding one.
+                new("name", "Name", SettingFieldKind.Text),
+                new("file", "File", SettingFieldKind.File) { FileFilter = AudioFileFilter },
+                new("volume", "Volume (%)", SettingFieldKind.Slider) { Min = 0, Max = 100, Step = 1, Default = 100 },
+                new("loop", "Loop", SettingFieldKind.Bool),
+                new("preview", "Preview", SettingFieldKind.Button) { Command = "preview" },
+                new("missingNotice", "File not found, pick it again.", SettingFieldKind.Notice) { VisibleWhen = "missing=true" },
+            ],
+        },
     ];
 
     public JsonObject Load()
