@@ -28,7 +28,7 @@ $repoRoot = Split-Path -Parent $PSScriptRoot
 Set-Location $repoRoot
 
 $plugins = @{
-    'obs'       = @{ dir = 'OBS';      proj = 'OBS/src/MacroGrid.Plugin.Obs.csproj' }
+    'obs'       = @{ dir = 'WebSocketBridgeForOBS'; proj = 'WebSocketBridgeForOBS/src/MacroGrid.Plugin.Obs.csproj' }
     'plc-icons' = @{ dir = 'PLCIcons'; proj = 'PLCIcons/src/MacroGrid.Plugin.PlcIcons.csproj' }
     'hellojs'   = @{ dir = 'HelloJs';  proj = '' }
     'soundboard' = @{ dir = 'SoundBoard'; proj = 'SoundBoard/src/MacroGrid.Plugin.SoundBoard.csproj' }
@@ -105,9 +105,9 @@ if (-not $Publish) {
 }
 
 # Publish the GitHub release; the tag is created on main's current commit.
-$notes = "See $($entry.dir)/CHANGELOG.md for what changed in this version."
+$notes = "$($manifest.name) ${version}: see $($entry.dir)/CHANGELOG.md for what changed in this version."
 $ghArgs = @('release', 'create', $tag, $zip, "$zip.sha256", "$zip.sig", '--repo', "$owner/$repo",
-    '--target', 'main', '--title', "$($entry.dir) $version", '--notes', $notes)
+    '--target', 'main', '--title', "$($manifest.name) $version", '--notes', $notes)
 if ($version -match '-') { $ghArgs += '--prerelease' }
 & gh @ghArgs
 if ($LASTEXITCODE -ne 0) { throw 'gh release create failed' }

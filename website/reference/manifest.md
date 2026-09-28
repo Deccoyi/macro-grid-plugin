@@ -2,7 +2,7 @@
 
 Every plugin folder has a `plugin.json` at its root. This is the OBS plugin's:
 
-<<< @/../OBS/plugin.json
+<<< @/../WebSocketBridgeForOBS/plugin.json
 
 ## Fields
 

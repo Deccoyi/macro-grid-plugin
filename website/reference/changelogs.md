@@ -4,7 +4,7 @@ Every plugin keeps two changelogs next to its `plugin.json`: a short public one 
 
 | Plugin | Short (public) | Detailed (developer) |
 |---|---|---|
-| OBS | [CHANGELOG.md](https://github.com/Deccoyi/macro-grid-plugin/blob/main/OBS/CHANGELOG.md) | [CHANGELOG-developer.md](https://github.com/Deccoyi/macro-grid-plugin/blob/main/OBS/CHANGELOG-developer.md) |
+| OBS | [CHANGELOG.md](https://github.com/Deccoyi/macro-grid-plugin/blob/main/WebSocketBridgeForOBS/CHANGELOG.md) | [CHANGELOG-developer.md](https://github.com/Deccoyi/macro-grid-plugin/blob/main/WebSocketBridgeForOBS/CHANGELOG-developer.md) |
 | PLC Icons | [CHANGELOG.md](https://github.com/Deccoyi/macro-grid-plugin/blob/main/PLCIcons/CHANGELOG.md) | [CHANGELOG-developer.md](https://github.com/Deccoyi/macro-grid-plugin/blob/main/PLCIcons/CHANGELOG-developer.md) |
 
 The plugin SDK and the server have their own changelogs in the

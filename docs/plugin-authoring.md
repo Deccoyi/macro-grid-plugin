@@ -12,7 +12,7 @@ page, status bar items, icon packs) to the Macro Grid server. There are two kind
 
 Only install C# plugins you trust: they can do anything the server can do.
 
-The working examples in this repository are [OBS/](../OBS/) (a full C# integration), [PLCIcons/](../PLCIcons/) (a C#
+The working examples in this repository are [WebSocketBridgeForOBS/](../WebSocketBridgeForOBS/) (a full C# integration), [PLCIcons/](../PLCIcons/) (a C#
 icon pack) and [HelloJs/](../HelloJs/) (a small JavaScript plugin). Read [CONTRIBUTING.md](../CONTRIBUTING.md) for the
 rules that apply to every plugin in this repository (independent versioning, isolation, changelogs).
 
@@ -34,7 +34,7 @@ A plugin is loaded, reloaded and unloaded while the server runs. See [Lifecycle]
 ```json
 {
   "id": "obs",
-  "name": "OBS Control",
+  "name": "WebSocketBridge For OBS",
   "version": "0.3.0",
   "macroGrid": "1.0.0",
   "entry": "MacroGrid.Plugin.Obs.dll",
@@ -194,7 +194,7 @@ list served by `IOptionsSource`), `DependsOn` (keys whose current form values ar
 Implement `IPluginSettingsPage` (`Fields`, `Load()`, `Save(values)`) and register it with `host.RegisterSettingsPage`.
 The editor draws the form from `Fields`; `Load` and `Save` are your bridge to disk (usually a `settings.json` in
 `DataDirectory`). A page that also implements `IOptionsSource` can serve dynamic dropdowns. A plugin with a settings page
-gets a gear button in the Plugins window and its status item opens the page. Example: `ObsSettingsPage` in `OBS/src/ObsSettings.cs`.
+gets a gear button in the Plugins window and its status item opens the page. Example: `ObsSettingsPage` in `WebSocketBridgeForOBS/src/ObsSettings.cs`.
 
 ### Variables
 

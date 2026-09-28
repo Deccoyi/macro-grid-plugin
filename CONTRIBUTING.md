@@ -29,8 +29,8 @@ plugins reference it by path, so clone this repository next to the server reposi
 same folder). Then:
 
 ```powershell
-dotnet build OBS\src\MacroGrid.Plugin.Obs.csproj
-dotnet test  OBS\tests\MacroGrid.Plugin.Obs.Tests\MacroGrid.Plugin.Obs.Tests.csproj
+dotnet build WebSocketBridgeForOBS\src\MacroGrid.Plugin.Obs.csproj
+dotnet test  WebSocketBridgeForOBS\tests\MacroGrid.Plugin.Obs.Tests\MacroGrid.Plugin.Obs.Tests.csproj
 dotnet build PLCIcons\src\MacroGrid.Plugin.PlcIcons.csproj
 ```
 
@@ -116,7 +116,7 @@ in [website/reference/source-index.md](website/reference/source-index.md).
 
 ## Tests
 
-A plugin with logic should have tests next to it (see `OBS/tests`, which drives the plugin against a fake obs-websocket server). Run
+A plugin with logic should have tests next to it (see `WebSocketBridgeForOBS/tests`, which drives the plugin against a fake obs-websocket server). Run
 `dotnet test` on the plugin's test project before you open a pull request.
 
 ## Issues and labels
