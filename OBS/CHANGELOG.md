@@ -3,6 +3,10 @@
 New features and fixes in the OBS plugin. For technical details, see [CHANGELOG-developer.md](CHANGELOG-developer.md).
 
 ## Unreleased
+### New
+- **Saved password is protected:** The OBS password is now stored encrypted for your Windows account instead of as plain text. Your existing password is converted the next time you save the OBS settings.
+### Changed
+- **Needs Macro Grid 1.1.0 or newer.**
 
 ## 0.2.2 - 2026-09-25
 ### Changed

@@ -40,6 +40,7 @@ public sealed class FakePluginHost(string dataDirectory) : IPluginHost
     public string ServerVersion => "0.0.0-test";
     public string SdkVersion => "0.0.0-test";
     public string DataDirectory { get; } = dataDirectory;
+    public IPluginSecrets Secrets { get; } = new FakePluginSecrets();
 
     public List<string> Logs { get; } = [];
 
@@ -52,6 +53,16 @@ public sealed class FakePluginHost(string dataDirectory) : IPluginHost
     public void RegisterSettingsPage(IPluginSettingsPage page) { }
     public IPluginStatusItem CreateStatusItem(string id) => new FakeStatusItem();
     public void RegisterIconPack(IIconPackSource iconPack) { }
+}
+
+/// <summary>Reversible and obviously not the plain secret, so a test can see the round trip actually went
+/// through this — not real protection, just enough for <see cref="ObsSettings"/> to exercise the API.</summary>
+public sealed class FakePluginSecrets : IPluginSecrets
+{
+    public string Protect(string secret) => "test-protected:" + secret;
+
+    public string? Unprotect(string protectedSecret) =>
+        protectedSecret.StartsWith("test-protected:", StringComparison.Ordinal) ? protectedSecret["test-protected:".Length..] : null;
 }
 
 public sealed class FakeStatusItem : IPluginStatusItem

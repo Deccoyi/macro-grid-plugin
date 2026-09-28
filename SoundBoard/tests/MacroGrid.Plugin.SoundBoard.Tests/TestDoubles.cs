@@ -25,6 +25,7 @@ public sealed class FakePluginHost(string dataDirectory) : IPluginHost
     public string ServerVersion => "0.0.0-test";
     public string SdkVersion => "0.0.0-test";
     public string DataDirectory { get; } = dataDirectory;
+    public IPluginSecrets Secrets => throw new NotSupportedException("SoundBoard does not store secrets.");
 
     public void Log(string message) { }
     public void RegisterAction(IActionHandler handler) { }

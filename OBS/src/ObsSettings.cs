@@ -7,7 +7,10 @@ namespace MacroGrid.Plugin.Obs;
 /// <summary>
 /// OBS WebSocket (obs-websocket v5, built into OBS 28+) connection settings, persisted as this plugin's
 /// own `settings.json` in <see cref="Plugin.Abstractions.IPluginHost.DataDirectory"/>. The password is
-/// stored in plain text, consistent with how the main program stores its own OBS/pairing secrets today.
+/// protected with <see cref="IPluginHost.Secrets"/> (host-side, DPAPI on Windows) before it is written, under
+/// a different key (<c>protectedPassword</c>) than the legacy plain <c>password</c> one — a file from before
+/// this is read once as plain text and rewritten protected on the next save. <see cref="Password"/> itself
+/// always holds the plain value in memory; only the file on disk is protected.
 /// </summary>
 public sealed class ObsSettings
 {
@@ -18,20 +21,35 @@ public sealed class ObsSettings
 
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web) { WriteIndented = true };
 
-    public static ObsSettings LoadOrCreate(string dataDirectory)
+    public static ObsSettings LoadOrCreate(IPluginHost host)
     {
-        Directory.CreateDirectory(dataDirectory);
-        var path = Path.Combine(dataDirectory, "settings.json");
+        Directory.CreateDirectory(host.DataDirectory);
+        var path = Path.Combine(host.DataDirectory, "settings.json");
         if (!File.Exists(path))
         {
             var defaults = new ObsSettings();
-            File.WriteAllText(path, JsonSerializer.Serialize(defaults, JsonOptions));
+            defaults.Save(host);
             return defaults;
         }
 
         try
         {
-            return JsonSerializer.Deserialize<ObsSettings>(File.ReadAllText(path), JsonOptions) ?? new ObsSettings();
+            var node = JsonNode.Parse(File.ReadAllText(path))?.AsObject();
+            if (node is null) return new ObsSettings();
+
+            var settings = new ObsSettings
+            {
+                Enabled = node["enabled"]?.GetValue<bool>() ?? false,
+                Host = node["host"]?.GetValue<string>() ?? "127.0.0.1",
+                Port = node["port"]?.GetValue<int>() ?? 4455,
+            };
+
+            if (node["protectedPassword"]?.GetValue<string>() is { Length: > 0 } protectedPassword)
+                settings.Password = host.Secrets.Unprotect(protectedPassword) ?? "";
+            else if (node["password"]?.GetValue<string>() is { Length: > 0 } legacyPlainPassword)
+                settings.Password = legacyPlainPassword; // pre-migration file; Save() below writes it protected next time
+
+            return settings;
         }
         catch (JsonException)
         {
@@ -39,10 +57,17 @@ public sealed class ObsSettings
         }
     }
 
-    public void Save(string dataDirectory)
+    public void Save(IPluginHost host)
     {
-        Directory.CreateDirectory(dataDirectory);
-        File.WriteAllText(Path.Combine(dataDirectory, "settings.json"), JsonSerializer.Serialize(this, JsonOptions));
+        Directory.CreateDirectory(host.DataDirectory);
+        var node = new JsonObject
+        {
+            ["enabled"] = Enabled,
+            ["host"] = Host,
+            ["port"] = Port,
+            ["protectedPassword"] = Password.Length > 0 ? host.Secrets.Protect(Password) : "",
+        };
+        File.WriteAllText(Path.Combine(host.DataDirectory, "settings.json"), node.ToJsonString(JsonOptions));
     }
 }
 
@@ -62,7 +87,7 @@ public sealed class ObsSettingsPage(IPluginHost host, ObsConnection connection) 
 
     public JsonObject Load()
     {
-        var settings = ObsSettings.LoadOrCreate(host.DataDirectory);
+        var settings = ObsSettings.LoadOrCreate(host);
         return new JsonObject
         {
             ["enabled"] = settings.Enabled,
@@ -81,7 +106,7 @@ public sealed class ObsSettingsPage(IPluginHost host, ObsConnection connection) 
             Port = values["port"]?.GetValue<int>() ?? 4455,
             Password = values["password"]?.GetValue<string>() ?? "",
         };
-        settings.Save(host.DataDirectory);
+        settings.Save(host);
         connection.NotifySettingsChanged();
     }
 }
