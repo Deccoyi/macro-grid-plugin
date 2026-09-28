@@ -24,7 +24,7 @@ https://raw.githubusercontent.com/<owner>/<repo>/HEAD/macrogrid-index.json
       "name": "OBS",
       "description": "One line shown in Discover.",
       "author": "someone",
-      "homepage": "https://github.com/<owner>/<repo>/tree/main/OBS",
+      "homepage": "https://github.com/<owner>/<repo>/tree/main/WebSocketBridgeForOBS",
       "kind": "csharp",
       "versions": [
         {

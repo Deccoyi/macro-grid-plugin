@@ -24,7 +24,7 @@ and every plugin here is versioned on its own. Documentation site: <https://decc
 
 | Plugin | Kind | What it does |
 |---|---|---|
-| [OBS/](OBS/) | C# | Controls OBS Studio over obs-websocket v5: scenes, streaming, recording, audio, scene items, text sources, plus about 45 live `obs.*` variables. |
+| [WebSocketBridgeForOBS/](WebSocketBridgeForOBS/) | C# | Controls OBS Studio over obs-websocket v5: scenes, streaming, recording, audio, scene items, text sources, plus about 45 live `obs.*` variables. |
 | [PLCIcons/](PLCIcons/) | C# | A static icon pack of ladder-logic (PLC) symbols for the editor's icon picker. |
 | [SoundBoard/](SoundBoard/) | C# | Plays local sound files from buttons: named clips with volume, loop, overlap and fade control, plus live `soundboard.*` variables. |
 | [HelloJs/](HelloJs/) | JavaScript | A small example of a sandboxed script plugin: a counter variable, a settings page, one action. |
@@ -36,7 +36,7 @@ Manually, a plugin is a folder placed in `%AppData%\MacroGrid\plugins\<id>\` (th
 1. Download a plugin archive from the [Plugin store](https://deccoyi.github.io/macro-grid-plugin/store/) (or the Releases page) and unzip it, build it yourself (C# plugins), or use the folder as it is
    (JavaScript plugins).
 2. In the Macro Grid editor open **Plugins → Manage Plugins…** and choose **Install from Folder…**. For a C# plugin pick its build
-   output folder (for example `OBS\src\bin\Debug\net10.0\`); the build puts `plugin.json` next to the DLL.
+   output folder (for example `WebSocketBridgeForOBS\src\bin\Debug\net10.0\`); the build puts `plugin.json` next to the DLL.
 3. The plugin is loaded right away, with no restart. A JavaScript plugin asks you to approve the permissions it needs first.
 
 Each plugin's README lists its own requirements and settings. Plugins are installed to `%AppData%\MacroGrid\plugins\<id>\`.
@@ -53,8 +53,8 @@ some-folder/
 ```
 
 ```powershell
-dotnet build OBS\src\MacroGrid.Plugin.Obs.csproj
-dotnet test  OBS\tests\MacroGrid.Plugin.Obs.Tests\MacroGrid.Plugin.Obs.Tests.csproj
+dotnet build WebSocketBridgeForOBS\src\MacroGrid.Plugin.Obs.csproj
+dotnet test  WebSocketBridgeForOBS\tests\MacroGrid.Plugin.Obs.Tests\MacroGrid.Plugin.Obs.Tests.csproj
 dotnet build PLCIcons\src\MacroGrid.Plugin.PlcIcons.csproj
 dotnet build SoundBoard\src\MacroGrid.Plugin.SoundBoard.csproj -p:UseLocalSdk=true
 dotnet test  SoundBoard\tests\MacroGrid.Plugin.SoundBoard.Tests\MacroGrid.Plugin.SoundBoard.Tests.csproj -p:UseLocalSdk=true
