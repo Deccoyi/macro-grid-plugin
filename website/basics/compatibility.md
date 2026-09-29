@@ -17,13 +17,17 @@ import { data as v } from '../.vitepress/versions.data'
 Every plugin declares in `plugin.json` the oldest Macro Grid editor version it runs on:
 
 ```json
-{ "macroGrid": "1.3.0" }
+{ "minMacroGrid": "1.3.0" }
 ```
 
 The plugin runs on every Macro Grid editor from **1.3.0 up to, but not including, 2.0.0**. Always write three parts (`1.3.0`, not `1.3`).
 
-**`macroGrid` is a minimum, not an exact match.** A plugin declaring `"macroGrid": "1.2.1"` does **not** run on Macro Grid editor `1.1.1` (older
+**`minMacroGrid` is a minimum, not an exact match.** A plugin declaring `"minMacroGrid": "1.2.1"` does **not** run on Macro Grid editor `1.1.1` (older
 than what it asks for) — only on `1.2.1` and every later version of the same MAJOR.
+
+`minMacroGrid` was called `macroGrid` up to Macro Grid editor 1.2.x. That name still works — read only when `minMacroGrid` is absent — and
+stays readable for at least one MAJOR after the rename. A plugin that must still run on 1.2.x, which reads only the old name, writes both
+fields with the same value.
 
 | Plugin says | Editor 1.2.4 | 1.3.0 | 1.9.9 | 2.0.0 |
 |---|---|---|---|---|
@@ -33,21 +37,21 @@ than what it asks for) — only on `1.2.1` and every later version of the same M
 A plugin that does not fit is listed as **Incompatible** in the editor, with the reason ("Needs Macro Grid editor 1.3.0 or newer, this is 1.2.4",
 or "must be rebuilt" for another MAJOR), and is not loaded. Discover and the Store only offer a version that fits.
 
-Set `macroGrid` to the SDK version you build against, or older if you use nothing that came later: a lower value lets the plugin run on more
-editor versions. For a C# plugin the build checks that it has the same MAJOR as the SDK package and is not newer than it.
+Set `minMacroGrid` to the SDK version you build against, or older if you use nothing that came later: a lower value lets the plugin run on more
+editor versions.
 
 ### Older manifests
 
-Before Macro Grid 1.0.0 a manifest had `sdkVersion` and `minServerVersion`. They are still read when `macroGrid` is missing: `sdkVersion` `^0.4.x`
-counts as `macroGrid: 1.0.0` (nothing a 0.4 plugin uses changed), anything older must be rebuilt. If your plugin also has to load on servers older
-than 1.0.0, keep the two old fields next to `macroGrid`; Macro Grid 1.0.0 and newer ignore them.
+Before Macro Grid 1.0.0 a manifest had `sdkVersion` and `minServerVersion`. They are still read when neither `minMacroGrid` nor `macroGrid` is
+present: `sdkVersion` `^0.4.x` counts as `minMacroGrid: 1.0.0` (nothing a 0.4 plugin uses changed), anything older must be rebuilt. If your
+plugin also has to load on servers older than 1.0.0, keep the two old fields next to `minMacroGrid`; Macro Grid 1.0.0 and newer ignore them.
 
 ## What counts as a breaking change
 
 Within one MAJOR the SDK only grows: members are added, never removed or changed, so a plugin built for 1.0.0 keeps running on 1.x.
 
-- **Macro Grid / SDK (a new MAJOR):** a public interface a plugin implements or receives (`IPlugin`, `IPluginHost`, `IActionHandler`,
-  `IVariableProvider`, `IVariableStore`, `IDeviceController`, `ActionContext`, ...) changes incompatibly. Every plugin must be rebuilt.
+- **Macro Grid / SDK (a new MAJOR):** something a plugin uses (the `host` object of JavaScript plugins, the manifest, the SDK interfaces the
+  official C# plugins implement) changes incompatibly. Plugins must be changed, and the official C# ones rebuilt.
 - **Plugin (its own MAJOR):** it changes its action types, settings or variable names in a way that makes a user's saved profile stop working.
 
 ## Versioning your plugin
@@ -58,8 +62,7 @@ Within one MAJOR the SDK only grows: members are added, never removed or changed
   profile would silently stop working. Never rename an action `type` or a variable name casually.
 - A plugin does not depend on another plugin's version. Plugins talk to each other only at run time, through variables.
 
-## The SDK package
+## The SDK
 
-C# plugins compile against the NuGet package `MacroGrid.Plugin.Abstractions`; its version is the Macro Grid version it belongs to. Use the
-version you want to build against, and keep the SDK dll out of your output (`ExcludeAssets="runtime"`): the server and every plugin share
-the server's copy. See [Tutorial 2](/tutorials/csharp-hello-world#step-1-create-the-project).
+The official C# plugins compile against the plugin SDK, whose version is the Macro Grid version it belongs to. A JavaScript plugin needs no SDK
+and no build: it only declares `minMacroGrid` in its manifest.

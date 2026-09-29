@@ -2,9 +2,16 @@
 
 This file tracks the version of this plugin only (independent of the main program — see the "Independent versions" section of `../CONTRIBUTING.md`). The short, public changelog is [CHANGELOG.md](CHANGELOG.md).
 
+## [Unreleased]
+
+## [0.3.1] - 2026-09-29
+### Changed
+- `plugin.json` declares `"minMacroGrid": "1.1.0"` (the field's new name, same value as the old `macroGrid`).
+- Package format: the release zip now also carries `signature.json` (`id`, `version`, `kind` and the SHA-256 of every file) and `signature.sig` in its root, written by `scripts/release-plugin.ps1`. Macro Grid versions that enforce official-only C# plugins check them every time the plugin loads and refuse a plugin whose files do not match; older versions ignore the two files. No manifest, setting, action or variable changed.
+
 ## [0.3.0] - 2026-09-28
 ### Changed
-- Display name is now "WebSocketBridge For OBS" (trademark compliance, see `../docs/done/obs-plugin-trademark-compliance.md`); `id`, DLL and namespace stay `obs`. A non-affiliation notice was added to the manifest description, the settings window (a `Notice` field), README and NOTICE. The catalog/index name changes with the release; a tool that matches the plugin by its old name "OBS Control" must use the id instead.
+- Display name is now "WebSocketBridge For OBS" (trademark compliance); `id`, DLL and namespace stay `obs`. A non-affiliation notice was added to the manifest description, the settings window (a `Notice` field), README and NOTICE. The catalog/index name changes with the release; a tool that matches the plugin by its old name "OBS Control" must use the id instead.
 - Version 0.3.0. `plugin.json` declares `"macroGrid": "1.1.0"` (built against SDK 1.1.0, needed for `IPluginHost.Secrets`); the repository's default `MacroGridSdkVersion` is now 1.1.0.
 - `settings.json` stores the password as `protectedPassword` (`IPluginHost.Secrets.Protect`). A legacy plain `password` is read once and rewritten protected on the next save; downgrading the plugin loses the saved password.
 - Formerly: `plugin.json` declared `"macroGrid": "1.0.0"` (built against SDK 1.0.0). The old `sdkVersion` / `minServerVersion` stay so servers before 1.0.0 still load it.
@@ -18,7 +25,7 @@ This file tracks the version of this plugin only (independent of the main progra
 ### Added
 - **Plugin languages:** the plugin's own texts are now English (the default language, `defaultLanguage: "en"` in `plugin.json`) and `locales/tr.json` holds the Turkish translations, keyed by the English text. The host translates them by the language in the preferences. Log lines, exception messages and the per-item scene variable descriptions are English only. The locale files are copied into the build output. The `obs.status` variable now holds the English text.
 - License files: `LICENSE` and `NOTICE.md` are now copied into the build output next to `plugin.json` (documentation and packaging only, no behavior change, no version bump).
-- **Integration test suite** (`OBS/tests/MacroGrid.Plugin.Obs.Tests/`, xUnit): tests envisioned by `docs/done/obs-plugin-0.2-plan.md`, run against an in-process fake obs-websocket v5 server (`FakeObsServer`, `HttpListener`-based) instead of a real OBS. They cover: handshake with and without a password; a 4009 (wrong password) close stops retrying until the settings change and retries immediately after `NotifySettingsChanged`; an unresponsive server is detected by timeout and reconnected; a sudden disconnect reconnects with backoff; an `ExitStarted` event closes the connection immediately without waiting for the TCP timeout; and when an input is removed (`InputRemoved`), its variables (`obs.input.*.muted/volumeDb`) are deleted with `IVariableStore.Remove`. Run separately with `dotnet test OBS/tests/MacroGrid.Plugin.Obs.Tests/` (the repo has no shared `.sln`; each project is built and tested on its own).
+- **Integration test suite** (`OBS/tests/MacroGrid.Plugin.Obs.Tests/`, xUnit): tests run against an in-process fake obs-websocket v5 server (`FakeObsServer`, `HttpListener`-based) instead of a real OBS. They cover: handshake with and without a password; a 4009 (wrong password) close stops retrying until the settings change and retries immediately after `NotifySettingsChanged`; an unresponsive server is detected by timeout and reconnected; a sudden disconnect reconnects with backoff; an `ExitStarted` event closes the connection immediately without waiting for the TCP timeout; and when an input is removed (`InputRemoved`), its variables (`obs.input.*.muted/volumeDb`) are deleted with `IVariableStore.Remove`. Run separately with `dotnet test OBS/tests/MacroGrid.Plugin.Obs.Tests/` (the repo has no shared `.sln`; each project is built and tested on its own).
 
 ## [0.2.0] - 2026-09-23
 ### Added

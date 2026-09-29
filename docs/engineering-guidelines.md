@@ -36,5 +36,5 @@ framework design guidance, the C# coding conventions and the VitePress documenta
 ## Working rules
 
 - Behavior-preserving refactors go in small commits; each one builds and passes the tests.
-- Anything that would change behavior or a public surface is written up in `docs/proposals/` instead of being done silently.
-- Only code proven unused (build with the analyzers, search, tests) is deleted; the rest is listed in `docs/proposals/dead-code-review.md`.
+- Anything that would change behavior or a public surface is written up as a proposal (kept locally in `docs/agents/proposals/`, git-ignored) instead of being done silently.
+- Only code proven unused (build with the analyzers, search, tests) is deleted; the rest is listed in the local `docs/agents/proposals/dead-code-review.md`.

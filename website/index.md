@@ -4,7 +4,7 @@ title: Macro Grid Plugins
 hero:
   name: Macro Grid
   text: Plugins for your macro deck
-  tagline: Write actions, live variables, settings pages and icon packs for Macro Grid, in JavaScript or C#. Beta software.
+  tagline: Write actions, live variables and settings pages for Macro Grid, as small JavaScript plugins. Beta software.
   actions:
     - theme: brand
       text: Browse plugins
@@ -16,8 +16,8 @@ hero:
       text: Tutorials
       link: /tutorials/js-hello-world
 features:
-  - title: Two kinds of plugin
-    details: Small sandboxed JavaScript scripts with approved permissions, or full C# integrations that run inside the server.
+  - title: Sandboxed JavaScript plugins
+    details: Small scripts that run in a sandbox and get only the permissions you approve. C# is used only for the official plugins.
     link: /basics/
   - title: Installed while the server runs
     details: Install, reload and remove plugins from the editor. No server restart.

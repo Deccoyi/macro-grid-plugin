@@ -1,5 +1,10 @@
 # Simge paketleri: PLC Icons
 
+::: warning Simge paketleri yalnızca resmî eklentilerle gelir
+Simge paketi sunucunun içinde çalışan koddur; bu yüzden yalnızca bir C# eklentisi olabilir ve sunucu C# eklentilerini yalnızca resmî ve imzalı olduklarında yükler.
+JavaScript eklentileri simge paketi ekleyemez. Bu sayfa, resmî PLC Icons eklentisinin nasıl yapıldığını okumak için gösterir.
+:::
+
 Simge paketi, işe yarar en basit C# eklentisidir: bağlantı yok, ayar yok, aksiyon yok. **PLC Icons** eklentisi
 ([`PLCIcons/`](https://github.com/Deccoyi/macro-grid-plugin/tree/main/PLCIcons), id `plc-icons`) Düzenleyici'nin simge seçicisine kendi kategorisi olarak
 29 merdiven mantığı (PLC) simgesi ekler. Bu sayfa onu adım adım anlatır.
@@ -50,10 +55,3 @@ bu yüzden renkleri asla sabit yazmayın. Bu, `coil.svg` dosyasıdır:
 1. `src/icons/` içine yeni bir `.svg` koyun. Tek renkli tutun ve her çizgi ve dolgu için `currentColor` kullanın.
 2. Dosya adını (uzantısız) `Names` dizisine ekleyin.
 3. Eklentiyi derleyin ve yeniden kurun (veya yeniden yükleyin).
-
-## Kendi paketiniz
-
-İki sınıfı kopyalayın, kimlikleri ve adları değiştirin, SVG'lerinizi bir klasöre atın, `EmbeddedResource` satırını koruyun ve proje ile manifest için
-[Eğitim 2](/tr/tutorials/csharp-hello-world)'nin geri kalanını izleyin. Dağıttığınız her simgeyi dağıtma hakkınız olduğundan emin olun ve
-kaynağını README'nizde ve `NOTICE.md` dosyasında belirtin; örneğin PLC simgeleri, MIT lisansı altında özgün
-yapay zekâ üretimi çalışmalar olarak belgelenmiştir.

@@ -1,9 +1,8 @@
-# Öğretici 3: canlı veri gösterme
+# Öğretici 2: canlı veri gösterme
 
 Bir widget, canlı veriyi metninde **değişkenler** aracılığıyla gösterir. Her eklenti (ve sunucunun kendisi) değişken yayınlar; siz
 bunları widget metninde `{name}` olarak kullanır ve `{name|format}` ile biçimlendirirsiniz. Bu öğretici,
-[Öğretici 1](/tr/tutorials/js-hello-world)'deki sayacı (`hellojs.count`), [Öğretici 2](/tr/tutorials/csharp-hello-world)'deki
-sayacı (`hellocsharp.count`) ve sunucunun sağladığı değişkenleri kullanır.
+[Öğretici 1](/tr/tutorials/js-hello-world)'deki sayacı (`hellojs.count`) ve sunucunun sağladığı değişkenleri kullanır.
 
 ## Değişken yayınlama
 
@@ -11,10 +10,6 @@ JavaScript eklentisi `host.variables.set(name, value)` ile yayınlar. Değer bir
 eklenti kimliğinizle başlamalıdır:
 
 <<< @/../examples/hello-js/index.js#variable
-
-C# eklentisi `IVariableProvider` uygular ve `store.Set(name, value)` çağırır:
-
-<<< @/../examples/hello-csharp/src/GreetingCounter.cs#variables{cs}
 
 Mevcut değere eşit bir değer yok sayılır; bu yüzden her yoklamada değişkeni ayarlamak ucuzdur. Değer gerçekten değiştiğinde sunucu
 yalnızca onu kullanan widget'ları yeniden çizer ve yalnızca değişen metinleri gönderir (saniyede en fazla yaklaşık on güncelleme).

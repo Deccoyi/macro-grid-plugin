@@ -12,13 +12,13 @@ macro-grid-plugin/
 ├── README.md
 ├── CONTRIBUTING.md
 ├── website/                   this documentation site
-├── examples/                  the tutorial projects, built in CI
+├── examples/                  the tutorial project, checked in CI
 └── <PluginName>/
     ├── plugin.json              the manifest
     ├── README.md                what it does, requirements, settings
     ├── CHANGELOG.md             short, public, for non-developers
     ├── CHANGELOG-developer.md   detailed, technical
-    └── src/                     the source (a C# project, or the script for a JavaScript plugin)
+    └── src/                     the source (a C# project for an official plugin, or the script for a JavaScript plugin)
 ```
 
 ## Independent versions
@@ -39,15 +39,19 @@ macro-grid-plugin/
 
 ## The manifest and compatibility
 
-Every plugin has a `plugin.json` at its root; the fields are in the [manifest reference](/reference/manifest). `macroGrid` (the oldest
+Every plugin has a `plugin.json` at its root; the fields are in the [manifest reference](/reference/manifest). `minMacroGrid` (the oldest
 Macro Grid the plugin runs on) is checked when the server loads the plugin. Set it honestly.
 
 ## C# and JavaScript plugins
 
-- **C#** plugins have full trust. They are loaded into their own assembly load context so they cannot break other plugins, but they are
-  not sandboxed.
-- **JavaScript** plugins are sandboxed and need approved permissions. Ask only for the permissions you use.
+- **JavaScript** plugins are sandboxed and need approved permissions. Ask only for the permissions you use. Plugins by other authors are
+  JavaScript, and belong in the author's own repository.
+- **C#** plugins are used only for the official plugins in this repository. They have full trust, so the maintainer builds and signs them, and
+  the server loads a C# plugin only with that signature. They are loaded into their own assembly load context so they cannot break other
+  plugins, but they are not sandboxed.
 - A plugin folder is one or the other, never both.
+- This repository does not generally accept pull requests from outside the project, because official plugins run on people's computers.
+  Open an issue instead; a small fix may be accepted after it was discussed there.
 
 ## Language, comments and names
 
@@ -72,4 +76,4 @@ example `feat(obs): pause reconnecting while OBS is not running`.
 ## Tests
 
 A plugin with logic should have tests next to it (see `WebSocketBridgeForOBS/tests`, which drives the plugin against a fake obs-websocket server). Run
-`dotnet test` on the plugin's test project before you open a pull request.
+`dotnet test` on the plugin's test project before you change it.

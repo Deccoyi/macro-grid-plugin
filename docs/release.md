@@ -23,7 +23,7 @@ version from `plugin.json` and refuses a tag that already exists. The server, th
 ## Checklist
 
 1. On `dev`, move the plugin's `[Unreleased]` entries in both changelogs to a dated version heading.
-2. Set `version` in the plugin's `plugin.json` to the new version. Check `macroGrid` there: the oldest Macro Grid the plugin runs on (`MAJOR.MINOR.PATCH`). Keep it as low as what the plugin really uses; raise it (together with `MacroGridSdkVersion` in `Directory.Build.props`) only when the plugin starts to use something added in a newer MINOR of the SDK. The build fails when it has another MAJOR than the SDK or is newer than it. The Macro Grid version it asks for must already be released, and for a C# plugin its SDK package must be on nuget.org.
+2. Set `version` in the plugin's `plugin.json` to the new version. Check `minMacroGrid` there: the oldest Macro Grid the plugin runs on (`MAJOR.MINOR.PATCH`). Keep it as low as what the plugin really uses; raise it (together with `MacroGridSdkVersion` in `Directory.Build.props`) only when the plugin starts to use something added in a newer MINOR of the SDK. The build fails when it has another MAJOR than the SDK or is newer than it. The Macro Grid version it asks for must already be released, and for a C# plugin its server tag must exist (the SDK is built from a checkout of it).
 3. Make sure CI is green on `dev`, then merge `dev` into `main`.
 4. Check out `main` (clean, equal to `origin/main`) and run the release script. Without `-Publish` it only builds and signs into a
    temp folder, so you can inspect the zip first:
@@ -33,10 +33,13 @@ version from `plugin.json` and refuses a tag that already exists. The server, th
    ```
    `-Name` is `obs`, `plc-icons`, `hellojs` or `soundboard`. The key defaults to `%USERPROFILE%\signing\plugin-signing\plugin-signing-private.pem`
    (`-KeyPath` overrides it); it is never in a repository and is never printed.
-5. The script builds that plugin, zips the output together with `LICENSE`, `NOTICE.md` and `THIRD_PARTY_NOTICES.md`, hashes the zip
+5. The script builds that plugin, adds `LICENSE`, `NOTICE.md` and `THIRD_PARTY_NOTICES.md`, and signs the folder's contents: it writes
+   `signature.json` (id, version, kind and the SHA-256 of every file) and `signature.sig` (the signature over those exact bytes) into the
+   package root (`scripts/sign-package-contents.cs`), so the server can check the installed files every time the plugin loads. It then zips
+   the folder, hashes the zip
    (`<zip>.sha256`) and signs it with the plugin-signing key (`<zip>.sig`, `scripts/sign-package.cs`), then publishes the release with
    `gh` (not a draft, tag `plugin-<name>-v<version>`). It then commits the plugin's new version into `macrogrid-index.json` on `main`
-   (`scripts/update-plugin-index.ps1`, which writes `macroGrid`, plus `sdkVersion` and `minServerVersion` when `plugin.json` still has them), the file the host and the Store read; see
+   (`scripts/update-plugin-index.ps1`, which writes `minMacroGrid`, plus `macroGrid`, `sdkVersion` and `minServerVersion` when `plugin.json` still has them), the file the host and the Store read; see
    [Source index](../website/reference/source-index.md) for its format. The index stays `formatVersion` 1 because a server before 1.0.0 refuses any other number.
 6. Every official release must be signed, so there is no unsigned path. Keep the key folder backed up and out of every repository (the guide above says why and what happens if it is lost).
    `.github/workflows` has no release workflow on purpose; `examples/third-party-release.yml` is a signing-free template for other repositories.

@@ -4,7 +4,7 @@ title: Macro Grid Eklentileri
 hero:
   name: Macro Grid
   text: Makro deck'iniz için eklentiler
-  tagline: Macro Grid için JavaScript veya C# ile aksiyonlar, canlı değişkenler, ayar sayfaları ve simge paketleri yazın. Beta yazılımdır.
+  tagline: Macro Grid için küçük JavaScript eklentileriyle aksiyonlar, canlı değişkenler ve ayar sayfaları yazın. Beta yazılımdır.
   actions:
     - theme: brand
       text: Eklentilere göz at
@@ -16,8 +16,8 @@ hero:
       text: Eğitimler
       link: /tr/tutorials/js-hello-world
 features:
-  - title: İki tür eklenti
-    details: Onaylı izinlerle çalışan küçük, korumalı (sandbox) JavaScript betikleri ya da sunucunun içinde çalışan tam C# entegrasyonları.
+  - title: Korumalı JavaScript eklentileri
+    details: Yalıtılmış ortamda (sandbox) çalışan ve yalnızca onayladığınız izinleri alan küçük betikler. C# yalnızca resmî eklentiler için kullanılır.
     link: /tr/basics/
   - title: Sunucu çalışırken kurulur
     details: Eklentileri Düzenleyici'den kurun, yeniden yükleyin ve kaldırın. Sunucuyu yeniden başlatmaya gerek yok.

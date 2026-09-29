@@ -1,5 +1,10 @@
 # Gerçek dünyadan bir eklenti: OBS
 
+::: info Resmî bir C# eklentisi, okumak için gösteriliyor
+OBS eklentisi resmî C# eklentilerinden biridir: bakımcı tarafından derlenir ve imzalanır; sunucu bir C# eklentisini yalnızca bu imzayla yükler.
+Başka yazarların eklentileri JavaScript eklentileridir. Bu sayfa, tam bir entegrasyonun neye benzediğini gösterdiği için onu adım adım anlatır.
+:::
+
 [OBS eklentisi](https://github.com/Deccoyi/macro-grid-plugin/tree/main/WebSocketBridgeForOBS) (id `obs`), OBS 28 ve üzerinde yerleşik gelen obs-websocket v5
 üzerinden [OBS Studio](https://obsproject.com/)'yu kontrol eder. Depodaki en büyük eklentidir ve SDK'nın sunduğu neredeyse her şeyi
 kullanır; bu yüzden eğitimlerden sonra okunacak en iyi örnektir.

@@ -18,7 +18,7 @@ Aşağıdaki her kod bloğu bu klasörden alınmıştır.
 - `kind` değeri `js`, `entry` ise çalışacak betiktir.
 - `permissions` betiğin neye ihtiyaç duyduğunu listeler. `variables` değişken yayınlamasını, `actions` aksiyon kaydetmesini sağlar.
   Kullanıcı, betik çalışmadan önce tam olarak bu listeyi onaylamak zorundadır.
-- `macroGrid`, eklentinin çalıştığı en eski Macro Grid'i söyler (bkz. [Uyumluluk](/tr/basics/compatibility)).
+- `minMacroGrid`, eklentinin çalıştığı en eski Macro Grid'i söyler (bkz. [Uyumluluk](/tr/basics/compatibility)).
 
 ## Adım 2: bir değişken
 
@@ -91,5 +91,4 @@ yükleyin. Bkz. [Hata ayıklama ve günlükler](/tr/guides/debugging).
 
 - [JavaScript host API başvurusunu](/tr/reference/js-host-api) okuyun; örneğin yerel bir hizmeti yoklamak için `host.http.get`
   (bir `http:<host>:<port>` izni gerekir).
-- Değişkeninizi widget metninde biçimlendirmek için [Öğretici 3](/tr/tutorials/live-data) ile devam edin.
-- Aynı fikri C# ile yazın: [Öğretici 2](/tr/tutorials/csharp-hello-world).
+- Değişkeninizi widget metninde biçimlendirmek için [Öğretici 2](/tr/tutorials/live-data) ile devam edin.

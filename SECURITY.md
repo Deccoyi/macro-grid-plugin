@@ -2,16 +2,17 @@
 
 ## What to expect from these plugins
 
-- **C# plugins run in-process with the server.** A C# plugin is loaded into the Macro Grid server process with full .NET access: it can
-  do anything the server can, including reading and writing your files and starting programs. It sits in its own assembly load context
-  so it cannot break other plugins, but that is not a security boundary. Install only C# plugins whose source you trust, including the
-  ones in this repository.
-- **JavaScript plugins are sandboxed.** They have no .NET access and only the permissions you approve, with time and memory limits per
-  call; the sandbox is described in [docs/plugin-authoring.md](docs/plugin-authoring.md#7-javascript-plugins).
-- **Plugins by other authors are not reviewed by this project.** Macro Grid can install plugins from other repositories and shows them as
-  third-party. Such a C# plugin can connect to the internet and send data, and Macro Grid cannot limit or check that. A JavaScript plugin can
-  only send web requests to the exact `http:<host>:<port>` addresses it declares, and the permission shown before you approve it says whether
-  each one is on this computer, your local network or the internet. Report a problem in another author's plugin to that author.
+- **Only official, signed C# plugins run.** A C# plugin runs in-process with the server with full .NET access, so Macro Grid loads one only
+  when it carries a valid signature of the official plugin key, checked every time it loads; the signature covers every file of the plugin. The
+  official plugins in this repository are built and signed by the maintainer, and the key stays on the maintainer's PC. They still run with full
+  trust: install only the ones you want.
+- **Plugins by other authors are JavaScript.** They run in a sandbox with no .NET access and only the permissions you approve, with time and memory
+  limits per call; the sandbox is described in [docs/plugin-authoring.md](docs/plugin-authoring.md#7-javascript-plugins). Macro Grid does not
+  review them, and shows them as third-party. A JavaScript plugin can only send web requests to the exact `http:<host>:<port>` addresses it declares,
+  and the permission shown before you approve it says whether each one is on this computer, your local network or the internet. The `input`
+  permission (pressing keys and typing) still needs your approval and works only while you press one of the plugin's buttons, with small limits and
+  never into a terminal or a system tool; an approved plugin with it can still type up to 200 characters into an ordinary program when you press its
+  button, so allow it only for plugins you trust. Report a problem in another author's plugin to that author.
 - **Local network only.** Macro Grid is designed for a trusted local network (your PC and your phone). It is not meant to be exposed to
   the internet, and neither are the plugins that talk to it. Plugins that connect to other software (for example the OBS plugin
   connecting to OBS Studio) do so with the settings and passwords you enter; keep those services on your local machine or network too.
