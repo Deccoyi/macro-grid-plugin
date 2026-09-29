@@ -33,7 +33,10 @@ version from `plugin.json` and refuses a tag that already exists. The server, th
    ```
    `-Name` is `obs`, `plc-icons`, `hellojs` or `soundboard`. The key defaults to `%USERPROFILE%\signing\plugin-signing\plugin-signing-private.pem`
    (`-KeyPath` overrides it); it is never in a repository and is never printed.
-5. The script builds that plugin, zips the output together with `LICENSE`, `NOTICE.md` and `THIRD_PARTY_NOTICES.md`, hashes the zip
+5. The script builds that plugin, adds `LICENSE`, `NOTICE.md` and `THIRD_PARTY_NOTICES.md`, and signs the folder's contents: it writes
+   `signature.json` (id, version, kind and the SHA-256 of every file) and `signature.sig` (the signature over those exact bytes) into the
+   package root (`scripts/sign-package-contents.cs`), so the server can check the installed files every time the plugin loads. It then zips
+   the folder, hashes the zip
    (`<zip>.sha256`) and signs it with the plugin-signing key (`<zip>.sig`, `scripts/sign-package.cs`), then publishes the release with
    `gh` (not a draft, tag `plugin-<name>-v<version>`). It then commits the plugin's new version into `macrogrid-index.json` on `main`
    (`scripts/update-plugin-index.ps1`, which writes `minMacroGrid`, plus `macroGrid`, `sdkVersion` and `minServerVersion` when `plugin.json` still has them), the file the host and the Store read; see

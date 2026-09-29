@@ -6,7 +6,8 @@
   Replaces the old tag-triggered workflow: the plugin-signing private key never leaves the maintainer's machine,
   so a compromised GitHub account cannot produce a signed plugin. Run it from a clean, up-to-date `main`.
 
-  Steps: read the plugin's plugin.json, build and zip it together with the licence texts, hash and sign the zip
+  Steps: read the plugin's plugin.json, build it with the licence texts, sign the folder's contents (signature.json and
+  signature.sig, scripts/sign-package-contents.cs), zip it, hash and sign the zip
   (scripts/sign-package.cs) and write its software bill of materials, then, only with -Publish, create the GitHub
   release (tag plugin-<name>-v<version>) with the zip, .sha256, .sig and SBOM attached, and commit the new version into
   macrogrid-index.json on main. A C# plugin with a known vulnerable package is refused before anything is built.
@@ -86,6 +87,11 @@ if ($entry.proj) {
 Copy-Item 'LICENSE' (Join-Path $stage 'LICENSE') -Force
 Copy-Item (Join-Path $entry.dir 'NOTICE.md') (Join-Path $stage 'NOTICE.md') -Force
 Copy-Item 'THIRD_PARTY_NOTICES.md' $stage -Force
+
+# Sign the folder's contents (signature.json + signature.sig) before zipping, so the server can check the installed
+# files every time the plugin loads. The zip signature below still protects the download.
+dotnet run (Join-Path $PSScriptRoot 'sign-package-contents.cs') -- sign $stage $KeyPath | Out-Null
+if ($LASTEXITCODE -ne 0) { throw 'signing the package contents failed' }
 
 $zip = Join-Path $OutDir $zipName
 # Entries use forward slashes; Windows PowerShell 5.1's CreateFromDirectory can write backslashes.

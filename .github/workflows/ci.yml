@@ -46,6 +46,11 @@ jobs:
           }
           if ($failed.Count) { throw "Known vulnerable packages in: $($failed -join ', ')" }
 
+      - name: Test package signing script
+        working-directory: macro-grid-plugin
+        shell: pwsh
+        run: ./scripts/tests/test-package-signature.ps1
+
       - name: Build OBS plugin
         working-directory: macro-grid-plugin
         run: dotnet build WebSocketBridgeForOBS/src/MacroGrid.Plugin.Obs.csproj -c Release
