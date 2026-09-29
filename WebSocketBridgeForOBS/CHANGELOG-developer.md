@@ -3,8 +3,11 @@
 This file tracks the version of this plugin only (independent of the main program — see the "Independent versions" section of `../CONTRIBUTING.md`). The short, public changelog is [CHANGELOG.md](CHANGELOG.md).
 
 ## [Unreleased]
+
+## [0.3.1] - 2026-09-29
 ### Changed
 - `plugin.json` declares `"minMacroGrid": "1.1.0"` (the field's new name, same value as the old `macroGrid`).
+- Package format: the release zip now also carries `signature.json` (`id`, `version`, `kind` and the SHA-256 of every file) and `signature.sig` in its root, written by `scripts/release-plugin.ps1`. Macro Grid versions that enforce official-only C# plugins check them every time the plugin loads and refuse a plugin whose files do not match; older versions ignore the two files. No manifest, setting, action or variable changed.
 
 ## [0.3.0] - 2026-09-28
 ### Changed
