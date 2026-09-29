@@ -27,6 +27,12 @@ Başka izin adı yoktur. Değer alan tek izin `http:` iznidir ve her hedef için
 
 ### `input`
 
+::: danger `input` vermeden önce eklentiye güvenin
+`input` izinli bir eklenti bilgisayarınızda tuşlara basabilir ve yazı yazabilir. Macro Grid sınırlar koyar (aşağıya bakın), ama bunlar
+kötüye kullanımı yalnızca zorlaştırır; tamamen engelleyemez. Üçüncü taraf eklentileri **yalnızca güvendiğiniz kaynaklardan** kurun,
+onaylamadan önce izinleri okuyun ve tetikte olun.
+:::
+
 - `host.input.hotkey('ctrl+shift+m')` bir tuş kombinasyonu gönderir, `host.input.type('metin')` klavyenin başındaymış gibi metin yazar.
 - En güçlü yerel izindir; bu yüzden sunucu onu sıkı sınırlar: yalnızca kullanıcının kendi buton basışı işlenirken, küçük miktarlarda ve hiçbir zaman bir terminale veya sistem aracına çalışır. Bkz. [`input` izni](#input-izni).
 - Yalnızca eklentinin asıl amacı girdi göndermekse isteyin ve ne yapacağını README'nizde belirtin.
@@ -76,6 +82,12 @@ HTTP satırı, hedefin nerede olduğuna göre etiketlenir: `localhost`, `127.x.x
 4. Onaylar, kurulumlar ve kaldırmalar günlük dosyalarına yazılır.
 
 ## `input` izni
+
+::: danger `input` vermeden önce eklentiye güvenin
+`input` izinli bir eklenti bilgisayarınızda tuşlara basabilir ve yazı yazabilir. Macro Grid sınırlar koyar (aşağıya bakın), ama bunlar
+kötüye kullanımı yalnızca zorlaştırır; tamamen engelleyemez. Üçüncü taraf eklentileri **yalnızca güvendiğiniz kaynaklardan** kurun,
+onaylamadan önce izinleri okuyun ve tetikte olun.
+:::
 
 `input`, eklentinin klavyenin başındaymış gibi tuşlara basmasına ve yazı yazmasına izin verir. Asıl karar kullanıcının onayıdır. Bunun üstüne sunucu, JavaScript eklentileri için şu sınırları uygular (kullanıcının kendi yapılandırdığı yerleşik kısayol ve metin yazma aksiyonları değişmez):
 
