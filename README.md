@@ -43,8 +43,8 @@ Each plugin's README lists its own requirements and settings. Plugins are instal
 
 ## Building
 
-You need the [.NET 10 SDK](https://dotnet.microsoft.com/download). The C# plugins reference the plugin SDK
-(`MacroGrid.Plugin.Abstractions`) by path, so clone this repository **next to** the server repository:
+You need the [.NET 10 SDK](https://dotnet.microsoft.com/download). The official C# plugins build against the plugin SDK
+(`MacroGrid.Plugin.Abstractions`) from a checkout of the server repository (it is not published on NuGet), so clone this repository **next to** it:
 
 ```
 some-folder/
@@ -56,8 +56,8 @@ some-folder/
 dotnet build WebSocketBridgeForOBS\src\MacroGrid.Plugin.Obs.csproj
 dotnet test  WebSocketBridgeForOBS\tests\MacroGrid.Plugin.Obs.Tests\MacroGrid.Plugin.Obs.Tests.csproj
 dotnet build PLCIcons\src\MacroGrid.Plugin.PlcIcons.csproj
-dotnet build SoundBoard\src\MacroGrid.Plugin.SoundBoard.csproj -p:UseLocalSdk=true
-dotnet test  SoundBoard\tests\MacroGrid.Plugin.SoundBoard.Tests\MacroGrid.Plugin.SoundBoard.Tests.csproj -p:UseLocalSdk=true
+dotnet build SoundBoard\src\MacroGrid.Plugin.SoundBoard.csproj
+dotnet test  SoundBoard\tests\MacroGrid.Plugin.SoundBoard.Tests\MacroGrid.Plugin.SoundBoard.Tests.csproj
 ```
 
 ## Writing your own

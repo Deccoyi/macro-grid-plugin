@@ -22,6 +22,9 @@ param(
     [Parameter(Mandatory)] [ValidateSet('obs', 'plc-icons', 'hellojs', 'soundboard')] [string]$Name,
     [string]$KeyPath = (Join-Path $env:USERPROFILE 'signing\plugin-signing\plugin-signing-private.pem'),
     [string]$OutDir = (Join-Path ([System.IO.Path]::GetTempPath()) 'macrogrid-plugin-release'),
+    # A server repository checkout to build the SDK from, when the sibling ..\macro-grid is not at MacroGridSdkVersion
+    # (for example: git worktree add ..\macro-grid-sdk server-v1.1.0-beta, then -SdkPath ..\macro-grid-sdk).
+    [string]$SdkPath = (Join-Path (Split-Path -Parent $PSScriptRoot | Split-Path -Parent) 'macro-grid'),
     [switch]$Publish
 )
 
@@ -53,6 +56,16 @@ if ($Publish) {
     if ((git rev-parse HEAD) -ne (git rev-parse origin/main)) { throw 'main is not up to date with origin/main.' }
 }
 
+# The plugin SDK is not on NuGet: a C# plugin is built against a server checkout whose version is exactly MacroGridSdkVersion.
+$sdkProject = $null
+if ($entry.proj) {
+    $sdkProject = Join-Path $SdkPath 'src\MacroGrid.Plugin.Abstractions\MacroGrid.Plugin.Abstractions.csproj'
+    if (-not (Test-Path $sdkProject)) { throw "The plugin SDK was not found at $SdkPath. Check out the server repository there (or pass -SdkPath)." }
+    $wanted = [regex]::Match((Get-Content 'Directory.Build.props' -Raw), '<MacroGridSdkVersion[^>]*>([\d.]+)</MacroGridSdkVersion>').Groups[1].Value
+    $have = [regex]::Match((Get-Content (Join-Path $SdkPath 'Directory.Build.props') -Raw), '<Version>([\d.]+)</Version>').Groups[1].Value
+    if ($wanted -ne $have) { throw "The SDK checkout at $SdkPath is version $have, but MacroGridSdkVersion is $wanted. Check out the server tag for $wanted (a worktree is fine) and pass -SdkPath." }
+}
+
 $manifest = Get-Content (Join-Path $entry.dir 'plugin.json') -Raw | ConvertFrom-Json
 $version = $manifest.version
 if ($manifest.minMacroGrid -notmatch '^\d+\.\d+\.\d+$') { throw "plugin.json needs `"minMacroGrid`" as MAJOR.MINOR.PATCH (the oldest Macro Grid it runs on), found '$($manifest.minMacroGrid)'." }
@@ -64,9 +77,9 @@ Write-Host "Releasing $($manifest.name) $version ($tag)"
 
 # A release never ships a package with a known vulnerability.
 if ($entry.proj) {
-    dotnet restore $entry.proj --verbosity quiet
+    dotnet restore $entry.proj "-p:LocalSdkProject=$sdkProject" --verbosity quiet
     if ($LASTEXITCODE -ne 0) { throw 'restore failed' }
-    $report = dotnet list $entry.proj package --vulnerable --include-transitive 2>&1 | Out-String
+    $report = dotnet list $entry.proj package --vulnerable --include-transitive "-p:LocalSdkProject=$sdkProject" 2>&1 | Out-String
     if ($LASTEXITCODE -ne 0) { Write-Host $report; throw 'dotnet list package failed' }
     if ($report -match 'has the following vulnerable packages') { Write-Host $report; throw 'A package of this plugin has a known vulnerability; update it first.' }
 }
@@ -76,9 +89,12 @@ if (Test-Path $OutDir) { Remove-Item $OutDir -Recurse -Force }
 $stage = Join-Path $OutDir 'stage'
 New-Item -ItemType Directory -Force $stage | Out-Null
 if ($entry.proj) {
-    dotnet build $entry.proj -c Release -o $stage
+    dotnet build $entry.proj -c Release -o $stage "-p:LocalSdkProject=$sdkProject"
     if ($LASTEXITCODE -ne 0) { throw 'build failed' }
     Get-ChildItem $stage -Filter *.pdb -Recurse | Remove-Item -Force
+    # Building with -o sends the referenced SDK project's output here too; the server supplies its own copy, so a plugin never ships it.
+    Get-ChildItem $stage -Filter 'MacroGrid.Plugin.Abstractions.*' | Remove-Item -Force
+    if (Get-ChildItem $stage -Filter 'MacroGrid.Plugin.Abstractions.*') { throw 'The SDK must not be in the plugin package.' }
 } else {
     # JavaScript plugin: the folder is the plugin.
     Copy-Item (Join-Path $entry.dir '*') $stage -Recurse -Force

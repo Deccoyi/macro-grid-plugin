@@ -32,6 +32,16 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
+      # The plugin SDK is not on NuGet any more: build against the server repository at the tag of MacroGridSdkVersion, checked out next to this one.
+      - name: Check out the plugin SDK (the server repository at its tag)
+        shell: bash
+        run: |
+          version=$(sed -n 's:.*<MacroGridSdkVersion[^>]*>\([0-9][0-9.]*\)</MacroGridSdkVersion>.*:\1:p' macro-grid-plugin/Directory.Build.props | head -n1)
+          test -n "$version" || { echo "::error::MacroGridSdkVersion not found in Directory.Build.props."; exit 1; }
+          tag=$(git ls-remote --tags https://github.com/Deccoyi/macro-grid "refs/tags/server-v${version}*" | sed -n 's:.*refs/tags/::p' | grep -v '\^{}' | head -n1)
+          test -n "$tag" || { echo "::error::The server repository has no tag server-v${version}*."; exit 1; }
+          git clone --depth 1 --branch "$tag" https://github.com/Deccoyi/macro-grid macro-grid
+
       - name: Stop on known vulnerable dependencies
         working-directory: macro-grid-plugin
         shell: pwsh

@@ -29,7 +29,7 @@ authors belong in the author's own repository, as JavaScript plugins that people
 
 ## Building and testing
 
-You need the [.NET 10 SDK](https://dotnet.microsoft.com/download). Until the plugin SDK is published as a NuGet package, the C#
+You need the [.NET 10 SDK](https://dotnet.microsoft.com/download). The plugin SDK is not published on NuGet; the C#
 plugins reference it by path, so clone this repository next to the server repository (`macro-grid/` and `macro-grid-plugin/` in the
 same folder). Then:
 

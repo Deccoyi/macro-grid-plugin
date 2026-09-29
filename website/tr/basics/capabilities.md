@@ -52,7 +52,7 @@ Birbirinden bağımsız üç sürüm numarası vardır, hepsi [anlamsal sürümd
 
 | Ne | Nerede | Kim değiştirir |
 |---|---|---|
-| Macro Grid düzenleyicisi **ve** eklenti SDK'sı | tek numara; sunucu deposundaki `<Version>` (NuGet paketi `MacroGrid.Plugin.Abstractions`) | Macro Grid sürümü |
+| Macro Grid düzenleyicisi **ve** eklenti SDK'sı | tek numara; sunucu deposundaki `<Version>` | Macro Grid sürümü |
 | Sizin eklentiniz | `plugin.json` içindeki `version` | siz |
 | İhtiyaç duyduğunuz en düşük Macro Grid | `plugin.json` içindeki `minMacroGrid` | siz |
 

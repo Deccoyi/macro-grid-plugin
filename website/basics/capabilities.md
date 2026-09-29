@@ -52,7 +52,7 @@ There are three independent version numbers, all [semantic versions](https://sem
 
 | What | Where | Who changes it |
 |---|---|---|
-| Macro Grid editor **and** the plugin SDK | one number, `<Version>` in the server repository (NuGet package `MacroGrid.Plugin.Abstractions`) | the Macro Grid release |
+| Macro Grid editor **and** the plugin SDK | one number, `<Version>` in the server repository | the Macro Grid release |
 | Your plugin | `version` in your `plugin.json` | you |
 | Minimum Macro Grid you need | `minMacroGrid` in your `plugin.json` | you |
 

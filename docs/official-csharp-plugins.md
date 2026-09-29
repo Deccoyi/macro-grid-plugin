@@ -24,9 +24,8 @@ The rest of this document is the C# material that used to be in the public guide
 ### Project setup
 
 Reference the SDK package and copy `plugin.json` into the build output, so the output folder is directly installable.
-The SDK is published on NuGet as `MacroGrid.Plugin.Abstractions` (use the version that matches the server's SDK version,
-see the compatibility notes). Developers who work on the server and a plugin at the same time can switch to the sibling
-project instead, see [using-the-sdk-package.md](using-the-sdk-package.md).
+The SDK is `MacroGrid.Plugin.Abstractions`. It is not published on NuGet: a plugin project references it from a checkout of the server
+repository, see "Building against the SDK" at the end of this document.
 
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
@@ -413,57 +412,22 @@ See [Icon packs](/guides/icon-packs).
 If your plugin instance or anything you registered implements `IDisposable` or `IAsyncDisposable`, the server disposes it on unload
 after cancelling your `RunAsync` token and waiting up to 5 seconds. See the [lifecycle](/basics/#lifecycle).
 
-## Using the SDK package
+## Building against the SDK
 
+Official C# plugins compile against `MacroGrid.Plugin.Abstractions`. It is **not published on NuGet** (publishing stopped after 1.2.0; the existing versions are
+unlisted): a plugin project references the SDK project in a checkout of the server repository, through `build/Plugin.props` and `Directory.Build.props`.
 
-C# plugins compile against `MacroGrid.Plugin.Abstractions`. There are two ways to get it; the plugin projects in this
-repository support both.
-
-### Default: NuGet package
-
-Nothing to set up. `dotnet build` restores `MacroGrid.Plugin.Abstractions` (version in `MacroGridSdkVersion`,
-`Directory.Build.props`) from nuget.org, so a clean clone of this repo builds on its own. `nuget.config` lists nuget.org only.
-
-In your own plugin project:
-
-```xml
-<PackageReference Include="MacroGrid.Plugin.Abstractions" Version="1.0.0"
-                  PrivateAssets="all" ExcludeAssets="runtime" />
-```
-
-`ExcludeAssets="runtime"` keeps the SDK dll out of the plugin's output. The server and all plugins share the server's copy
-of that assembly; shipping your own makes type checks like `is IActionHandler` fail. Test projects are the exception: they
-need the dll at runtime, so they reference the package without `ExcludeAssets`.
-
-### Working on both repos: local SDK
-
-If you have the server repo checked out next to this one (`..\macro-grid`) and are changing the SDK and a plugin together,
-build against the sibling source instead of the package:
-
-```powershell
-dotnet build WebSocketBridgeForOBS/src -p:UseLocalSdk=true
-dotnet test WebSocketBridgeForOBS/tests/MacroGrid.Plugin.Obs.Tests -p:UseLocalSdk=true
-```
-
-`UseLocalSdk` defaults to `false`. To make it stick on your machine, pass it from an environment variable
-(`$env:UseLocalSdk = "true"`), and do not commit a changed default.
-
-### Testing an unpublished SDK build
-
-Pack the SDK into a folder and add that folder as a source:
-
-```powershell
-dotnet pack ..\macro-grid\src\MacroGrid.Plugin.Abstractions -c Release -o C:\local-feed
-dotnet build WebSocketBridgeForOBS/src -p:RestoreSources=C:\local-feed
-```
-
-Alternatively uncomment the `local-sdk` line in `nuget.config` (do not commit that).
+- **Locally:** clone the server repository next to this one (`..\macro-grid`); `dotnet build` and `dotnet test` work as they are. Another checkout: `-p:LocalSdkProject=<path to
+  MacroGrid.Plugin.Abstractions.csproj>`.
+- **CI:** `ci.yml` checks out the server tag of `MacroGridSdkVersion` (`server-vX.Y.Z*`) next to the plugin repository.
+- **Releases:** `scripts/release-plugin.ps1` builds against `-SdkPath` (default the sibling `..\macro-grid`) and refuses to build unless that checkout's `<Version>` is exactly
+  `MacroGridSdkVersion`. If the sibling is on another version, make a worktree at the tag: `git -C ..\macro-grid worktree add ..\macro-grid-sdk server-v1.1.0-beta`, then pass
+  `-SdkPath ..\macro-grid-sdk`.
+- The SDK dll stays out of the plugin's output (`ExcludeAssets="runtime"`): the server and all plugins share the server's copy; shipping your own makes type checks
+  like `is IActionHandler` fail. Test projects need the dll at run time, so they reference the SDK project without `ExcludeAssets`.
 
 ### Versions
 
-Package version = the Macro Grid version = `PluginSdk.Version` in the server repo (one number for both). A plugin's `plugin.json` says
-`"minMacroGrid": "1.0.0"`: the oldest Macro Grid it runs on. The build checks that it has the same MAJOR as `MacroGridSdkVersion` and is not
-newer than it; the minor and patch may be lower, which lets the plugin run on more servers. When you start to use something added in a newer
-MINOR, bump `MacroGridSdkVersion` in `Directory.Build.props` and raise `minMacroGrid` in that plugin's `plugin.json` to match. After a MAJOR
-release of Macro Grid, every plugin is rebuilt against it.
-
+Macro Grid version = SDK version = `PluginSdk.Version` (one number). A plugin's `plugin.json` says `"minMacroGrid": "1.0.0"`: the oldest Macro Grid it runs on. The build checks that it
+has the same MAJOR as `MacroGridSdkVersion` and is not newer than it; the minor and patch may be lower, which lets the plugin run on more servers. When a plugin starts to use
+something added in a newer MINOR of the SDK, move `MacroGridSdkVersion` to that version (tag the server release first) and raise `minMacroGrid` in that plugin's `plugin.json`.
