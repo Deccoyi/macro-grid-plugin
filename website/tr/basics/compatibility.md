@@ -38,7 +38,7 @@ Uymayan bir eklenti Düzenleyici'de sebebiyle birlikte **Uyumsuz** listelenir ("
 MAJOR için "yeniden derlenmeli") ve yüklenmez. Keşfet ve Mağaza yalnızca uyan bir sürüm sunar.
 
 `minMacroGrid` değerini derlediğiniz SDK sürümüne ayarlayın; sonradan gelen bir şeyi kullanmıyorsanız daha eskisini yazın: düşük değer eklentinin daha çok
-sunucuda çalışmasını sağlar. C# eklentisinde derleme, değerin SDK paketiyle aynı MAJOR'da olduğunu ve ondan yeni olmadığını denetler.
+sunucuda çalışmasını sağlar.
 
 ### Eski manifest'ler
 
@@ -50,8 +50,8 @@ Eklentiniz 1.0.0'dan eski sunucularda da yüklenecekse iki eski alanı `minMacro
 
 Bir MAJOR içinde SDK yalnızca büyür: üyeler eklenir, asla kaldırılmaz ya da değiştirilmez; bu yüzden 1.0.0 için derlenmiş bir eklenti 1.x'te çalışmaya devam eder.
 
-- **Macro Grid / SDK (yeni bir MAJOR):** Bir eklentinin uyguladığı ya da aldığı herkese açık bir arayüz (`IPlugin`, `IPluginHost`, `IActionHandler`,
-  `IVariableProvider`, `IVariableStore`, `IDeviceController`, `ActionContext`, ...) uyumsuz biçimde değişir. Her eklentinin yeniden derlenmesi gerekir.
+- **Macro Grid / SDK (yeni bir MAJOR):** Bir eklentinin kullandığı bir şey (JavaScript eklentilerinin `host` nesnesi, manifest, resmî C# eklentilerinin uyguladığı SDK arayüzleri)
+  uyumsuz biçimde değişir. Eklentilerin değiştirilmesi, resmî C# olanların yeniden derlenmesi gerekir.
 - **Eklenti (kendi MAJOR'u):** Aksiyon türlerini, ayarlarını veya değişken adlarını, kullanıcının kayıtlı profilinin çalışmayı bırakacağı şekilde değiştirir.
 
 ## Eklentinizi sürümleme
@@ -62,8 +62,7 @@ Bir MAJOR içinde SDK yalnızca büyür: üyeler eklenir, asla kaldırılmaz ya 
   profilinin sessizce çalışmayı bırakacağı durumlar. Bir aksiyonun `type` değerini ya da bir değişken adını gelişigüzel yeniden adlandırmayın.
 - Bir eklenti başka bir eklentinin sürümüne bağımlı değildir. Eklentiler birbirleriyle yalnızca çalışma zamanında, değişkenler aracılığıyla konuşur.
 
-## SDK paketi
+## SDK
 
-C# eklentileri `MacroGrid.Plugin.Abstractions` NuGet paketine karşı derlenir; paketin sürümü, ait olduğu Macro Grid sürümüdür. Derlemek istediğiniz sürümü
-kullanın ve SDK dll'ini çıktınızın dışında tutun (`ExcludeAssets="runtime"`): sunucu ve tüm eklentiler sunucunun kendi kopyasını paylaşır. Bkz.
-[Eğitim 2](/tr/tutorials/csharp-hello-world#step-1-create-the-project).
+Resmî C# eklentileri, sürümü ait olduğu Macro Grid sürümü olan eklenti SDK'sına karşı derlenir. Bir JavaScript eklentisi SDK'ya ve derlemeye ihtiyaç duymaz:
+yalnızca manifest'inde `minMacroGrid` bildirir.

@@ -11,7 +11,7 @@
   <!-- plugin.json's "minMacroGrid" is the oldest Macro Grid the plugin runs on (MAJOR.MINOR.PATCH); Macro Grid and the SDK share one
        version. It must be in the same MAJOR as the SDK this plugin is built against and must not be newer than it (the minor and
        patch may be lower: that is what lets the plugin run on more servers). Raise it when you start to use something added to the SDK
-       in a newer MINOR. See docs/using-the-sdk-package.md. -->
+       in a newer MINOR. See docs/official-csharp-plugins.md. -->
   <Target Name="CheckMinMacroGridVersion" BeforeTargets="BeforeBuild">
     <PropertyGroup>
       <_DeclaredMinMacroGrid>$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(MSBuildProjectDirectory)\..\plugin.json')), '"minMacroGrid"\s*:\s*"([^"]*)"').Groups[1].Value)</_DeclaredMinMacroGrid>
@@ -31,13 +31,9 @@
   </Target>
 
   <ItemGroup>
-    <!-- SDK: NuGet by default, sibling checkout with -p:UseLocalSdk=true (see Directory.Build.props and
-         docs/using-the-sdk-package.md). Either way the SDK dll stays out of the plugin output: the server
+    <!-- SDK: a checkout of the server repository (see Directory.Build.props). The SDK dll stays out of the plugin output: the server
          and every plugin must share the server's copy. -->
-    <PackageReference Include="MacroGrid.Plugin.Abstractions" Version="$(MacroGridSdkVersion)"
-                      PrivateAssets="all" ExcludeAssets="runtime" Condition="'$(UseLocalSdk)' != 'true'" />
-    <ProjectReference Include="$(LocalSdkProject)" Private="false" ExcludeAssets="runtime"
-                      Condition="'$(UseLocalSdk)' == 'true'" />
+    <ProjectReference Include="$(LocalSdkProject)" Private="false" ExcludeAssets="runtime" />
   </ItemGroup>
 
   <ItemGroup>

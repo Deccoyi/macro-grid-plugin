@@ -91,5 +91,4 @@ yükleyin. Bkz. [Hata ayıklama ve günlükler](/tr/guides/debugging).
 
 - [JavaScript host API başvurusunu](/tr/reference/js-host-api) okuyun; örneğin yerel bir hizmeti yoklamak için `host.http.get`
   (bir `http:<host>:<port>` izni gerekir).
-- Değişkeninizi widget metninde biçimlendirmek için [Öğretici 3](/tr/tutorials/live-data) ile devam edin.
-- Aynı fikri C# ile yazın: [Öğretici 2](/tr/tutorials/csharp-hello-world).
+- Değişkeninizi widget metninde biçimlendirmek için [Öğretici 2](/tr/tutorials/live-data) ile devam edin.

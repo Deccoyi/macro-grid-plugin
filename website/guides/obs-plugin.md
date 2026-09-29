@@ -1,5 +1,10 @@
 # A real-world plugin: OBS
 
+::: info An official C# plugin, shown for reading
+The OBS plugin is one of the official C# plugins: it is built and signed by the maintainer, and the server loads a C# plugin only with
+that signature. Plugins by other authors are JavaScript plugins. This page walks through it because it shows what a full integration looks like.
+:::
+
 The [OBS plugin](https://github.com/Deccoyi/macro-grid-plugin/tree/main/WebSocketBridgeForOBS) (id `obs`) controls
 [OBS Studio](https://obsproject.com/) over obs-websocket v5, which is built into OBS 28 and newer. It is the largest plugin in the
 repository and uses almost everything the SDK offers, so it is the best example to read after the tutorials.

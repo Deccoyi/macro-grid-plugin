@@ -5,7 +5,7 @@
   "author": "Deccoyi",
   "homepage": "https://github.com/Deccoyi/macro-grid-plugin/tree/main/WebSocketBridgeForOBS",
   "defaultLanguage": "en",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "minMacroGrid": "1.1.0",
   "sdkVersion": "^0.4.0",
   "minServerVersion": "0.3.2",

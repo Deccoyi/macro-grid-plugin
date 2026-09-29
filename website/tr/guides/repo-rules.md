@@ -11,13 +11,13 @@ macro-grid-plugin/
 ├── README.md
 ├── CONTRIBUTING.md
 ├── website/                   bu dokümantasyon sitesi
-├── examples/                  eğitim projeleri, CI'da derlenir
+├── examples/                  eğitim projesi, CI'da denetlenir
 └── <PluginName>/
     ├── plugin.json              manifest
     ├── README.md                ne yapar, gereksinimler, ayarlar
     ├── CHANGELOG.md             kısa, herkese açık, geliştirici olmayanlar için
     ├── CHANGELOG-developer.md   ayrıntılı, teknik
-    └── src/                     kaynak (bir C# projesi veya JavaScript eklentisi için betik)
+    └── src/                     kaynak (resmî bir eklenti için bir C# projesi, ya da JavaScript eklentisi için betik)
 ```
 
 ## Bağımsız sürümler
@@ -38,9 +38,13 @@ Her eklentinin kökünde bir `plugin.json` bulunur; alanlar [manifest başvurusu
 
 ## C# ve JavaScript eklentileri
 
-- **C#** eklentileri tam güvene sahiptir. Diğer eklentileri bozamasınlar diye kendi assembly yükleme bağlamlarına yüklenirler, ancak yalıtılmış ortamda (sandbox) çalışmazlar.
-- **JavaScript** eklentileri yalıtılmış ortamda çalışır ve onaylanmış izinler gerektirir. Yalnızca kullandığınız izinleri isteyin.
+- **JavaScript** eklentileri yalıtılmış ortamda çalışır ve onaylanmış izinler gerektirir. Yalnızca kullandığınız izinleri isteyin. Başka yazarların eklentileri
+  JavaScript'tir ve yazarın kendi deposuna aittir.
+- **C#** eklentileri yalnızca bu depodaki resmî eklentiler için kullanılır. Tam güvene sahiptir; bu yüzden bakımcı derler ve imzalar, sunucu da bir C# eklentisini
+  yalnızca bu imzayla yükler. Diğer eklentileri bozamasınlar diye kendi assembly yükleme bağlamlarına yüklenirler, ancak yalıtılmış ortamda (sandbox) çalışmazlar.
 - Bir eklenti klasörü ya birdir ya diğeri, asla ikisi birden değil.
+- Bu depo proje dışından gelen çekme isteklerini genel olarak kabul etmez, çünkü resmî eklentiler insanların bilgisayarlarında çalışır. Bunun yerine bir issue açın;
+  orada konuşulduktan sonra küçük bir düzeltme kabul edilebilir.
 
 ## Dil, yorumlar ve adlar
 
@@ -60,4 +64,4 @@ Bir değişiklik tamamlandığında, değiştirdiğiniz eklentinin her iki deği
 
 ## Testler
 
-Mantık içeren bir eklentinin yanında testleri olmalıdır (eklentiyi sahte bir obs-websocket sunucusuna karşı çalıştıran `WebSocketBridgeForOBS/tests` örneğine bakın). Çekme isteği açmadan önce eklentinin test projesinde `dotnet test` çalıştırın.
+Mantık içeren bir eklentinin yanında testleri olmalıdır (eklentiyi sahte bir obs-websocket sunucusuna karşı çalıştıran `WebSocketBridgeForOBS/tests` örneğine bakın). Eklentiyi değiştirmeden önce test projesinde `dotnet test` çalıştırın.
