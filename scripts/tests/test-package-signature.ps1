@@ -60,3 +60,5 @@ try {
 
 if ($failures.Count) { throw "$($failures.Count) check(s) failed" }
 Write-Host 'All checks passed.'
+# The last native command above is expected to fail (that is what is being tested); its exit code must not become the script's.
+exit 0
