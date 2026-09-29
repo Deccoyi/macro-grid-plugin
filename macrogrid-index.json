@@ -12,6 +12,20 @@
                         "kind":  "js",
                         "versions":  [
                                          {
+                                             "version":  "0.1.2",
+                                             "minMacroGrid":  "1.0.0",
+                                             "sdkVersion":  "^0.4.0",
+                                             "minServerVersion":  "0.3.2",
+                                             "url":  "https://github.com/Deccoyi/macro-grid-plugin/releases/download/plugin-hellojs-v0.1.2/hellojs-0.1.2.zip",
+                                             "sha256":  "cf06a2c3cf89d6dc4f36ca9fe0c36f8e7a6a66d24261d5d49e16c7bce892e0ca",
+                                             "size":  5282,
+                                             "permissions":  [
+                                                                 "variables",
+                                                                 "actions"
+                                                             ],
+                                             "signature":  "qBFHSHWle4S0H0hOKfb87mVvmO9pLNdtGtKakBAlrvPgS4SosSPsA1MgJPHZb9Ts2pENiJrJ1ZTDc24XKGnqmg=="
+                                         },
+                                         {
                                              "version":  "0.1.1",
                                              "sdkVersion":  "^0.4.0",
                                              "minServerVersion":  "0.3.2",
@@ -28,12 +42,38 @@
                     },
                     {
                         "id":  "obs",
-                        "name":  "OBS Control",
-                        "description":  "Controls OBS Studio over obs-websocket: scenes, streaming, recording, audio, sources and live variables.",
+                        "name":  "WebSocketBridge For OBS",
+                        "description":  "Controls OBS Studio over obs-websocket: scenes, streaming, recording, audio, sources and live variables. Independent project, not affiliated with the OBS Project.",
                         "author":  "Deccoyi",
-                        "homepage":  "https://github.com/Deccoyi/macro-grid-plugin/tree/main/OBS",
+                        "homepage":  "https://github.com/Deccoyi/macro-grid-plugin/tree/main/WebSocketBridgeForOBS",
                         "kind":  "csharp",
                         "versions":  [
+                                         {
+                                             "version":  "0.3.1",
+                                             "minMacroGrid":  "1.1.0",
+                                             "sdkVersion":  "^0.4.0",
+                                             "minServerVersion":  "0.3.2",
+                                             "url":  "https://github.com/Deccoyi/macro-grid-plugin/releases/download/plugin-obs-v0.3.1/obs-0.3.1.zip",
+                                             "sha256":  "8f47e7348bb84c861598e53936f772a714ca61d1f7604017efb641ce50031eed",
+                                             "size":  49908,
+                                             "permissions":  [
+
+                                                             ],
+                                             "signature":  "u5JmJqj3Btz4LaFmuKf4M65EeozvlobmarKYEaZR6TseWljcKKsKiEa5MvY79V6vNcw8W6FJShBgvN6SoZWtwg=="
+                                         },
+                                         {
+                                             "version":  "0.3.0",
+                                             "macroGrid":  "1.1.0",
+                                             "sdkVersion":  "^0.4.0",
+                                             "minServerVersion":  "0.3.2",
+                                             "url":  "https://github.com/Deccoyi/macro-grid-plugin/releases/download/plugin-obs-v0.3.0/obs-0.3.0.zip",
+                                             "sha256":  "366b0b134f12f6d9905ff821d460d0404e4542f5275fc83844c31e878af98511",
+                                             "size":  49099,
+                                             "permissions":  [
+
+                                                             ],
+                                             "signature":  "YjbWpcFzMguXrHpKV4ByoRjeottHxNXbV9VnGhF5Win93m0c9Wo0Ecy26AxacEIkW2f9M+Oo3BsYIKRVdHtd3g=="
+                                         },
                                          {
                                              "version":  "0.2.2",
                                              "sdkVersion":  "^0.4.0",
@@ -57,6 +97,19 @@
                         "kind":  "csharp",
                         "versions":  [
                                          {
+                                             "version":  "0.1.4",
+                                             "minMacroGrid":  "1.0.0",
+                                             "sdkVersion":  "^0.4.0",
+                                             "minServerVersion":  "0.3.2",
+                                             "url":  "https://github.com/Deccoyi/macro-grid-plugin/releases/download/plugin-plc-icons-v0.1.4/plc-icons-0.1.4.zip",
+                                             "sha256":  "0605fbefaed8bf011c5d49588dfd6c1875306d4316d44a8e8105d0f945cbe6f6",
+                                             "size":  9116,
+                                             "permissions":  [
+
+                                                             ],
+                                             "signature":  "pzUCQo6ttp1qDWL3lrIL79l9JW4i8CaAGYgtSH75B7QkZ1elXFYCnvdYDPTOz5s0Hn4HSXsQt+D8HwSM18PBHg=="
+                                         },
+                                         {
                                              "version":  "0.1.3",
                                              "sdkVersion":  "^0.4.0",
                                              "minServerVersion":  "0.3.2",
@@ -78,6 +131,19 @@
                         "homepage":  "https://github.com/Deccoyi/macro-grid-plugin/tree/main/SoundBoard",
                         "kind":  "csharp",
                         "versions":  [
+                                         {
+                                             "version":  "0.1.2",
+                                             "minMacroGrid":  "1.0.0",
+                                             "sdkVersion":  "^0.4.0",
+                                             "minServerVersion":  "0.3.2",
+                                             "url":  "https://github.com/Deccoyi/macro-grid-plugin/releases/download/plugin-soundboard-v0.1.2/soundboard-0.1.2.zip",
+                                             "sha256":  "715a847ad74b247faa509c56cb907c8247fa4adbb62f72a4d420780a564d9831",
+                                             "size":  263144,
+                                             "permissions":  [
+
+                                                             ],
+                                             "signature":  "XBbz6fYqmOtzZIsStQkET93E9vxKMEDRgmiAmoN8rGh7wPYaDqzyOS13TTnGkPfxfRJ0fbXffsvnvKVfC8ho9Q=="
+                                         },
                                          {
                                              "version":  "0.1.1",
                                              "sdkVersion":  "^0.4.0",
