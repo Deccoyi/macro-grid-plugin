@@ -55,8 +55,7 @@ export default defineConfig({
             text: 'Öğreticiler',
             items: [
               { text: '1. JavaScript ile merhaba dünya', link: '/tr/tutorials/js-hello-world' },
-              { text: '2. C# ile merhaba dünya', link: '/tr/tutorials/csharp-hello-world' },
-              { text: '3. Canlı veri gösterme', link: '/tr/tutorials/live-data' },
+              { text: '2. Canlı veri gösterme', link: '/tr/tutorials/live-data' },
             ],
           },
           {
@@ -77,7 +76,6 @@ export default defineConfig({
               { text: 'Manifest (plugin.json)', link: '/tr/reference/manifest' },
               { text: 'JavaScript host API', link: '/tr/reference/js-host-api' },
               { text: 'Alan türleri (formlar)', link: '/tr/reference/js-field-kinds' },
-              { text: 'C# SDK arayüzleri', link: '/tr/reference/csharp-sdk' },
               { text: 'İzinler', link: '/tr/reference/permissions' },
               { text: 'Değişiklik günlükleri', link: '/tr/reference/changelogs' },
               { text: 'Kaynak dizini', link: '/tr/reference/source-index' },
@@ -130,8 +128,7 @@ export default defineConfig({
         text: 'Tutorials',
         items: [
           { text: '1. JavaScript hello world', link: '/tutorials/js-hello-world' },
-          { text: '2. C# hello world', link: '/tutorials/csharp-hello-world' },
-          { text: '3. Showing live data', link: '/tutorials/live-data' },
+          { text: '2. Showing live data', link: '/tutorials/live-data' },
         ],
       },
       {
@@ -152,7 +149,6 @@ export default defineConfig({
           { text: 'Manifest (plugin.json)', link: '/reference/manifest' },
           { text: 'JavaScript host API', link: '/reference/js-host-api' },
           { text: 'Field kinds (forms)', link: '/reference/js-field-kinds' },
-          { text: 'C# SDK interfaces', link: '/reference/csharp-sdk' },
           { text: 'Permissions', link: '/reference/permissions' },
           { text: 'Changelogs', link: '/reference/changelogs' },
           { text: 'Source index', link: '/reference/source-index' },

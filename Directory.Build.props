@@ -1,11 +1,10 @@
 <Project>
   <PropertyGroup>
-    <!-- false (default): the SDK comes from NuGet (MacroGrid.Plugin.Abstractions).
-         true: use the sibling ..\macro-grid checkout instead, for work on both repos at once:
-           dotnet build -p:UseLocalSdk=true
-         See docs/using-the-sdk-package.md. Each plugin csproj switches on this property. -->
-    <UseLocalSdk Condition="'$(UseLocalSdk)' == ''">false</UseLocalSdk>
+    <!-- The plugin SDK (MacroGrid.Plugin.Abstractions) is no longer published to NuGet. The official plugins build against a checkout of the
+         server repository: the sibling ..\macro-grid by default, or another checkout with -p:LocalSdkProject=<path to
+         MacroGrid.Plugin.Abstractions.csproj>. CI checks out the server tag of MacroGridSdkVersion, and scripts/release-plugin.ps1 refuses to build
+         unless the checkout's <Version> equals it. See docs/official-csharp-plugins.md. -->
     <MacroGridSdkVersion Condition="'$(MacroGridSdkVersion)' == ''">1.1.0</MacroGridSdkVersion>
-    <LocalSdkProject>$(MSBuildThisFileDirectory)..\macro-grid\src\MacroGrid.Plugin.Abstractions\MacroGrid.Plugin.Abstractions.csproj</LocalSdkProject>
+    <LocalSdkProject Condition="'$(LocalSdkProject)' == ''">$(MSBuildThisFileDirectory)..\macro-grid\src\MacroGrid.Plugin.Abstractions\MacroGrid.Plugin.Abstractions.csproj</LocalSdkProject>
   </PropertyGroup>
 </Project>

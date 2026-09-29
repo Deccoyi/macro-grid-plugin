@@ -121,7 +121,8 @@ host.registerAction({
 })
 ```
 
-`host.input.type` types a whole text; combine it with a form field (`allowVariables: true`) so the text can contain live values.
+`host.input` only works inside an action the user triggered (never from a timer), with at most 10 combinations and 200 typed characters per press, and
+not with the Windows key. `host.input.type` types a text; combine it with a form field so users choose what it types.
 
 ## 6. A timer you design yourself
 

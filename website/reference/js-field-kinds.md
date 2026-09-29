@@ -42,7 +42,7 @@ two places:
 | `visibleWhen` | all | Show the field only when another field has a value, written `"key=value"`, for example `"mode=pause"`. Inside a `List` row it is checked against that row's own values. |
 | `fileFilter` | `File` | Required. A Windows file filter such as `"Audio files (*.wav;*.mp3)\|*.wav;*.mp3"`. |
 | `itemFields` | `List` | Required. The fields of one row, using any kind above. Row keys you did not declare are kept across a save. |
-| `dependsOn`, `optionsSource`, `command` | dynamic dropdowns and buttons | These need a C# handler and do nothing in a JavaScript plugin. |
+| `dependsOn`, `optionsSource`, `command` | dynamic dropdowns and buttons | These need code in the server (official C# plugins only) and do nothing in a JavaScript plugin. |
 
 ## Examples
 

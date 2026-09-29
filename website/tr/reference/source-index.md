@@ -45,7 +45,7 @@ https://raw.githubusercontent.com/<owner>/<repo>/HEAD/macrogrid-index.json
 |---|---|
 | `formatVersion` | Bugün her zaman `1`. Gelecekteki bir sürümü anlamayan bir sunucu çökmek yerine o kaynağı yok sayar. |
 | `plugins[].id` / `.name` / `.description` / `.author` / `.homepage` | Herhangi bir şey indirilmeden önce Keşfet'te gösterilir. |
-| `plugins[].kind` | `"csharp"` veya `"js"`, `plugin.json` ile eşleşir. |
+| `plugins[].kind` | `"csharp"` veya `"js"`, `plugin.json` ile eşleşir. Yalnızca resmî kaynak `"csharp"` eklentileri listeleyebilir; sunucu başka bir kaynağın `"csharp"` girdisini gizler ve reddeder. Üçüncü taraf kaynaklar `"js"` eklentileri listeler. |
 | `versions[].minMacroGrid` | Yayımlanan `plugin.json`'dan kopyalanır; böylece sunucu, indirmeden önce uyumsuz bir sürümü soluklaştırabilir. `plugin.json`'da hâlâ varsa `macroGrid` (alanın önceki adı, yalnızca `minMacroGrid` yoksa okunur), `sdkVersion` ve `minServerVersion` (1.0.0 öncesi sunucular için eski alanlar) de kopyalanır. |
 | `versions[].url` | `https://github.com/<aynı owner>/<aynı repo>/releases/download/...` olmalıdır — **bir dizin yalnızca kendi deposunun sürümlerine işaret edebilir.** Sunucu başka bir host veya depoyu reddeder. |
 | `versions[].sha256` / `.size` | Zorunlu. İndirilen dosya, zip'i açmadan önce buna göre denetlenir. |

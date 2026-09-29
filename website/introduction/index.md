@@ -45,15 +45,17 @@ There are three parts, in three repositories, versioned independently.
 
 A plugin cannot draw its own widget or add a widget type yet.
 
-## The two kinds of plugin
+## Who can write which kind of plugin
 
-| | C# plugin | JavaScript plugin |
+| | Official plugin (C#) | Plugin by anyone else (JavaScript) |
 |---|---|---|
-| Trust | Full trust, inside the server process | Sandboxed, only a small `host` object and approved permissions |
-| Good for | Real integrations (a websocket client, a device driver) | Small scripts (poll a local HTTP API, publish a variable, add an action) |
+| Trust | Full trust, inside the server process. Signed by the maintainer, and the server checks the signature every time it loads. | Sandboxed, only a small `host` object and approved permissions |
+| Good for | The plugins in this repository | Small scripts (poll a local HTTP API, publish a variable, add an action) |
 | Needs a build | Yes | No |
 
-Only install C# plugins whose source you trust: they can do anything the server can do.
+**Third-party plugins are JavaScript.** A C# plugin runs with full access to the PC and Macro Grid cannot limit it, so the server
+loads a C# plugin only when it is one of the official, signed plugins. A JavaScript plugin shows the permissions it asks for and only
+runs after you approve them. Macro Grid does not review plugins from other authors: install only ones you trust.
 
 ## Where to go next
 

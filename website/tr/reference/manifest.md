@@ -1,8 +1,8 @@
 # Manifest (plugin.json)
 
-Her eklenti klasörünün kökünde bir `plugin.json` bulunur. Aşağıdaki, OBS eklentisinin dosyasıdır:
+Her eklenti klasörünün kökünde bir `plugin.json` bulunur. Aşağıdaki, JavaScript örneğinin dosyasıdır:
 
-<<< @/../WebSocketBridgeForOBS/plugin.json
+<<< @/../examples/hello-js/plugin.json
 
 ## Alanlar
 
@@ -15,10 +15,10 @@ Her eklenti klasörünün kökünde bir `plugin.json` bulunur. Aşağıdaki, OBS
 | `macroGrid` | hayır | Eskisi: `minMacroGrid`'in önceki adı, aynı anlam ve biçimde. Yalnızca `minMacroGrid` yoksa okunur. Yalnızca eski adı okuyan Macro Grid 1.2.x'e kadar da çalışması gereken bir eklenti her iki alanı da aynı değerle yazar. |
 | `sdkVersion` | hayır | Macro Grid 1.0.0 öncesinden kalma alan. Yalnızca ne `minMacroGrid` ne de `macroGrid` varsa okunur: `^0.4.x`, `minMacroGrid: 1.0.0` sayılır, daha eski aralıklar uyumsuzdur. Eklenti 1.0.0'dan eski sunucularda da yüklenecekse `minMacroGrid` yanında tutun. |
 | `minServerVersion` | hayır | `sdkVersion` gibi eski alan. Macro Grid 1.0.0 ve sonrası bunu yok sayar. |
-| `entry` | evet | C#: giriş DLL'sinin dosya adı. JavaScript: betik (genellikle `index.js`). |
-| `kind` | evet | `"csharp"` veya `"js"`. |
+| `entry` | evet | JavaScript: betik (genellikle `index.js`). Resmî bir C# eklentisi için: giriş DLL'sinin dosya adı. |
+| `kind` | evet | Resmî olanlar dışındaki her eklenti için `"js"`. `"csharp"` yalnızca resmî eklentilerce kullanılır ve sunucu böyle bir eklentiyi yalnızca resmî imzayı (`signature.json` ve `signature.sig`) taşıyorsa yükler; bunsuz `"csharp"` diyen eklenti *İzin verilmedi* olarak gösterilir. |
 | `defaultLanguage` | hayır | Eklentinin kendi metinlerinin yazıldığı dil, örneğin `"en"` (varsayılan). Çeviriler `plugin.json` yanındaki `locales/<language>.json` dosyasından gelir; eksik bir dil veya metin, yazıldığı haline döner. |
-| `permissions` | hayır | Yalnızca JavaScript: betiğin ihtiyaç duyduğu izinler (bkz. [İzinler](/tr/reference/permissions)). C# eklentilerinde yok sayılır. |
+| `permissions` | hayır | Yalnızca JavaScript: betiğin ihtiyaç duyduğu izinler (bkz. [İzinler](/tr/reference/permissions)). |
 | `description` | hayır | Keşfet ve Mağaza'da gösterilen tek satırlık özet. Eklentiseldir; eski sunucular yok sayar. |
 | `author` | hayır | Eklentinin yazarı, `description` yanında gösterilir. Eklentiseldir. |
 | `homepage` | hayır | Eklentinin sayfasına veya kaynağına bir bağlantı olarak gösterilir. Eklentiseldir. |
@@ -54,14 +54,10 @@ Manifest, SDK'daki `PluginManifest` kaydına karşılık gelir (dosyada özellik
 
 Sunucu bu şemayı okumaz; kolaylık için sunulmuştur ve SDK'nın `PluginManifest` türünden türetilmiştir.
 
-## Örnekler
+## Örnek
 
 Bir JavaScript eklentisi:
 
 <<< @/../examples/hello-js/plugin.json
 
-Bir C# eklentisi:
-
-<<< @/../examples/hello-csharp/plugin.json
-
-SDK sürümü, `MacroGrid.Plugin.Abstractions` içindeki `PluginSdk.Version` değeridir. Neyin uyumsuz değişiklik sayıldığı için [Uyumluluk](/tr/basics/compatibility) sayfasına bakın.
+Neyin uyumsuz değişiklik sayıldığı için [Uyumluluk](/tr/basics/compatibility) sayfasına bakın.

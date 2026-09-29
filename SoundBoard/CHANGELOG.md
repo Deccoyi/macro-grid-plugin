@@ -4,6 +4,10 @@ New features and fixes in the SoundBoard plugin. For technical details, see [CHA
 
 ## Unreleased
 
+## 0.1.2 - 2026-09-29
+### Changed
+- **Signed for a stricter check:** this version is signed in the new way Macro Grid checks every time the plugin starts. There is nothing else new in it.
+
 ## 0.1.1 - 2026-09-26
 ### Changed
 - **Now playing:** The now-playing variable shows the sound that is playing and is empty when nothing plays. A new last-played variable keeps the name of the last sound that was started.

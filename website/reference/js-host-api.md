@@ -16,7 +16,7 @@ ideas built from these pieces see [What you can build](/guides/js-recipes).
 | [Actions](#host-registeraction) | `host.registerAction` | `actions` |
 | [Settings page](#host-settings) | `host.settings.page / get` | none |
 | [Status bar](#host-status) | `host.status` | none |
-| [Keyboard](#host-input) | `host.input.hotkey / type` | `input` |
+| [Keyboard](#host-input) | `host.input.hotkey / type` | `input`, and only during a button press |
 | [HTTP](#host-http) | `host.http.get / post / getAsync / postAsync` | `http:<host>:<port>` |
 | [Timers](#host-every-host-after-host-cancel) | `host.every / after / cancel` | none |
 | [Granted permissions](#host-permissions) | `host.permissions` | none |
@@ -134,7 +134,7 @@ const { url, poll } = host.settings.get()
 - `page(fields)` adds one settings form to the Plugins window (a gear button). Call it at the top level. A second call replaces the first.
 - `get()` returns the current values as an object: saved values over the `default`s. It returns `{}` when there is no page. Call it
   again when you need fresh values; users can change them while the plugin runs.
-- Values are stored in `settings.json` in the plugin folder. Only keys you declared are kept.
+- Values are stored in `settings.json` in the plugin folder. Only keys you declared are kept, and the saved file may be at most 64 KB.
 - A `Password` field is stored as plain text in JavaScript plugins; say so in your README.
 
 See [Field kinds](/reference/js-field-kinds) for every kind and option.
@@ -152,20 +152,26 @@ file, and a text with a value in it can be translated as a template (key `"Retry
 
 ## host.input
 
-Needs `input`.
+Needs `input`, and works **only while a button press is being handled**: inside an `action`'s `run` (and the promise it returns) for at
+most 5 seconds. From a timer or at start-up it throws `Keyboard input is only allowed while handling a button press.` The full list of
+limits is in [Permissions](/reference/permissions#the-input-permission).
 
 ```js
 host.input.hotkey('ctrl+shift+m')
-host.input.hotkey('win')             // a lone modifier is pressed as a plain key
-host.input.type('hello')             // up to 2000 characters per call
+host.input.type('hello')             // at most 200 characters per call, 200 per press
 ```
+
+- At most 10 key combinations and 200 typed characters per press.
+- Combinations with the Windows key (`win`) and `ctrl+escape`, `ctrl+alt+delete` are refused.
+- Nothing is sent while a terminal, script host, system tool, system dialog or a Macro Grid window is in front, or when Macro Grid runs as administrator.
+- Text that looks like a harmful command throws `This text is not allowed.` and switches the plugin off.
 
 **Combination syntax:** keys joined with `+`, at most one non-modifier key, case-insensitive. A literal `+` key is written `plus`.
 A bad combination throws an `Error` with the reason (`Unknown key: 'foo'.`, `More than one key: ...`).
 
 | Group | Names |
 |---|---|
-| Modifiers | `ctrl` (`control`), `shift`, `alt` (`option`), `win` (`windows`, `meta`, `cmd`) |
+| Modifiers | `ctrl` (`control`), `shift`, `alt` (`option`). `win` (`windows`, `meta`, `cmd`) parses but is refused for plugins. |
 | Letters and digits | `a` to `z`, `0` to `9`, `num0` to `num9` |
 | Function keys | `f1` to `f24` |
 | Navigation | `up`, `down`, `left`, `right`, `home`, `end`, `pageup` (`pgup`), `pagedown` (`pgdn`), `insert` (`ins`), `delete` (`del`) |
@@ -175,7 +181,7 @@ A bad combination throws an `Error` with the reason (`Unknown key: 'foo'.`, `Mor
 | Keypad | `numadd`, `numsubtract`, `nummultiply`, `numdivide`, `numdecimal` |
 | Media | `volumeup`, `volumedown`, `volumemute`, `mediaplaypause`, `medianext`, `mediaprev`, `mediastop` |
 
-The keys go to whichever window has focus, so use this from an action the user triggered on purpose, not from a timer.
+The keys go to whichever window has focus, which is why the press rule exists: the user just touched a button on purpose.
 
 ## host.http
 
@@ -243,7 +249,8 @@ texts and tooltips. A missing file or entry falls back to the text as written.
 | Status items | 10 per plugin |
 | HTTP | 5 s per request, 1 MB response, 4 async requests in flight |
 | Log line | 500 characters |
-| `host.input.type` | 2000 characters per call |
+| `host.input` | 200 typed characters and 10 key combinations per press, 5 second press window |
+| `settings.json` | 64 KB |
 
 - **One thing at a time.** The script runs on its own thread, one call at a time, so a slow plugin never blocks the server or
   another plugin.
@@ -255,6 +262,6 @@ texts and tooltips. A missing file or entry falls back to the text as written.
 
 - A plugin cannot draw its own widget (a `plugin-html` widget is planned) or add an icon pack or a new widget type.
 - No files, no sockets, no WebSocket, no `fetch`, no `setTimeout` (use `host.after`), no modules.
-- No button inside a settings form (a `Button` field needs a handler that only exists in C# plugins).
-- No dynamic dropdown lists: `Select` options are static.
+- No button inside a settings form (a `Button` field needs code in the server, so it exists only in official C# plugins).
+- No dynamic dropdown lists: `Select` options are static (dynamic lists are official-C# only).
 - No way to pick which page or profile a phone shows from JavaScript.

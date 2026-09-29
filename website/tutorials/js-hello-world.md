@@ -91,5 +91,4 @@ See [Debugging and logs](/guides/debugging).
 
 - Read the [JavaScript host API reference](/reference/js-host-api), for example `host.http.get` to poll a local service (needs an
   `http:<host>:<port>` permission).
-- Continue with [Tutorial 3](/tutorials/live-data) to format your variable in widget text.
-- Write the same idea in C#: [Tutorial 2](/tutorials/csharp-hello-world).
+- Continue with [Tutorial 2](/tutorials/live-data) to format your variable in widget text.

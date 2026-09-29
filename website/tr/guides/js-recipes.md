@@ -116,7 +116,7 @@ host.registerAction({
 })
 ```
 
-`host.input.type` bütün bir metni yazar; metnin canlı değerler içerebilmesi için bir form alanıyla (`allowVariables: true`) birleştirin.
+`host.input` yalnızca kullanıcının tetiklediği aksiyonun içinde çalışır (zamanlayıcıdan asla), basış başına en çok 10 kombinasyon ve 200 karakterle, Windows tuşu olmadan. `host.input.type` bir metin yazar; kullanıcının ne yazılacağını seçebilmesi için bir form alanıyla birleştirin.
 
 ## 6. Kendi tasarladığınız zamanlayıcı
 

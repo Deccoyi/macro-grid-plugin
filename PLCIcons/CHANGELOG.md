@@ -4,6 +4,10 @@ New features and fixes in the PLC Icons pack. For technical details, see [CHANGE
 
 ## Unreleased
 
+## 0.1.4 - 2026-09-29
+### Changed
+- **Signed for a stricter check:** this version is signed in the new way Macro Grid checks every time the plugin starts. There is nothing else new in it.
+
 ## 0.1.3 - 2026-09-25
 ### Changed
 - **Needs Macro Grid 0.3.2 or newer:** this version works with the new plugin system, so an older Macro Grid will not load it.

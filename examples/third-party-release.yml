@@ -65,6 +65,8 @@ jobs:
           "macroGrid=$($manifest.macroGrid)" | Out-File -Append -Encoding utf8 $env:GITHUB_OUTPUT
           "sdkVersion=$($manifest.sdkVersion)" | Out-File -Append -Encoding utf8 $env:GITHUB_OUTPUT
           "minServerVersion=$($manifest.minServerVersion)" | Out-File -Append -Encoding utf8 $env:GITHUB_OUTPUT
+          # The server installs a C# plugin only from the official source, so a plugin by another author must be a JavaScript plugin.
+          if ($manifest.kind -eq 'csharp') { throw 'Only official C# plugins can be installed. A plugin by another author must be a JavaScript plugin (kind "js").' }
           "kind=$($manifest.kind)" | Out-File -Append -Encoding utf8 $env:GITHUB_OUTPUT
           $permissions = @($manifest.permissions | Where-Object { $_ })
           $permissionsJson = ConvertTo-Json -InputObject $permissions -Compress -AsArray

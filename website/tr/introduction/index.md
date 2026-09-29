@@ -46,15 +46,17 @@ sorunları dahil hiçbir konuda sorumluluk kabul etmez. **Tüm risk size aittir*
 
 Bir eklenti henüz kendi widget'ını çizemez ya da yeni bir widget türü ekleyemez.
 
-## İki tür eklenti
+## Hangi eklentiyi kim yazabilir
 
-| | C# eklentisi | JavaScript eklentisi |
+| | Resmî eklenti (C#) | Başkalarının eklentisi (JavaScript) |
 |---|---|---|
-| Güven | Tam güven, sunucu işleminin içinde | Korumalı (sandbox); yalnızca küçük bir `host` nesnesi ve onaylanmış izinler |
-| Şunun için uygun | Gerçek entegrasyonlar (websocket istemcisi, aygıt sürücüsü) | Küçük betikler (yerel bir HTTP API'yi sorgulamak, değişken yayınlamak, aksiyon eklemek) |
+| Güven | Tam güven, sunucu işleminin içinde. Bakımcı tarafından imzalanır ve sunucu imzayı her yüklemede denetler. | Korumalı (sandbox); yalnızca küçük bir `host` nesnesi ve onaylanmış izinler |
+| Şunun için uygun | Bu depodaki eklentiler | Küçük betikler (yerel bir HTTP API'yi sorgulamak, değişken yayınlamak, aksiyon eklemek) |
 | Derleme gerekir mi | Evet | Hayır |
 
-Yalnızca kaynağına güvendiğiniz C# eklentilerini kurun: sunucunun yapabildiği her şeyi yapabilirler.
+**Üçüncü taraf eklentiler JavaScript'tir.** Bir C# eklentisi bilgisayara tam erişimle çalışır ve Macro Grid onu sınırlayamaz; bu yüzden sunucu, yalnızca
+resmî, imzalı eklentilerden biri olan C# eklentisini yükler. Bir JavaScript eklentisi istediği izinleri gösterir ve yalnızca siz onayladıktan sonra çalışır.
+Macro Grid başka yazarların eklentilerini incelemez: yalnızca güvendiklerinizi kurun.
 
 ## Sonraki adım
 

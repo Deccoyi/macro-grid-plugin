@@ -46,7 +46,7 @@ https://raw.githubusercontent.com/<owner>/<repo>/HEAD/macrogrid-index.json
 |---|---|
 | `formatVersion` | Always `1` today, also with `minMacroGrid` (or the legacy `macroGrid`) entries (a server before 1.0.0 refuses any other number). A host that does not understand a future version ignores that source rather than crashing. |
 | `plugins[].id` / `.name` / `.description` / `.author` / `.homepage` | Shown in Discover before anything is downloaded. |
-| `plugins[].kind` | `"csharp"` or `"js"`, matching `plugin.json`. |
+| `plugins[].kind` | `"csharp"` or `"js"`, matching `plugin.json`. Only the official source may list `"csharp"` plugins; the host hides and refuses a `"csharp"` entry of any other source. Third-party sources list `"js"` plugins. |
 | `versions[].minMacroGrid` | Copied from the released `plugin.json` so the host can grey out an incompatible version without downloading it. `macroGrid` (the field's earlier name, read only when `minMacroGrid` is absent), `sdkVersion` and `minServerVersion` (legacy, for servers before 1.0.0) are copied too when `plugin.json` still has them. |
 | `versions[].url` | Must be `https://github.com/<same owner>/<same repo>/releases/download/...` — **an index can only point at its own repository's releases.** A host refuses any other host or repository. |
 | `versions[].sha256` / `.size` | Required. Checked against the downloaded file before it is unzipped. |

@@ -40,7 +40,7 @@
 | `visibleWhen` | hepsi | Alanı yalnızca başka bir alanın değeri tutunca gösterir; `"anahtar=değer"` yazılır, örneğin `"mode=pause"`. `List` satırı içinde o satırın kendi değerlerine karşı denetlenir. |
 | `fileFilter` | `File` | Zorunlu. `"Audio files (*.wav;*.mp3)\|*.wav;*.mp3"` gibi bir Windows dosya filtresi. |
 | `itemFields` | `List` | Zorunlu. Bir satırın alanları; yukarıdaki türlerden herhangi biri kullanılabilir. Bildirmediğiniz satır anahtarları kayıtta korunur. |
-| `dependsOn`, `optionsSource`, `command` | dinamik listeler ve butonlar | Bunlar C# işleyicisi ister; JavaScript eklentisinde bir şey yapmazlar. |
+| `dependsOn`, `optionsSource`, `command` | dinamik listeler ve butonlar | Bunlar sunucuda kod ister (yalnızca resmî C# eklentileri); JavaScript eklentisinde bir şey yapmazlar. |
 
 ## Örnekler
 

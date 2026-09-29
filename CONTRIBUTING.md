@@ -13,18 +13,23 @@ reporting, see [SECURITY.md](SECURITY.md); for anything else, open an issue.
 
 ## This is a hobby project
 
-Macro Grid is maintained in spare time. Issues and pull requests are welcome, but replies and reviews can take a while, and there is no
-promise that a request will be accepted or a pull request merged. Please be patient, and don't expect support on a schedule.
+Macro Grid is maintained in spare time. Issues are welcome, but replies can take a while, and there is no promise that a request will be
+accepted. Please be patient, and don't expect support on a schedule.
+
+**Pull requests from outside the project are generally not accepted**, because this code runs on people's computers and the official plugins
+are signed as trusted. Please open an issue instead; a small fix may be accepted after it was discussed in an issue first. Plugins by other
+authors belong in the author's own repository, as JavaScript plugins that people install by link or as a source (see
+[Publishing your plugin](https://deccoyi.github.io/macro-grid-plugin/guides/publishing)).
 
 ## Branching model
 
 - `main` holds released code only. Releases are tagged on `main` (see [Releases and tags](#releases-and-tags)).
-- `dev` is the integration branch: open pull requests against `dev`.
-- Keep pull requests small and about one thing. CI (build and OBS tests) must pass.
+- `dev` is the integration branch the maintainer works on. A pull request that was agreed in an issue goes against `dev`.
+- Keep such a pull request small and about one thing. CI (build and OBS tests) must pass.
 
 ## Building and testing
 
-You need the [.NET 10 SDK](https://dotnet.microsoft.com/download). Until the plugin SDK is published as a NuGet package, the C#
+You need the [.NET 10 SDK](https://dotnet.microsoft.com/download). The plugin SDK is not published on NuGet; the C#
 plugins reference it by path, so clone this repository next to the server repository (`macro-grid/` and `macro-grid-plugin/` in the
 same folder). Then:
 
@@ -80,9 +85,11 @@ newer than the SDK. The rules are in the server repository's [versioning guide](
 
 ## C# and JavaScript plugins
 
-- **C#** plugins have full trust. They are loaded into their own assembly load context so they cannot break other plugins, but they
-  are not sandboxed.
-- **JavaScript** plugins are sandboxed and need approved permissions. Ask only for the permissions you use.
+- **JavaScript** plugins are sandboxed and need approved permissions. Ask only for the permissions you use. Plugins by other authors are
+  JavaScript plugins.
+- **C#** plugins are used only for the official plugins in this repository, built and signed by the maintainer. They have full trust; the
+  server loads a C# plugin only when it carries a valid signature of the official plugin key, checked every time it loads. They are loaded into
+  their own assembly load context so they cannot break other plugins, but they are not sandboxed. A C# plugin from anywhere else is refused.
 - A plugin folder is one or the other, never both.
 
 ## Language, comments and names

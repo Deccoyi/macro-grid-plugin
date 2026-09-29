@@ -13,7 +13,7 @@ Bu sayfa her fonksiyonu, her seçeneği ve her sınırı listeler. İzin tarafı
 | [Aksiyonlar](#host-registeraction) | `host.registerAction` | `actions` |
 | [Ayar sayfası](#host-settings) | `host.settings.page / get` | yok |
 | [Durum çubuğu](#host-status) | `host.status` | yok |
-| [Klavye](#host-input) | `host.input.hotkey / type` | `input` |
+| [Klavye](#host-input) | `host.input.hotkey / type` | `input`, yalnızca buton basışı sırasında |
 | [HTTP](#host-http) | `host.http.get / post / getAsync / postAsync` | `http:<host>:<port>` |
 | [Zamanlayıcılar](#host-every-host-after-host-cancel) | `host.every / after / cancel` | yok |
 | [Verilen izinler](#host-permissions) | `host.permissions` | yok |
@@ -123,7 +123,7 @@ const { url, poll } = host.settings.get()
 
 - `page(fields)` Eklentiler penceresine bir ayar formu ekler (dişli buton). En üst düzeyde çağırın. İkinci çağrı birincisinin yerini alır.
 - `get()` güncel değerleri nesne olarak verir: `default`'ların üstüne kayıtlı değerler. Sayfa yoksa `{}` döner. Taze değer gerektiğinde yeniden çağırın; kullanıcı eklenti çalışırken değiştirebilir.
-- Değerler eklenti klasöründeki `settings.json` içinde saklanır. Yalnızca bildirdiğiniz anahtarlar tutulur.
+- Değerler eklenti klasöründeki `settings.json` içinde saklanır. Yalnızca bildirdiğiniz anahtarlar tutulur ve kaydedilen dosya en çok 64 KB olabilir.
 - JavaScript eklentilerinde `Password` alanı düz metin olarak saklanır; README'nizde belirtin.
 
 Her tür ve seçenek için bkz. [Alan türleri](/tr/reference/js-field-kinds).
@@ -138,19 +138,23 @@ Düzenleyicinin pencere genelindeki durum çubuğunda bir girdi oluşturur veya 
 
 ## host.input
 
-`input` gerekir.
+`input` gerekir ve **yalnızca bir buton basışı işlenirken** çalışır: bir aksiyonun `run`'ı (ve döndürdüğü promise) içinde, en çok 5 saniye. Zamanlayıcıdan veya başlangıçta `Keyboard input is only allowed while handling a button press.` hatası verir. Sınırların tamamı [İzinler](/tr/reference/permissions#input-izni) sayfasındadır.
 
 ```js
 host.input.hotkey('ctrl+shift+m')
-host.input.hotkey('win')             // tek başına değiştirici, sıradan tuş olarak basılır
-host.input.type('hello')             // çağrı başına en çok 2000 karakter
+host.input.type('hello')             // çağrı başına en çok 200 karakter, basış başına 200
 ```
+
+- Basış başına en çok 10 tuş kombinasyonu ve 200 yazılan karakter.
+- Windows tuşlu (`win`) kombinasyonlar ile `ctrl+escape`, `ctrl+alt+delete` reddedilir.
+- Terminal, betik ana bilgisayarı, sistem aracı, sistem iletişim kutusu veya Macro Grid penceresi öndeyken ya da Macro Grid yönetici olarak çalışırken hiçbir şey gönderilmez.
+- Zararlı komut gibi görünen metin `This text is not allowed.` hatası verir ve eklentiyi kapatır.
 
 **Kombinasyon sözdizimi:** `+` ile bağlanmış tuşlar, en çok bir değiştirici olmayan tuş, büyük/küçük harfe duyarsız. Gerçek `+` tuşu `plus` yazılır. Hatalı kombinasyon nedeniyle bir `Error` fırlatır (`Unknown key: 'foo'.`, `More than one key: ...`).
 
 | Grup | Adlar |
 |---|---|
-| Değiştiriciler | `ctrl` (`control`), `shift`, `alt` (`option`), `win` (`windows`, `meta`, `cmd`) |
+| Değiştiriciler | `ctrl` (`control`), `shift`, `alt` (`option`). `win` (`windows`, `meta`, `cmd`) ayrıştırılır ama eklentiler için reddedilir. |
 | Harf ve rakamlar | `a`–`z`, `0`–`9`, `num0`–`num9` |
 | Fonksiyon tuşları | `f1`–`f24` |
 | Gezinme | `up`, `down`, `left`, `right`, `home`, `end`, `pageup` (`pgup`), `pagedown` (`pgdn`), `insert` (`ins`), `delete` (`del`) |
@@ -160,7 +164,7 @@ host.input.type('hello')             // çağrı başına en çok 2000 karakter
 | Sayısal tuş takımı | `numadd`, `numsubtract`, `nummultiply`, `numdivide`, `numdecimal` |
 | Medya | `volumeup`, `volumedown`, `volumemute`, `mediaplaypause`, `medianext`, `mediaprev`, `mediastop` |
 
-Tuşlar odaktaki pencereye gider; bunu bir zamanlayıcıdan değil, kullanıcının bilerek tetiklediği bir aksiyondan kullanın.
+Tuşlar odaktaki pencereye gider; basış kuralı bu yüzden vardır: kullanıcı az önce bilerek bir butona dokundu.
 
 ## host.http
 
@@ -223,7 +227,8 @@ Her metni tek bir dilde yazın (`plugin.json` içindeki `defaultLanguage`, varsa
 | Durum öğeleri | Eklenti başına 10 |
 | HTTP | İstek başına 5 sn, 1 MB yanıt, 4 async istek aynı anda |
 | Günlük satırı | 500 karakter |
-| `host.input.type` | Çağrı başına 2000 karakter |
+| `host.input` | Basış başına 200 yazılan karakter ve 10 tuş kombinasyonu, 5 saniyelik basış penceresi |
+| `settings.json` | 64 KB |
 
 - **Aynı anda tek iş.** Betik kendi iş parçacığında, bir seferde bir çağrı çalışır; yavaş bir eklenti sunucuyu veya başka eklentiyi asla engellemez.
 - **Üst üste beş hata eklentiyi kapatır.** Durumu son mesajla *Error* olur. **Reload** yeniden başlatır. Tek başarılı çağrı sayacı sıfırlar.
@@ -233,6 +238,6 @@ Her metni tek bir dilde yazın (`plugin.json` içindeki `defaultLanguage`, varsa
 
 - Eklenti kendi widget'ını çizemez (bir `plugin-html` widget'ı planlı), simge paketi veya yeni widget türü ekleyemez.
 - Dosya, soket, WebSocket, `fetch`, `setTimeout` (yerine `host.after`), modül yok.
-- Ayar formunda buton yok (`Button` alanı yalnızca C# eklentilerinde bulunan bir işleyici ister).
-- Dinamik açılır liste yok: `Select` seçenekleri sabittir.
+- Ayar formunda buton yok (`Button` alanı sunucuda kod ister, bu yüzden yalnızca resmî C# eklentilerinde vardır).
+- Dinamik açılır liste yok: `Select` seçenekleri sabittir (dinamik listeler yalnızca resmî C# eklentilerindedir).
 - JavaScript'ten bir telefonun hangi sayfayı veya profili gösterdiğini seçmek mümkün değil.

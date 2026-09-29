@@ -1,9 +1,8 @@
-# Tutorial 3: showing live data
+# Tutorial 2: showing live data
 
 A widget shows live data in its text through **variables**. Any plugin (and the server itself) publishes variables; you use them
 in a widget's text as `{name}` and format them with `{name|format}`. This tutorial uses the counter from
-[Tutorial 1](/tutorials/js-hello-world) (`hellojs.count`), the counter from [Tutorial 2](/tutorials/csharp-hello-world)
-(`hellocsharp.count`) and the variables the server provides.
+[Tutorial 1](/tutorials/js-hello-world) (`hellojs.count`) and the variables the server provides.
 
 ## Publishing a variable
 
@@ -11,10 +10,6 @@ A JavaScript plugin publishes with `host.variables.set(name, value)`. The value 
 to start with your plugin id:
 
 <<< @/../examples/hello-js/index.js#variable
-
-A C# plugin implements `IVariableProvider` and calls `store.Set(name, value)`:
-
-<<< @/../examples/hello-csharp/src/GreetingCounter.cs#variables{cs}
 
 A value equal to the current one is ignored, so it is cheap to set a variable on every poll. When the value really changes, the
 server renders only the widgets that use it and sends only the texts that changed (at most about ten updates per second).
