@@ -67,6 +67,7 @@ export default defineConfig({
               { text: 'Gerçek dünyadan bir eklenti: OBS', link: '/tr/guides/obs-plugin' },
               { text: 'Hata ayıklama ve günlükler', link: '/tr/guides/debugging' },
               { text: 'Eklentinizi yayımlama', link: '/tr/guides/publishing' },
+              { text: 'Neler yapabilirsiniz (JS)', link: '/tr/guides/js-recipes' },
               { text: 'Depo kuralları', link: '/tr/guides/repo-rules' },
             ],
           },
@@ -75,6 +76,7 @@ export default defineConfig({
             items: [
               { text: 'Manifest (plugin.json)', link: '/tr/reference/manifest' },
               { text: 'JavaScript host API', link: '/tr/reference/js-host-api' },
+              { text: 'Alan türleri (formlar)', link: '/tr/reference/js-field-kinds' },
               { text: 'C# SDK arayüzleri', link: '/tr/reference/csharp-sdk' },
               { text: 'İzinler', link: '/tr/reference/permissions' },
               { text: 'Değişiklik günlükleri', link: '/tr/reference/changelogs' },
@@ -140,6 +142,7 @@ export default defineConfig({
           { text: 'A real-world plugin: OBS', link: '/guides/obs-plugin' },
           { text: 'Debugging and logs', link: '/guides/debugging' },
           { text: 'Publishing your plugin', link: '/guides/publishing' },
+          { text: 'What you can build (JS)', link: '/guides/js-recipes' },
           { text: 'Repository rules', link: '/guides/repo-rules' },
         ],
       },
@@ -148,6 +151,7 @@ export default defineConfig({
         items: [
           { text: 'Manifest (plugin.json)', link: '/reference/manifest' },
           { text: 'JavaScript host API', link: '/reference/js-host-api' },
+          { text: 'Field kinds (forms)', link: '/reference/js-field-kinds' },
           { text: 'C# SDK interfaces', link: '/reference/csharp-sdk' },
           { text: 'Permissions', link: '/reference/permissions' },
           { text: 'Changelogs', link: '/reference/changelogs' },

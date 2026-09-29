@@ -37,7 +37,7 @@ Aksiyonlar ayrıca bir `IDeviceController` alır; böylece bir aksiyon, kendisin
 
 - Yeni bir widget türü eklemek veya kendi widget'ını çizmek. Eklenti aksiyon, değişken, form, durum öğesi ve simge ekler; her şeyi düzenleyici çizer.
 - Windows dışında çalışmak (sunucu yalnızca Windows'ta çalışır).
-- (JavaScript) `require`, `fetch`, dosya, .NET, `async`/`await` kullanmak veya 20'den fazla zamanlayıcı açmak. Bkz. [JavaScript host API](/tr/reference/js-host-api).
+- (JavaScript) `require`, `fetch`, dosya, .NET, veya 20'den fazla zamanlayıcı açmak (`async` fonksiyonlar `host.http.getAsync/postAsync` ile çalışır). Bkz. [JavaScript host API](/tr/reference/js-host-api).
 
 ## İhtiyaç duyacağınız fonksiyonlar, sırasıyla
 

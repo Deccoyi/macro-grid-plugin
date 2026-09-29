@@ -37,7 +37,7 @@ Actions also receive an `IDeviceController`, so an action can switch page or pro
 
 - Add a new widget type or draw its own widget. A plugin adds actions, variables, forms, status items and icons; the editor draws everything.
 - Run on anything but Windows (the server is Windows-only).
-- (JavaScript) use `require`, `fetch`, files, .NET, `async`/`await` or more than 20 timers. See [JavaScript host API](/reference/js-host-api).
+- (JavaScript) use `require`, `fetch`, files, .NET, or more than 20 timers (`async` functions work with `host.http.getAsync/postAsync`). See [JavaScript host API](/reference/js-host-api).
 
 ## The functions you need, in the order you need them
 
