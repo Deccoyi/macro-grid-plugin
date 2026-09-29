@@ -33,10 +33,10 @@ and every plugin here is versioned on its own. Documentation site: <https://decc
 
 Manually, a plugin is a folder placed in `%AppData%\MacroGrid\plugins\<id>\` (the folder that contains `plugin.json`). The easy way:
 
-1. Download a plugin archive from the [Plugin store](https://deccoyi.github.io/macro-grid-plugin/store/) (or the Releases page) and unzip it, build it yourself (C# plugins), or use the folder as it is
-   (JavaScript plugins).
-2. In the Macro Grid editor open **Plugins → Manage Plugins…** and choose **Install from Folder…**. For a C# plugin pick its build
-   output folder (for example `WebSocketBridgeForOBS\src\bin\Debug\net10.0\`); the build puts `plugin.json` next to the DLL.
+1. Download a plugin archive from the [Plugin store](https://deccoyi.github.io/macro-grid-plugin/store/) (or the Releases page) and unzip it, or use the folder as it is
+   (JavaScript plugins). The easiest way to get an official plugin is the **Discover** tab of the Plugins window.
+2. In the Macro Grid editor open **Plugins → Manage Plugins…** and choose **Install from Folder…**. A C# plugin installs only when it is
+   officially signed (the released archive is); one you built yourself is refused, except in a development build of the server.
 3. The plugin is loaded right away, with no restart. A JavaScript plugin asks you to approve the permissions it needs first.
 
 Each plugin's README lists its own requirements and settings. Plugins are installed to `%AppData%\MacroGrid\plugins\<id>\`.
@@ -62,15 +62,16 @@ dotnet test  SoundBoard\tests\MacroGrid.Plugin.SoundBoard.Tests\MacroGrid.Plugin
 
 ## Writing your own
 
-[docs/plugin-authoring.md](docs/plugin-authoring.md) is the guide: the manifest, the C# SDK (actions, variables, settings forms, status
-items, icon packs), the lifecycle, and the JavaScript sandbox with its permissions. [CONTRIBUTING.md](CONTRIBUTING.md) describes the rules
+[docs/plugin-authoring.md](docs/plugin-authoring.md) is the guide: the manifest, the lifecycle, and the JavaScript sandbox with its permissions.
+Plugins by other authors are JavaScript plugins; C# is used only for the official plugins, see [docs/official-csharp-plugins.md](docs/official-csharp-plugins.md). [CONTRIBUTING.md](CONTRIBUTING.md) describes the rules
 every plugin in this repository follows. Releases are described in [docs/release.md](docs/release.md). Please read the
 [Code of Conduct](CODE_OF_CONDUCT.md) and the [security policy](SECURITY.md) before opening issues.
 
 ## Security
 
-A C# plugin runs inside the server process with full .NET access: **only install C# plugins whose source you trust.** JavaScript plugins
-run in a sandbox with no .NET access and only the permissions you approve, with time and memory limits per call.
+Only the official C# plugins in this repository run: a C# plugin is loaded only with a valid signature of the official plugin key, checked every
+time it loads, and it still has full access to your PC. Plugins by other authors are JavaScript plugins, which run in a sandbox with no .NET access and only
+the permissions you approve, with time and memory limits per call.
 
 ## License
 

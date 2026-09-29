@@ -13,14 +13,14 @@ host.variables.describe([{ name, description, example, category }])   // list th
 
 host.registerAction({ type, name, category, description, icon, fields, run(context, settings) {} })
 // context: { deviceId, pageId, widgetId, value }; settings: the values of the action's fields
-// fields: the same shape as the C# SettingField, e.g. { key, label, kind: 'Text' | 'Number' | 'Bool' | 'Select' | ..., default, min, max, options }
+// fields: e.g. { key, label, kind: 'Text' | 'Number' | 'Bool' | 'Select' | ..., default, min, max, options }
 
-host.settings.page(fields)           // adds a settings page (stored in settings.json in the plugin folder)
+host.settings.page(fields)           // adds a settings page (stored in settings.json in the plugin folder, at most 64 KB)
 host.settings.get()                  // the current values as an object
 host.status(id, text, level)         // status bar item; level: 'Idle' | 'Ok' | 'Busy' | 'Warning' | 'Error'
 
-host.input.hotkey('ctrl+shift+m')    // needs 'input'
-host.input.type('hello')             // needs 'input'
+host.input.hotkey('ctrl+shift+m')    // needs 'input'; only while handling a button press, see below
+host.input.type('hello')             // needs 'input'; at most 200 characters
 
 host.http.get(url, { headers })          // needs http:<host>:<port>; returns { status, body } (body is text), synchronous
 host.http.post(url, body, { headers })   // the body is sent as JSON
@@ -40,7 +40,7 @@ A complete script using `variables`, `settings`, `registerAction`, `status` and 
 |---|---|
 | `host.variables.*` | `variables` |
 | `host.registerAction` | `actions` |
-| `host.input.*` | `input` |
+| `host.input.*` | `input`, and only while a button press is being handled |
 | `host.http.*` | `http:<host>:<port>` for that exact target |
 | `host.log`, `host.settings.*`, `host.status`, timers | nothing |
 
@@ -60,10 +60,17 @@ See [Permissions](/reference/permissions).
   the script is busy are dropped.
 - **A plugin that fails 5 times in a row is switched off** (status *Error* with the last message). Reload starts it again.
 
-There is no `async`/`await` host API yet and no way for a plugin to draw its own widget (a `plugin-html` widget is planned).
+There is no way for a plugin to draw its own widget (a `plugin-html` widget is planned).
+
+## Keyboard input
+
+`host.input.hotkey` and `host.input.type` work only inside an action started by a touch on a device (and its promise), for at most 5 seconds, with
+at most 200 typed characters and 10 key combinations per press, never with the Windows key, and never while a terminal, a system tool or a
+Macro Grid window is in front; text that looks like a harmful command switches the plugin off. The reasons and the details are on the
+[Permissions](/reference/permissions#the-input-permission) page.
 
 ## Field declarations
 
-`fields` (for an action or a settings page) use the same shape as the C# `SettingField`; see
-[Settings pages](/guides/settings-pages#field-kinds-and-options). `kind` is one of `Text`, `Password`, `Number`, `Slider`, `Bool`,
-`Select`, `Segmented`, `File`, `List`, `Button`, `Notice`. `Button` needs a C# `ISettingsCommandHandler`, so it is only useful in C# plugins.
+`fields` (for an action or a settings page) are plain objects; see [Settings pages](/guides/settings-pages#field-kinds-and-options).
+`kind` is one of `Text`, `Password`, `Number`, `Slider`, `Bool`, `Select`, `Segmented`, `File`, `List`, `Button`, `Notice`. `Button` needs code in
+the server, so it is only useful in official C# plugins.

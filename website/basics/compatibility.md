@@ -38,7 +38,7 @@ A plugin that does not fit is listed as **Incompatible** in the editor, with the
 or "must be rebuilt" for another MAJOR), and is not loaded. Discover and the Store only offer a version that fits.
 
 Set `minMacroGrid` to the SDK version you build against, or older if you use nothing that came later: a lower value lets the plugin run on more
-editor versions. For a C# plugin the build checks that it has the same MAJOR as the SDK package and is not newer than it.
+editor versions.
 
 ### Older manifests
 
@@ -50,8 +50,8 @@ plugin also has to load on servers older than 1.0.0, keep the two old fields nex
 
 Within one MAJOR the SDK only grows: members are added, never removed or changed, so a plugin built for 1.0.0 keeps running on 1.x.
 
-- **Macro Grid / SDK (a new MAJOR):** a public interface a plugin implements or receives (`IPlugin`, `IPluginHost`, `IActionHandler`,
-  `IVariableProvider`, `IVariableStore`, `IDeviceController`, `ActionContext`, ...) changes incompatibly. Every plugin must be rebuilt.
+- **Macro Grid / SDK (a new MAJOR):** something a plugin uses (the `host` object of JavaScript plugins, the manifest, the SDK interfaces the
+  official C# plugins implement) changes incompatibly. Plugins must be changed, and the official C# ones rebuilt.
 - **Plugin (its own MAJOR):** it changes its action types, settings or variable names in a way that makes a user's saved profile stop working.
 
 ## Versioning your plugin
@@ -62,8 +62,7 @@ Within one MAJOR the SDK only grows: members are added, never removed or changed
   profile would silently stop working. Never rename an action `type` or a variable name casually.
 - A plugin does not depend on another plugin's version. Plugins talk to each other only at run time, through variables.
 
-## The SDK package
+## The SDK
 
-C# plugins compile against the NuGet package `MacroGrid.Plugin.Abstractions`; its version is the Macro Grid version it belongs to. Use the
-version you want to build against, and keep the SDK dll out of your output (`ExcludeAssets="runtime"`): the server and every plugin share
-the server's copy. See [Tutorial 2](/tutorials/csharp-hello-world#step-1-create-the-project).
+The official C# plugins compile against the plugin SDK, whose version is the Macro Grid version it belongs to. A JavaScript plugin needs no SDK
+and no build: it only declares `minMacroGrid` in its manifest.
