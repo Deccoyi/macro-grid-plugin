@@ -30,6 +30,11 @@ There are no other permission names. `http:` is the only one that takes a value,
 
 ### `input`
 
+::: danger Trust the plugin before you allow `input`
+A plugin with `input` can press keys and type on your PC. Macro Grid adds limits (see below), but they only make abuse harder; they cannot
+prevent it completely. Install third-party plugins **only from sources you trust**, read the permissions before you approve them, and stay alert.
+:::
+
 - `host.input.hotkey('ctrl+shift+m')` sends a key combination, `host.input.type('text')` types text, as if the user were at the keyboard.
 - The most powerful local permission, so the server limits it heavily: it works only while the user's own button press is being handled,
   in small amounts, and never into a terminal or system tool. See [The `input` permission](#the-input-permission).
@@ -82,6 +87,11 @@ everything else is *the internet*. Users are more careful about internet targets
 4. Approvals, installs and removals are written to the log files.
 
 ## The `input` permission
+
+::: danger Trust the plugin before you allow `input`
+A plugin with `input` can press keys and type on your PC. Macro Grid adds limits (see below), but they only make abuse harder; they cannot
+prevent it completely. Install third-party plugins **only from sources you trust**, read the permissions before you approve them, and stay alert.
+:::
 
 `input` lets a plugin press keys and type on the PC as if it were at the keyboard. The user's approval is the real decision. On top of it,
 the server enforces these limits for JavaScript plugins (the built-in hotkey and type-text actions, which the user configures, are unchanged):
