@@ -4,7 +4,7 @@ This file tracks the version of this plugin only (independent of the main progra
 
 ## [Unreleased]
 ### Changed
-- `plugin.json` declares `"macroGrid": "1.0.0"` (built against SDK 1.0.0). The old `sdkVersion` / `minServerVersion` stay so servers before 1.0.0 still load it.
+- `plugin.json` declares `"minMacroGrid": "1.0.0"` (the field's new name; built against SDK 1.0.0). The old `sdkVersion` / `minServerVersion` stay so servers before 1.0.0 still load it.
 
 ## [0.1.3] - 2026-09-25
 ### Changed

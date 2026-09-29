@@ -73,7 +73,7 @@ macro-grid-plugin/
 ## The manifest and compatibility
 
 Every plugin has a `plugin.json` at its root; the fields are described in [docs/plugin-authoring.md](docs/plugin-authoring.md#2-pluginjson).
-`macroGrid` (the oldest Macro Grid the plugin runs on, `MAJOR.MINOR.PATCH`; it runs on every later version of the same MAJOR) is checked when
+`minMacroGrid` (the oldest Macro Grid the plugin runs on, `MAJOR.MINOR.PATCH`; it runs on every later version of the same MAJOR) is checked when
 the server loads the plugin, and a plugin that does not fit is shown as incompatible instead of being loaded. Macro Grid and the plugin SDK share
 one version, so set it to the SDK you built and tested against, or older if you use nothing newer; the build refuses a value with another MAJOR or
 newer than the SDK. The rules are in the server repository's [versioning guide](https://github.com/Deccoyi/macro-grid/blob/main/docs/guides/versioning.md).

@@ -6,7 +6,7 @@ changelog is [CHANGELOG.md](CHANGELOG.md).
 
 ## [Unreleased]
 ### Changed
-- `plugin.json` declares `"macroGrid": "1.0.0"` (built against SDK 1.0.0). The old `sdkVersion` / `minServerVersion` stay so servers before 1.0.0 still load it.
+- `plugin.json` declares `"minMacroGrid": "1.0.0"` (the field's new name; built against SDK 1.0.0). The old `sdkVersion` / `minServerVersion` stay so servers before 1.0.0 still load it.
 
 ## [0.1.1] - 2026-09-26
 ### Changed

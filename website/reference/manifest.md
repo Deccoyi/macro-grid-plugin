@@ -11,8 +11,9 @@ Every plugin folder has a `plugin.json` at its root. This is the OBS plugin's:
 | `id` | yes | Unique, stable id. Used in the folder name, in action types and variable names, and for approvals. The server refuses a second plugin with the same id. |
 | `name` | yes | Display name in the Plugins window. |
 | `version` | yes | The plugin's own semantic version, independent of the server's. |
-| `macroGrid` | yes | The oldest Macro Grid the plugin runs on, as `MAJOR.MINOR.PATCH` such as `1.3.0`. **It is a minimum, not an exact match:** the plugin runs on every Macro Grid from that version up to, but not including, the next MAJOR — an older server (say `1.2.1` written but the server is `1.1.1`) does *not* run it. Macro Grid and the plugin SDK share one version, so use the SDK version you build against, or an older one if you use nothing newer. A server that does not fit lists the plugin as *Incompatible* and does not load it. |
-| `sdkVersion` | no | Legacy, from before Macro Grid 1.0.0. Read only when `macroGrid` is missing: `^0.4.x` then counts as `macroGrid: 1.0.0`, older ranges are incompatible. Keep it next to `macroGrid` only if the plugin must still load on servers older than 1.0.0. |
+| `minMacroGrid` | yes | The oldest Macro Grid the plugin runs on, as `MAJOR.MINOR.PATCH` such as `1.3.0`. **It is a minimum, not an exact match:** the plugin runs on every Macro Grid from that version up to, but not including, the next MAJOR — an older server (say `1.2.1` written but the server is `1.1.1`) does *not* run it. Macro Grid and the plugin SDK share one version, so use the SDK version you build against, or an older one if you use nothing newer. A server that does not fit lists the plugin as *Incompatible* and does not load it. Was called `macroGrid` up to Macro Grid 1.2.x; that name still works, read only when `minMacroGrid` is absent, and stays readable for at least one MAJOR after the rename. |
+| `macroGrid` | no | Legacy: the earlier name of `minMacroGrid`, same meaning and format. Read only when `minMacroGrid` is missing. A plugin that must still run on Macro Grid up to 1.2.x (which reads only this name) writes both, with the same value. |
+| `sdkVersion` | no | Legacy, from before Macro Grid 1.0.0. Read only when neither `minMacroGrid` nor `macroGrid` is present: `^0.4.x` then counts as `minMacroGrid: 1.0.0`, older ranges are incompatible. Keep it next to `minMacroGrid` only if the plugin must still load on servers older than 1.0.0. |
 | `minServerVersion` | no | Legacy, the same as `sdkVersion`. Macro Grid 1.0.0 and newer ignore it. |
 | `entry` | yes | C#: the entry DLL's file name. JavaScript: the script (usually `index.js`). |
 | `kind` | yes | `"csharp"` or `"js"`. |
@@ -31,11 +32,12 @@ editor:
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
-  "required": ["id", "name", "version", "macroGrid", "entry", "kind"],
+  "required": ["id", "name", "version", "minMacroGrid", "entry", "kind"],
   "properties": {
     "id": { "type": "string" },
     "name": { "type": "string" },
     "version": { "type": "string" },
+    "minMacroGrid": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
     "macroGrid": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
     "sdkVersion": { "type": "string" },
     "minServerVersion": { "type": "string" },

@@ -46,7 +46,7 @@ Alternatively uncomment the `local-sdk` line in `nuget.config` (do not commit th
 ## Versions
 
 Package version = the Macro Grid version = `PluginSdk.Version` in the server repo (one number for both). A plugin's `plugin.json` says
-`"macroGrid": "1.0.0"`: the oldest Macro Grid it runs on. The build checks that it has the same MAJOR as `MacroGridSdkVersion` and is not
+`"minMacroGrid": "1.0.0"`: the oldest Macro Grid it runs on. The build checks that it has the same MAJOR as `MacroGridSdkVersion` and is not
 newer than it; the minor and patch may be lower, which lets the plugin run on more servers. When you start to use something added in a newer
-MINOR, bump `MacroGridSdkVersion` in `Directory.Build.props` and raise `macroGrid` in that plugin's `plugin.json` to match. After a MAJOR
+MINOR, bump `MacroGridSdkVersion` in `Directory.Build.props` and raise `minMacroGrid` in that plugin's `plugin.json` to match. After a MAJOR
 release of Macro Grid, every plugin is rebuilt against it.

@@ -6,7 +6,7 @@ can install from the editor.
 ## Checklist
 
 1. **Manifest.** `id` is unique and stable, `version` follows [semantic versioning](/basics/compatibility#versioning-your-plugin),
-   `macroGrid` is the oldest Macro Grid that has what you use (the SDK version you build against, or older).
+   `minMacroGrid` is the oldest Macro Grid that has what you use (the SDK version you build against, or older).
 2. **Permissions** (JavaScript). Ask only for what you use; see [Permissions](/reference/permissions). An update that asks for more
    waits for the user's approval again.
 3. **A README** that says what the plugin does, its requirements, its settings and where it stores data. Say so if it stores a
