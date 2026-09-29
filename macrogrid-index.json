@@ -12,6 +12,20 @@
                         "kind":  "js",
                         "versions":  [
                                          {
+                                             "version":  "0.1.2",
+                                             "minMacroGrid":  "1.0.0",
+                                             "sdkVersion":  "^0.4.0",
+                                             "minServerVersion":  "0.3.2",
+                                             "url":  "https://github.com/Deccoyi/macro-grid-plugin/releases/download/plugin-hellojs-v0.1.2/hellojs-0.1.2.zip",
+                                             "sha256":  "cf06a2c3cf89d6dc4f36ca9fe0c36f8e7a6a66d24261d5d49e16c7bce892e0ca",
+                                             "size":  5282,
+                                             "permissions":  [
+                                                                 "variables",
+                                                                 "actions"
+                                                             ],
+                                             "signature":  "qBFHSHWle4S0H0hOKfb87mVvmO9pLNdtGtKakBAlrvPgS4SosSPsA1MgJPHZb9Ts2pENiJrJ1ZTDc24XKGnqmg=="
+                                         },
+                                         {
                                              "version":  "0.1.1",
                                              "sdkVersion":  "^0.4.0",
                                              "minServerVersion":  "0.3.2",
