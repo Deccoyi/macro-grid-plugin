@@ -24,13 +24,14 @@ param(
     [string]$OutDir = (Join-Path ([System.IO.Path]::GetTempPath()) 'macrogrid-plugin-release'),
     # A server repository checkout to build the SDK from, when the sibling ..\macro-grid is not at MacroGridSdkVersion
     # (for example: git worktree add ..\macro-grid-sdk server-v1.1.0-beta, then -SdkPath ..\macro-grid-sdk).
-    [string]$SdkPath = (Join-Path (Split-Path -Parent $PSScriptRoot | Split-Path -Parent) 'macro-grid'),
+    [string]$SdkPath = '',
     [switch]$Publish
 )
 
 $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path -Parent $PSScriptRoot
 Set-Location $repoRoot
+if (-not $SdkPath) { $SdkPath = Join-Path (Split-Path -Parent $repoRoot) 'macro-grid' }
 
 $plugins = @{
     'obs'       = @{ dir = 'WebSocketBridgeForOBS'; proj = 'WebSocketBridgeForOBS/src/MacroGrid.Plugin.Obs.csproj' }
@@ -63,6 +64,8 @@ if ($entry.proj) {
     if (-not (Test-Path $sdkProject)) { throw "The plugin SDK was not found at $SdkPath. Check out the server repository there (or pass -SdkPath)." }
     $wanted = [regex]::Match((Get-Content 'Directory.Build.props' -Raw), '<MacroGridSdkVersion[^>]*>([\d.]+)</MacroGridSdkVersion>').Groups[1].Value
     $have = [regex]::Match((Get-Content (Join-Path $SdkPath 'Directory.Build.props') -Raw), '<Version>([\d.]+)</Version>').Groups[1].Value
+    # Every dotnet command below (restore, list, build) reads this as the MSBuild property LocalSdkProject (Directory.Build.props).
+    $env:LocalSdkProject = (Resolve-Path $sdkProject).Path
     if ($wanted -ne $have) { throw "The SDK checkout at $SdkPath is version $have, but MacroGridSdkVersion is $wanted. Check out the server tag for $wanted (a worktree is fine) and pass -SdkPath." }
 }
 
@@ -77,9 +80,9 @@ Write-Host "Releasing $($manifest.name) $version ($tag)"
 
 # A release never ships a package with a known vulnerability.
 if ($entry.proj) {
-    dotnet restore $entry.proj "-p:LocalSdkProject=$sdkProject" --verbosity quiet
+    dotnet restore $entry.proj --verbosity quiet
     if ($LASTEXITCODE -ne 0) { throw 'restore failed' }
-    $report = dotnet list $entry.proj package --vulnerable --include-transitive "-p:LocalSdkProject=$sdkProject" 2>&1 | Out-String
+    $report = dotnet list $entry.proj package --vulnerable --include-transitive 2>&1 | Out-String
     if ($LASTEXITCODE -ne 0) { Write-Host $report; throw 'dotnet list package failed' }
     if ($report -match 'has the following vulnerable packages') { Write-Host $report; throw 'A package of this plugin has a known vulnerability; update it first.' }
 }
@@ -89,7 +92,7 @@ if (Test-Path $OutDir) { Remove-Item $OutDir -Recurse -Force }
 $stage = Join-Path $OutDir 'stage'
 New-Item -ItemType Directory -Force $stage | Out-Null
 if ($entry.proj) {
-    dotnet build $entry.proj -c Release -o $stage "-p:LocalSdkProject=$sdkProject"
+    dotnet build $entry.proj -c Release -o $stage
     if ($LASTEXITCODE -ne 0) { throw 'build failed' }
     Get-ChildItem $stage -Filter *.pdb -Recurse | Remove-Item -Force
     # Building with -o sends the referenced SDK project's output here too; the server supplies its own copy, so a plugin never ships it.
@@ -112,14 +115,19 @@ if ($LASTEXITCODE -ne 0) { throw 'signing the package contents failed' }
 $zip = Join-Path $OutDir $zipName
 # Entries use forward slashes; Windows PowerShell 5.1's CreateFromDirectory can write backslashes.
 Add-Type -AssemblyName System.IO.Compression, System.IO.Compression.FileSystem
-$stageRoot = (Resolve-Path $stage).Path.TrimEnd('\') + '\'
 $archive = [System.IO.Compression.ZipFile]::Open($zip, [System.IO.Compression.ZipArchiveMode]::Create)
+# The entry names come from Resolve-Path -Relative, not from cutting a prefix off FullName: a short (8.3) and a long spelling of the same
+# folder (a TEMP path under a long user name) have different lengths, and cutting by length left a leading '/' on every entry.
+Push-Location $stage
 try {
-    foreach ($file in Get-ChildItem $stage -Recurse -File) {
-        $entryName = $file.FullName.Substring($stageRoot.Length).Replace('\', '/')
-        [void][System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($archive, $file.FullName, $entryName, [System.IO.Compression.CompressionLevel]::Optimal)
+    foreach ($relative in (Get-ChildItem -Recurse -File | Resolve-Path -Relative)) {
+        $inStage = $relative.Substring(2)                   # strip the leading ".\" (not $name: PowerShell variables ignore case, $Name is a parameter)
+        $entryName = $inStage.Replace('\', '/')
+        if ($entryName.StartsWith('/') -or $entryName.StartsWith('.')) { throw "Unexpected package entry name: $entryName" }
+        [void][System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($archive, (Join-Path $stage $inStage), $entryName, [System.IO.Compression.CompressionLevel]::Optimal)
     }
 } finally {
+    Pop-Location
     $archive.Dispose()
 }
 
