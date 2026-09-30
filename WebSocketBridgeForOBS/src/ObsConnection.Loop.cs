@@ -147,15 +147,21 @@ public sealed partial class ObsConnection
         }
     }
 
+    /// <summary>One look at the process list for all the names (each lookup by name takes its own snapshot of every
+    /// process on the machine). Every returned process is disposed, or its handle would leak on each check.</summary>
     private static bool IsObsProcessRunning()
     {
-        foreach (var name in ObsProcessNames)
+        var processes = Process.GetProcesses();
+        try
         {
-            var processes = Process.GetProcessesByName(name);
-            foreach (var p in processes) p.Dispose();
-            if (processes.Length > 0) return true;
+            foreach (var p in processes)
+                if (ObsProcessNames.Contains(p.ProcessName, StringComparer.OrdinalIgnoreCase)) return true;
+            return false;
         }
-        return false;
+        finally
+        {
+            foreach (var p in processes) p.Dispose();
+        }
     }
 
     /// <summary>Polls for the OBS process instead of the port — cheap, silent, and returns as soon as OBS
