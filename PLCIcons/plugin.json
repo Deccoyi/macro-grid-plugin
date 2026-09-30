@@ -2,6 +2,8 @@
   "id": "plc-icons",
   "name": "PLC Icons",
   "description": "A static icon pack: 29 ladder-logic symbols in their own category in the editor's icon picker.",
+  "category": "Icons",
+  "tags": ["plc","icons","ladder"],
   "author": "Deccoyi",
   "homepage": "https://github.com/Deccoyi/macro-grid-plugin/tree/main/PLCIcons",
   "defaultLanguage": "en",

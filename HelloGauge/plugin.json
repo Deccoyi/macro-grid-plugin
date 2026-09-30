@@ -2,6 +2,8 @@
   "id": "hellogauge",
   "name": "Hello Gauge (widget example)",
   "description": "A custom widget example: an animated gauge that shows any number, drawn on a canvas.",
+  "category": "Examples",
+  "tags": ["example","widget"],
   "author": "Deccoyi",
   "homepage": "https://github.com/Deccoyi/macro-grid-plugin/tree/main/HelloGauge",
   "version": "0.1.0",
