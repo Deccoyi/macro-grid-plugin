@@ -16,6 +16,7 @@
       "description": "An animated gauge for any number.",
       "category": "Gauges",
       "entry": "widgets/gauge.js",
+      "icon": "widgets/gauge.svg",
       "size": { "w": 2, "h": 2 },
       "fps": 30,
       "interactive": true,
