@@ -170,10 +170,76 @@ Rules the server enforces:
   pile up while the script is busy are dropped.
 - **A plugin that fails 5 times in a row is switched off** (status *Error* with the last message). Reload starts it again.
 
-There is no `async`/`await` host API yet and no way for a plugin to draw its own widget (a `plugin-html` widget is planned).
+A plugin can draw its own widgets: see section 8.
 
-## 8. Limits of the current SDK
+## 8. Custom widgets
+
+A plugin can add its own widgets to the Toolbox. The widget's code is one JavaScript file that runs on the phone (or in the browser deck, or in the
+editor's preview) in a **worker with no network access** and draws to a **canvas**. It never touches the page around it, so a slow or broken widget cannot
+freeze the deck. Data comes from the plugin on the PC, over a small `macroGrid` object. The working example is [HelloGauge/](../HelloGauge/). Needs Macro
+Grid 1.4.0 or newer (`minMacroGrid` of the plugin).
+
+### In `plugin.json`
+
+```json
+"widgets": [
+  { "id": "gauge", "name": "Gauge", "description": "An animated gauge.", "category": "Gauges",
+    "entry": "widgets/gauge.js", "assets": ["widgets/needle.png"], "size": { "w": 2, "h": 2 },
+    "fps": 30, "interactive": true,
+    "options": { "keepLoaded": { "default": false } },
+    "settings": [ { "key": "source", "label": "Value", "kind": "Variable" }, { "key": "max", "label": "Maximum", "kind": "Number" } ] }
+]
+```
+
+- `entry`: one script, at most 2 MB (1 MB for a JavaScript plugin, which is not verified). Bundle your libraries into it. `assets`: png, jpeg, webp images and woff2 fonts, at most 4 MB per plugin. At most 16 widgets per plugin.
+- `fps`: the most frames per second the widget may draw, 1 to 60, 15 if left out (30 at most for a JavaScript plugin). Draw only when something changes; a widget that has nothing to animate should draw nothing.
+- `settings`: the same fields as everywhere, plus `Variable`: the person picks a variable in the editor and the widget may read that one. `Password` and `File` fields are not allowed (widget settings are saved in profiles, which people share).
+- `options`: extra abilities you declare and the person approves when installing the plugin: `keepLoaded` (the widget stays loaded when its page is left), `storage`, `notifications`. A widget can use nothing it did not declare.
+- A widget that fails a check is left out with a message in the Error List; the plugin and its other widgets keep working.
+
+### The `macroGrid` object (inside the widget)
+
+The script is wrapped in an `async` function, so `await` and `return` work at the top. The only other API is `macroGrid`:
+
+| Member | Meaning |
+|---|---|
+| `await macroGrid.ready` | `{ canvas, width, height, dpr, settings, bindings, mode, locale, theme }`. `canvas` is an `OffscreenCanvas`; get `"2d"` or `"webgl"` from it. `bindings` maps each `Variable` setting to the variable the person chose. `mode` is `"edit"` in the editor's preview. |
+| `macroGrid.frame(cb)` | Runs `cb` on the next frame, at most at the widget's `fps`, never while paused. `requestAnimationFrame` and timers follow the same pause. |
+| `macroGrid.onResize(cb)` | New size (`width`, `height`, `dpr`); set `canvas.width` and `canvas.height` yourself. |
+| `macroGrid.subscribe(names)`, `macroGrid.onVariables(cb)` | Ask for variables (your plugin's own, and the bound ones; at most 32). `cb` gets all values seen so far. |
+| `macroGrid.onEvent(name, cb)` | An event your plugin pushed with `host.widgets.post`. |
+| `await macroGrid.request(data)` | Send a message to your plugin and wait for the answer (see below). At most 16 KB, 10 a second. |
+| `await macroGrid.run(action, settings)` | Run one of your plugin's actions. A key press or typing by the action only works right after a real touch on this widget (one run per touch). |
+| `macroGrid.onSettings(cb)` | The person changed the widget's settings. |
+| `macroGrid.onPointer(cb)` | Only for `interactive` widgets: `{ phase: "down" \| "move" \| "up" \| "cancel", x, y }` in canvas pixels. |
+| `macroGrid.onVisibility(cb)` | `"paused"` or `"resumed"`. |
+| `await macroGrid.image(name)` | A package image as `ImageBitmap`; `await macroGrid.font(name, family)` adds a package font. |
+| `macroGrid.error(message)` | Report a problem to the Error List (uncaught errors are reported for you). |
+
+There is **no** `fetch`, `XMLHttpRequest`, `WebSocket`, `importScripts`, nested worker, browser storage or DOM, and `eval` does not work.
+WebAssembly does. A plugin gets web data on the PC: your plugin script (`host.http`) fetches it and the widget asks for it with `macroGrid.request`.
+
+### In the plugin script
+
+```js
+host.widgets.onMessage((message) => {          // message: { widget, deviceId, pageId, widgetId, settings, data }
+  return { temperature: 21 };                  // a value or a promise; a thrown error becomes a failed request
+});
+host.widgets.post('gauge', 'weather', { t: 21 }, { retain: true });  // event to every placed 'gauge'; retain keeps the last one per name
+```
+
+`host.widgets.post(widget, name, data, { widgetId, deviceId, retain })` narrows the target; a retained event is given to a widget that comes on screen later. At most 20 events a second and 64 KB each.
+
+### Limits and behavior worth knowing
+
+- Only the widgets of the page that is shown run; a widget's worker is stopped when its page is left (unless it declared `keepLoaded`). At most 8 workers run at once on a device, and the frame rates of all running widgets are scaled down together when their sum passes 120.
+- A widget that stops answering for 3 seconds, or uses more than half a core (a quarter for a JavaScript plugin) over 10 seconds, is stopped; it is started once more after 10 seconds and then waits for the person.
+- A widget can run out of memory like any web code. The app survives and starts again, and tells the person which plugin's widgets were running and that they were switched off on that device.
+- A JavaScript plugin's widgets show an "Unverified" mark and run with the lower limits above.
+- Libraries that can draw to an `OffscreenCanvas` without a page around them (chart libraries, 2D engines) work when bundled into the one script; libraries that need a DOM or `eval` do not.
+
+## 9. Limits of the current SDK
 
 - The SDK is a NuGet package (`MacroGrid.Plugin.Abstractions`); the server's copy is the one used at runtime.
-- A plugin cannot add a widget type.
+- A plugin adds widgets of its own (section 8), not new built-in widget types.
 - The server runs on Windows only, so plugins are Windows-only in practice.

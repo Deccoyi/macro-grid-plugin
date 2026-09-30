@@ -1,0 +1,30 @@
+{
+  "id": "hellogauge",
+  "name": "Hello Gauge (widget example)",
+  "description": "A custom widget example: an animated gauge that shows any number, drawn on a canvas.",
+  "author": "Deccoyi",
+  "homepage": "https://github.com/Deccoyi/macro-grid-plugin/tree/main/HelloGauge",
+  "version": "0.1.0",
+  "minMacroGrid": "1.4.0",
+  "entry": "index.js",
+  "kind": "js",
+  "permissions": ["variables"],
+  "widgets": [
+    {
+      "id": "gauge",
+      "name": "Gauge",
+      "description": "An animated gauge for any number.",
+      "category": "Gauges",
+      "entry": "widgets/gauge.js",
+      "size": { "w": 2, "h": 2 },
+      "fps": 30,
+      "interactive": true,
+      "settings": [
+        { "key": "source", "label": "Value to show", "kind": "Variable", "description": "Pick the variable the gauge follows. Leave it empty to see the demo value." },
+        { "key": "max", "label": "Maximum", "kind": "Number", "default": 100, "min": 1, "max": 100000 },
+        { "key": "unit", "label": "Unit", "kind": "Text", "default": "%" },
+        { "key": "color", "label": "Color", "kind": "Text", "default": "#38bdf8", "description": "A CSS color such as #38bdf8." }
+      ]
+    }
+  ]
+}
