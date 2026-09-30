@@ -17,6 +17,8 @@ param(
     [string]$Description = '',
     [Parameter(Mandatory)] [string]$Author,
     [Parameter(Mandatory)] [string]$Homepage,
+    [string]$Category = '',
+    [string[]]$Tags = @(),
     [Parameter(Mandatory)] [ValidateSet('csharp', 'js')] [string]$Kind,
     [Parameter(Mandatory)] [string]$Version,
     [Parameter(Mandatory)] [ValidatePattern('^\d+\.\d+\.\d+$')] [string]$MinMacroGrid,
@@ -82,6 +84,10 @@ if (-not $entry) {
     $entry.homepage = $Homepage
     $entry.kind = $Kind
 }
+# Optional browse fields; written only when the plugin declares them (the host caps and cleans them again).
+foreach ($name in 'category', 'tags') { if ($entry.PSObject.Properties[$name]) { $entry.PSObject.Properties.Remove($name) } }
+if ($Category) { $entry | Add-Member -NotePropertyName category -NotePropertyValue $Category }
+if ($Tags.Count -gt 0) { $entry | Add-Member -NotePropertyName tags -NotePropertyValue @($Tags) }
 
 $versions = @($entry.versions | Where-Object { $_.version -ne $Version })
 $fields = [ordered]@{ version = $Version; minMacroGrid = $MinMacroGrid }

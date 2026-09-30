@@ -178,6 +178,8 @@ if ($LASTEXITCODE -ne 0) { throw 'gh release create failed' }
     -Author $owner `
     -Homepage "https://github.com/$owner/$repo/tree/main/$($entry.dir)" `
     -Kind $manifest.kind `
+    -Category "$($manifest.category)" `
+    -Tags @($manifest.tags | Where-Object { $_ }) `
     -Version $version `
     -MinMacroGrid $manifest.minMacroGrid `
     -MacroGrid "$($manifest.macroGrid)" `

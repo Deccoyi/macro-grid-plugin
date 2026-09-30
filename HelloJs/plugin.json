@@ -2,6 +2,8 @@
   "id": "hellojs",
   "name": "Hello (JavaScript example)",
   "description": "A minimal JavaScript plugin: a counter variable, a settings page, one action and a status item.",
+  "category": "Examples",
+  "tags": ["example","javascript"],
   "author": "Deccoyi",
   "homepage": "https://github.com/Deccoyi/macro-grid-plugin/tree/main/HelloJs",
   "version": "0.1.2",

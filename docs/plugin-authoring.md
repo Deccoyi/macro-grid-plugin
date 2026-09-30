@@ -58,6 +58,8 @@ A plugin is loaded, reloaded and unloaded while the server runs. See [Lifecycle]
 | `description` | no | A one-line summary shown in Discover and the Store. Additive; older hosts ignore it. |
 | `author` | no | The plugin's author, shown next to `description`. Additive. |
 | `homepage` | no | A URL to the plugin's page or source, shown as a link. Additive. |
+| `category` | no | One word or short phrase (at most 32 characters) to browse Discover by, for example `Streaming`. Additive. |
+| `tags` | no | Up to 5 search words, at most 24 characters each, shown on the plugin's page in Discover. Additive. |
 
 Macro Grid and the plugin SDK share one version (`PluginSdk.Version` in `MacroGrid.Plugin.Abstractions`). See the server repository's
 [versioning guide](https://github.com/Deccoyi/macro-grid/blob/main/docs/guides/versioning.md) for what changes the MAJOR, MINOR and PATCH number.

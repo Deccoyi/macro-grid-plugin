@@ -2,6 +2,8 @@
   "id": "helloweather",
   "name": "Hello Weather (widget example)",
   "description": "A custom widget example: the current weather at a place you choose, drawn on a canvas.",
+  "category": "Examples",
+  "tags": ["example","widget","weather"],
   "author": "Deccoyi",
   "homepage": "https://github.com/Deccoyi/macro-grid-plugin/tree/main/HelloWeather",
   "version": "0.1.0",
