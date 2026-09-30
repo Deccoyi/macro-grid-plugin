@@ -192,7 +192,7 @@ Grid 1.4.0 or newer (`minMacroGrid` of the plugin).
 ```
 
 - `entry`: one script, at most 2 MB (1 MB for a JavaScript plugin, which is not verified). Bundle your libraries into it. `assets`: png, jpeg, webp images and woff2 fonts, at most 4 MB per plugin. At most 16 widgets per plugin.
-- `fps`: the most frames per second the widget may draw, 1 to 60, 15 if left out (30 at most for a JavaScript plugin). Draw only when something changes; a widget that has nothing to animate should draw nothing.
+- `fps`: the most frames per second the widget may draw, 1 to 60, 15 if left out (30 at most for a JavaScript plugin). Draw only when something changes; a widget that has nothing to animate should draw nothing. Measured on a recent phone, a widget that draws continuously at 15 fps costs about 3% of one processor core plus some graphics memory that grows while it runs; a widget that is idle costs close to nothing. Eight widgets that redraw all the time hold roughly twice the memory of eight that draw only on change, so animate only what needs it (the Hello Gauge example draws only while its needle moves).
 - `settings`: the same fields as everywhere, plus `Variable`: the person picks a variable in the editor and the widget may read that one. `Password` and `File` fields are not allowed (widget settings are saved in profiles, which people share).
 - `options`: extra abilities you declare and the person approves when installing the plugin: `keepLoaded` (the widget stays loaded when its page is left), `storage`, `notifications`. A widget can use nothing it did not declare.
 - A widget that fails a check is left out with a message in the Error List; the plugin and its other widgets keep working.
