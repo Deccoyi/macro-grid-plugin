@@ -162,7 +162,17 @@ if (-not $Publish) {
 
 # Publish the GitHub release; the tag is created on main's current commit.
 $notes = "$($manifest.name) ${version}: see $($entry.dir)/CHANGELOG.md for what changed in this version."
-$assets = @($zip, "$zip.sha256", "$zip.sig") + @($sbom | Where-Object { $_ })
+# The plugin's icon (manifest "icon", .png or .svg, at most 100 KB) goes next to the package so Discover can show it; the index records only the file name.
+$iconAsset = $null
+if ($manifest.icon) {
+    $iconSource = Join-Path $entry.dir $manifest.icon
+    $iconExt = [IO.Path]::GetExtension($iconSource).ToLowerInvariant()
+    if ((Test-Path $iconSource) -and ($iconExt -in '.png', '.svg') -and ((Get-Item $iconSource).Length -le 102400)) {
+        $iconAsset = Join-Path $OutDir "$($manifest.id)-$version.icon$iconExt"
+        Copy-Item $iconSource $iconAsset -Force
+    }
+}
+$assets = @($zip, "$zip.sha256", "$zip.sig") + @($sbom | Where-Object { $_ }) + @($iconAsset | Where-Object { $_ })
 $ghArgs = @('release', 'create', $tag) + $assets + @('--repo', "$owner/$repo",
     '--target', 'main', '--title', "$($manifest.name) $version", '--notes', $notes)
 if ($version -match '-') { $ghArgs += '--prerelease' }
@@ -178,6 +188,7 @@ if ($LASTEXITCODE -ne 0) { throw 'gh release create failed' }
     -Author $owner `
     -Homepage "https://github.com/$owner/$repo/tree/main/$($entry.dir)" `
     -Kind $manifest.kind `
+    -Icon $(if ($iconAsset) { Split-Path $iconAsset -Leaf } else { '' }) `
     -Category "$($manifest.category)" `
     -Tags @($manifest.tags | Where-Object { $_ }) `
     -Version $version `
