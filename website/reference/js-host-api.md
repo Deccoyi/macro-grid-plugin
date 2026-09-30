@@ -260,7 +260,7 @@ texts and tooltips. A missing file or entry falls back to the text as written.
 
 ## Not possible yet
 
-- A plugin cannot draw its own widget (a `plugin-html` widget is planned) or add an icon pack or a new widget type.
+- The script itself cannot draw. A plugin can ship its own widgets, but they are separate scripts that run in a sandboxed worker in the app (see "Custom widgets" in the plugin authoring guide). A plugin cannot add an icon pack.
 - No files, no sockets, no WebSocket, no `fetch`, no `setTimeout` (use `host.after`), no modules.
 - No button inside a settings form (a `Button` field needs code in the server, so it exists only in official C# plugins).
 - No dynamic dropdown lists: `Select` options are static (dynamic lists are official-C# only).

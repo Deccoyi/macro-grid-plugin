@@ -79,5 +79,5 @@ in text or use them in conditional rules (color, text, icon, animation).
 
 ## Limits of the current SDK
 
-- A plugin cannot add a widget type or draw its own widget (a `plugin-html` widget is planned).
+- A plugin's script cannot draw. A plugin can ship its own widgets (separate scripts that run in a sandboxed worker in the app, with no network access), but it cannot add a widget type of its own.
 - The server runs on Windows only, so plugins are Windows-only in practice.

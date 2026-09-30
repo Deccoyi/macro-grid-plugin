@@ -236,7 +236,7 @@ Her metni tek bir dilde yazın (`plugin.json` içindeki `defaultLanguage`, varsa
 
 ## Henüz mümkün olmayanlar
 
-- Eklenti kendi widget'ını çizemez (bir `plugin-html` widget'ı planlı), simge paketi veya yeni widget türü ekleyemez.
+- Eklentinin betiği çizim yapamaz. Bir eklenti kendi widget'larını getirebilir, ama bunlar uygulamada güvenli bir worker içinde çalışan ayrı betiklerdir (eklenti yazım rehberindeki "Custom widgets" bölümüne bakın). Eklenti simge paketi ekleyemez.
 - Dosya, soket, WebSocket, `fetch`, `setTimeout` (yerine `host.after`), modül yok.
 - Ayar formunda buton yok (`Button` alanı sunucuda kod ister, bu yüzden yalnızca resmî C# eklentilerinde vardır).
 - Dinamik açılır liste yok: `Select` seçenekleri sabittir (dinamik listeler yalnızca resmî C# eklentilerindedir).
