@@ -37,15 +37,22 @@ function draw() {
     ctx.fillText('Waiting for data', w / 2, h / 2);
     return;
   }
-  picture(w / 2, h * 0.34, u * 0.32);
+  // The picture, the temperature and the wind form one block sized by the cell's smaller side and centered in the cell,
+  // so a tall, narrow cell keeps them together instead of spreading them over the height.
+  const k = u * 1.1, r = k * 0.3, gap = k * 0.05, tempSize = k * 0.2, windSize = k * 0.08;
+  const total = r * 1.55 + gap + tempSize * 0.8 + (wind !== null ? gap + windSize : 0);
+  const top = (h - total) / 2;
+  picture(w / 2, top + r * 0.55, r);
   const shown = unit === 'F' ? temperature * 9 / 5 + 32 : temperature;
+  let baseline = top + r * 1.55 + gap + tempSize * 0.8;
   ctx.fillStyle = light ? '#111' : '#fff';
-  ctx.font = 'bold ' + (u * 0.22) + 'px sans-serif';
-  ctx.fillText(Math.round(shown) + '°' + unit, w / 2, h * 0.76);
+  ctx.font = 'bold ' + tempSize + 'px sans-serif';
+  ctx.fillText(Math.round(shown) + '°' + unit, w / 2, baseline);
   if (wind !== null) {
+    baseline += gap + windSize;
     ctx.fillStyle = light ? '#555' : '#9aa0a6';
-    ctx.font = (u * 0.09) + 'px sans-serif';
-    ctx.fillText(Math.round(wind) + ' km/h', w / 2, h * 0.9);
+    ctx.font = windSize + 'px sans-serif';
+    ctx.fillText(Math.round(wind) + ' km/h', w / 2, baseline);
   }
 }
 
