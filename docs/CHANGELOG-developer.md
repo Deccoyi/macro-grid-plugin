@@ -15,5 +15,6 @@ Repository-level developer log. Plugins keep their own `CHANGELOG-developer.md` 
 ### Added
 - `docs/engineering-guidelines.md`, and a golden-file test for the OBS action catalog.
 - `macrogrid-index.json` at the repository root, committed to `main` by `scripts/release-plugin.ps1` after each release (`scripts/update-plugin-index.ps1`). Format and the signature scheme are documented in `website/reference/source-index.md`. This is what a host or another plugin repository reads to browse and install from this repository without using the GitHub API.
+- The release script attaches the manifest's `icon` (.png or .svg, at most 100 KB) as `<id>-<version>.icon.<ext>` and writes `icon` (the file name) into the index entry for Discover.
 - Optional manifest fields `category` and `tags` (additive): the release script copies them into `macrogrid-index.json` for Discover (`update-plugin-index.ps1 -Category -Tags`); set on the official plugins here.
 - Optional manifest fields `description`, `author`, `homepage` (additive; set on all three plugins here).

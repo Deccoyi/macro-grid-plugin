@@ -58,6 +58,7 @@ A plugin is loaded, reloaded and unloaded while the server runs. See [Lifecycle]
 | `description` | no | A one-line summary shown in Discover and the Store. Additive; older hosts ignore it. |
 | `author` | no | The plugin's author, shown next to `description`. Additive. |
 | `homepage` | no | A URL to the plugin's page or source, shown as a link. Additive. |
+| `icon` | no | A square `.png` or `.svg` (at most 100 KB) for the plugin itself; the release script publishes it next to the package and Discover shows it on the plugin's card. Additive. |
 | `category` | no | One word or short phrase (at most 32 characters) to browse Discover by, for example `Streaming`. Additive. |
 | `tags` | no | Up to 5 search words, at most 24 characters each, shown on the plugin's page in Discover. Additive. |
 
