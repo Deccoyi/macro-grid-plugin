@@ -61,6 +61,23 @@ jobs:
         shell: pwsh
         run: ./scripts/tests/test-package-signature.ps1
 
+      - name: Test catalog signing script
+        working-directory: macro-grid-plugin
+        shell: pwsh
+        run: ./scripts/tests/test-catalog-signing.ps1
+
+      # Passes while no signed file exists yet. The signature itself cannot be checked here (the private key is not on GitHub); this checks structure, kind and size.
+      - name: Check the signed catalog files
+        working-directory: macro-grid-plugin
+        shell: pwsh
+        run: |
+          foreach ($pair in @(@('index', 'index.signed.json'), @('revoked', 'revoked.signed.json'))) {
+            $file = Join-Path 'website/public/catalog' $pair[1]
+            if (-not (Test-Path $file)) { Write-Host "no $($pair[1]) yet"; continue }
+            dotnet run scripts/sign-catalog.cs -- verify $file $pair[0]
+            if ($LASTEXITCODE -ne 0) { throw "$file is not valid" }
+          }
+
       - name: Build OBS plugin
         working-directory: macro-grid-plugin
         run: dotnet build WebSocketBridgeForOBS/src/MacroGrid.Plugin.Obs.csproj -c Release
