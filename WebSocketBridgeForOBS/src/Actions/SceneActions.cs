@@ -13,7 +13,7 @@ public abstract class ObsSceneAction(ObsConnection obs, string requestType) : Ob
     public override Task ExecuteAsync(ActionContext context, JsonObject settings, CancellationToken cancellationToken)
     {
         var sceneName = GetString(settings, "sceneName");
-        if (string.IsNullOrEmpty(sceneName)) return Task.CompletedTask;
+        if (string.IsNullOrEmpty(sceneName)) throw new ObsNotConfiguredException("No scene is chosen.");
         ObsTargetCheck.RequireScene(Obs, sceneName);
         return Obs.RequestAsync(requestType, new JsonObject { ["sceneName"] = sceneName }, cancellationToken);
     }
@@ -25,7 +25,8 @@ public abstract class ObsNamedChoiceAction(ObsConnection obs, string settingKey,
     public override Task ExecuteAsync(ActionContext context, JsonObject settings, CancellationToken cancellationToken)
     {
         var name = GetString(settings, settingKey);
-        return string.IsNullOrEmpty(name) ? Task.CompletedTask : Obs.RequestAsync(requestType, new JsonObject { [settingKey] = name }, cancellationToken);
+        if (string.IsNullOrEmpty(name)) throw new ObsNotConfiguredException("Nothing is chosen.");
+        return Obs.RequestAsync(requestType, new JsonObject { [settingKey] = name }, cancellationToken);
     }
 }
 

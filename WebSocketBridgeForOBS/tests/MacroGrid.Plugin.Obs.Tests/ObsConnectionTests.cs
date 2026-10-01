@@ -11,7 +11,7 @@ namespace MacroGrid.Plugin.Obs.Tests;
 /// </summary>
 public sealed class ObsConnectionTests
 {
-    private static async Task WaitUntilAsync(Func<bool> condition, TimeSpan timeout, string message, FakeObsServer? server = null, FakePluginHost? host = null)
+    internal static async Task WaitUntilAsync(Func<bool> condition, TimeSpan timeout, string message, FakeObsServer? server = null, FakePluginHost? host = null)
     {
         var deadline = DateTime.UtcNow + timeout;
         while (DateTime.UtcNow < deadline)
@@ -27,7 +27,7 @@ public sealed class ObsConnectionTests
 
     /// <summary>Accepts one connection, does the Hello/Identify handshake (with or without auth), then
     /// answers RefreshAllAsync's startup RequestBatch so the connection reaches "Connected".</summary>
-    private static async Task AcceptAndIdentifyAsync(FakeObsConnection conn, string? authSalt = null, string? authChallenge = null, Func<string, JsonObject>? responseDataFor = null, CancellationToken ct = default)
+    internal static async Task AcceptAndIdentifyAsync(FakeObsConnection conn, string? authSalt = null, string? authChallenge = null, Func<string, JsonObject>? responseDataFor = null, CancellationToken ct = default)
     {
         await conn.SendHelloAsync(authSalt, authChallenge, ct: ct);
         var (op, data) = await conn.ReceiveAsync(ct);
@@ -91,7 +91,7 @@ public sealed class ObsConnectionTests
         }
     }
 
-    private static (string DataDir, FakePluginHost Host, FakeVariableStore Store) NewFixture(int port, string password = "")
+    internal static (string DataDir, FakePluginHost Host, FakeVariableStore Store) NewFixture(int port, string password = "")
     {
         var dataDir = Directory.CreateTempSubdirectory("obs-plugin-test-").FullName;
         var host = new FakePluginHost(dataDir);

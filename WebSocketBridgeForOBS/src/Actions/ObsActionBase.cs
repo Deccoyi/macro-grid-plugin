@@ -6,7 +6,7 @@ namespace MacroGrid.Plugin.Obs;
 /// <summary>Common shape of every OBS action: the shared category, the connection, and the small
 /// setting readers the actions repeat. Concrete actions supply their type id, labels, icon and, where they
 /// have any, settings fields.</summary>
-public abstract class ObsActionBase(ObsConnection obs) : IActionHandler, IActionDescriptor
+public abstract class ObsActionBase(ObsConnection obs) : IActionHandler, IActionDescriptor, IActionOutcomeHandler
 {
     protected ObsConnection Obs { get; } = obs;
 
@@ -19,14 +19,30 @@ public abstract class ObsActionBase(ObsConnection obs) : IActionHandler, IAction
 
     public abstract Task ExecuteAsync(ActionContext context, JsonObject settings, CancellationToken cancellationToken);
 
+    /// <summary>Runs the action and says what happened: the exceptions the plugin throws on purpose become coded failures; anything else
+    /// propagates and the host reports it as a provider error.</summary>
+    public async Task<ActionOutcome> ExecuteWithOutcomeAsync(ActionContext context, JsonObject settings, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await ExecuteAsync(context, settings, cancellationToken);
+            return ActionOutcome.Success;
+        }
+        catch (ObsNotConnectedException ex) { return ActionOutcome.Failed(ActionFailureCode.NotConnected, ex.Message); }
+        catch (IOException) { return ActionOutcome.Failed(ActionFailureCode.NotConnected, "Not connected to OBS."); }
+        catch (ObsNotConfiguredException ex) { return ActionOutcome.Failed(ActionFailureCode.NotConfigured, ex.Message); }
+        catch (ObsTargetMissingException ex) { return ActionOutcome.Failed(ActionFailureCode.NotFound, ex.Message); }
+        catch (TimeoutException ex) { return ActionOutcome.Failed(ActionFailureCode.Timeout, ex.Message); }
+        catch (ObsRequestException ex) { return ActionOutcome.Failed(ActionFailureCode.ProviderRejected, ex.Comment); }
+    }
+
     protected static string? GetString(JsonObject settings, string key) => settings[key]?.GetValue<string>();
 
-    /// <summary>Reads the "inputName" setting. False when it is empty (the action then does nothing);
-    /// throws when the input no longer exists in OBS.</summary>
+    /// <summary>Reads the "inputName" setting. Throws when it is empty or when the input no longer exists in OBS.</summary>
     protected bool TryGetAudioInput(JsonObject settings, out string inputName)
     {
         inputName = GetString(settings, "inputName") ?? "";
-        if (inputName.Length == 0) return false;
+        if (inputName.Length == 0) throw new ObsNotConfiguredException("No audio source is chosen.");
         ObsTargetCheck.RequireAudioInput(Obs, inputName);
         return true;
     }

@@ -46,7 +46,7 @@ public sealed partial class ObsConnection(IPluginHost host) : IVariableProvider,
     /// closed should fail fast and visibly (ActionDispatcher logs it, it never silently no-ops).</summary>
     public Task<JsonObject> RequestAsync(string requestType, JsonObject? requestData, CancellationToken cancellationToken)
     {
-        var client = CurrentClient ?? throw new InvalidOperationException("Not connected to OBS.");
+        var client = CurrentClient ?? throw new ObsNotConnectedException();
         return client.RequestAsync(requestType, requestData, cancellationToken);
     }
 

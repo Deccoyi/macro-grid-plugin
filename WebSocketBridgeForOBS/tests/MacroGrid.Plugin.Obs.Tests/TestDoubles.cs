@@ -41,6 +41,7 @@ public sealed class FakePluginHost(string dataDirectory) : IPluginHost
     public string SdkVersion => "0.0.0-test";
     public string DataDirectory { get; } = dataDirectory;
     public IPluginSecrets Secrets { get; } = new FakePluginSecrets();
+    public IPluginWidgets Widgets { get; } = new FakePluginWidgets();
 
     public List<string> Logs { get; } = [];
 
@@ -68,4 +69,9 @@ public sealed class FakePluginSecrets : IPluginSecrets
 public sealed class FakeStatusItem : IPluginStatusItem
 {
     public void Update(string text, StatusLevel level, string? icon = null, string? tooltip = null) { }
+}
+
+public sealed class FakePluginWidgets : IPluginWidgets
+{
+    public void Post(string widget, string name, System.Text.Json.Nodes.JsonNode? data, string? widgetId = null, string? deviceId = null, bool retain = false) { }
 }

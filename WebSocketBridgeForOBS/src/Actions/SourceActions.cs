@@ -25,10 +25,10 @@ public sealed class ObsSetItemVisibilityAction(ObsConnection obs) : ObsOptionsAc
     {
         var sceneName = GetString(settings, "sceneName");
         var sourceName = GetString(settings, "sourceName");
-        if (string.IsNullOrEmpty(sceneName) || string.IsNullOrEmpty(sourceName)) return;
+        if (string.IsNullOrEmpty(sceneName) || string.IsNullOrEmpty(sourceName)) throw new ObsNotConfiguredException("No scene item is chosen.");
 
         var item = Obs.Cache.SceneItems(sceneName).FirstOrDefault(i => i.SourceName == sourceName)
-            ?? throw new InvalidOperationException($"Item '{sourceName}' is no longer in scene '{sceneName}'.");
+            ?? throw new ObsTargetMissingException($"Item '{sourceName}' is no longer in scene '{sceneName}'.");
 
         var container = item.ParentGroup ?? sceneName;
         var idResponse = await Obs.RequestAsync("GetSceneItemId", new JsonObject { ["sceneName"] = container, ["sourceName"] = sourceName }, cancellationToken);
