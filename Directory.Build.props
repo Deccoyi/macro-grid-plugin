@@ -6,5 +6,8 @@
          unless the checkout's <Version> equals it. See docs/official-csharp-plugins.md. -->
     <MacroGridSdkVersion Condition="'$(MacroGridSdkVersion)' == ''">1.1.0</MacroGridSdkVersion>
     <LocalSdkProject Condition="'$(LocalSdkProject)' == ''">$(MSBuildThisFileDirectory)..\macro-grid\src\MacroGrid.Plugin.Abstractions\MacroGrid.Plugin.Abstractions.csproj</LocalSdkProject>
+    <!-- The shared test doubles (fake IPluginHost, variable store, status item) sit next to the SDK in the same checkout; the test projects reference
+         them from there instead of keeping a copy each. -->
+    <LocalSdkTestingProject Condition="'$(LocalSdkTestingProject)' == ''">$([System.IO.Path]::GetFullPath('$(LocalSdkProject)\..\..\..\tests\MacroGrid.Plugin.Testing\MacroGrid.Plugin.Testing.csproj'))</LocalSdkTestingProject>
   </PropertyGroup>
 </Project>
