@@ -58,6 +58,8 @@ host.variables.describe([
 | `set(name, value)` | Publishes or updates one of your variables. `undefined` becomes `null`; any other type (an object, an array) is turned into a string. |
 | `get(name)` | Reads the current value of any variable, including `system.*` and other plugins'. A variable that does not exist gives `null`. |
 | `remove(name)` | Removes one of your variables. |
+
+Names that start with `user.` belong to the person's own Global Variable List: you can read them with `get`, but `set` and `remove` ignore them.
 | `describe(list)` | Lists variables in the editor's variable picker so people do not have to guess names. Call it once, at the top level. |
 
 **Names** must start with `<plugin id>.`, be at most 120 characters and use only letters, digits, `.`, `_` and `-`.
