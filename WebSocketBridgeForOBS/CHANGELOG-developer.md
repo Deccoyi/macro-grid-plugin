@@ -3,6 +3,8 @@
 This file tracks the version of this plugin only (independent of the main program — see the "Independent versions" section of `../CONTRIBUTING.md`). The short, public changelog is [CHANGELOG.md](CHANGELOG.md).
 
 ## [Unreleased]
+### Changed
+- Actions implement `IActionOutcomeHandler` (a coded outcome: not connected, not configured, not found, rejected, timeout). Needs an editor that has the interface, so `minMacroGrid` must be raised before this is released. An action with an empty required setting (no scene, no audio source, no scene item) now reports "not configured" instead of doing nothing.
 
 ## [0.3.1] - 2026-09-29
 ### Changed

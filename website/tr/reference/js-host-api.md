@@ -111,6 +111,23 @@ Aksiyonun hangi olaylara bağlanacağını kullanıcı belirler: basma, bırakma
 
 Aksiyon, `run` döndüğünde bitmiş sayılır. `async run` içinde `await` ettiğiniz işler bundan sonra da sürer.
 
+### Sonucu bildirmek
+
+Ne olduğunu söylemek için `run` içinden bir nesne döndürün:
+
+```js
+return { ok: false, code: 'NotConnected', message: 'Işık merkezine ulaşılamıyor.' }   // hata
+return { ok: 'accepted', message: 'Gönderildi, doğrulanamıyor.' }                     // iletildi, doğrulanamıyor
+```
+
+`code` şunlardan biridir: `NotConfigured`, `NotConnected`, `PermissionDenied`, `ProviderError`, `ProviderRejected`, `InvalidParameter`, `NotFound`,
+`Timeout`, `Unavailable` (büyük/küçük harf fark etmez; eksik veya bilinmeyen kod `ProviderError` sayılır). `message` kişiye gösterilen sade bir cümledir ve 200 karaktere
+kısaltılır; içine parola, kimlik bilgili adres veya dosya yolu yazmayın. Döndürülen başka her değer eskisi gibi başarıdır. Bildirilen hata bir betik hatası
+değildir: Hata Listesi'ne satır eklemez ve eklentinin kapatılmasına doğru sayılmaz.
+
+`async run` beklenmez. Aksiyonu `outcome: true` ile kaydederseniz sunucu promise'i bekler (en çok 10 saniye, sonra `Timeout`), çözdüğünüz nesneyi okur ve
+reddedilmeyi hatanın mesajıyla `ProviderError` sayar. Aynı anda en çok 16 böyle bekleme açık olabilir. Bekleyen bir basış aynı cihazın sonraki basışını geciktirir; kısa tutun.
+
 ## host.settings
 
 ```js

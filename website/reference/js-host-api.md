@@ -121,6 +121,24 @@ One action serves them all; read `context.value` if you want to react to a slide
 
 The action counts as finished when `run` returns. Work you `await` inside an `async run` carries on after that.
 
+### Reporting the result
+
+Return a shape from `run` to say what happened:
+
+```js
+return { ok: false, code: 'NotConnected', message: 'The light hub is not reachable.' }   // a failure
+return { ok: 'accepted', message: 'Sent, no confirmation available.' }               // handed over, cannot be confirmed
+```
+
+`code` is one of `NotConfigured`, `NotConnected`, `PermissionDenied`, `ProviderError`, `ProviderRejected`, `InvalidParameter`, `NotFound`,
+`Timeout`, `Unavailable` (any case; a missing or unknown code counts as `ProviderError`). `message` is plain words for the person, cut to 200 characters;
+leave out secrets, addresses with credentials and file paths. Any other return value is success, as before. A reported failure is not a script
+error: it adds nothing to the Error List and does not count towards switching the plugin off.
+
+An `async run` is not waited for. Register the action with `outcome: true` and the host waits for the promise (up to 10 seconds, then it reports `Timeout`), reads
+the shape you resolve with, and treats a rejection as `ProviderError` with the error's message. At most 16 such waits can be open at once. A button
+press that waits delays the same device's next press, so keep it short.
+
 ## host.settings
 
 ```js
