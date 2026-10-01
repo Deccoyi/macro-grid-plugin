@@ -202,7 +202,11 @@ if ($LASTEXITCODE -ne 0) { throw 'gh release create failed' }
     -Signature $result.signature `
     -Permissions @($manifest.permissions | Where-Object { $_ })
 
-git add macrogrid-index.json
+# The signed copy of the index is what the app reads first; it is signed here, with the same key, and committed with the plain one.
+& (Join-Path $PSScriptRoot 'publish-catalog.ps1') -Only index -KeyPath $KeyPath
+if ($LASTEXITCODE -ne 0) { throw 'Signing the catalog index failed' }
+
+git add macrogrid-index.json website/public/catalog/index.signed.json
 git commit -m "chore(index): add $($manifest.id) $version to the plugin index"
 git push origin main
 Write-Host "Released $tag and updated macrogrid-index.json"

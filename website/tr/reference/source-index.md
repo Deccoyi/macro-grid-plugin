@@ -91,6 +91,18 @@ makinesinden hiç çıkmayan özel bir ECDSA P-256 anahtarıyla imzalar:
 Bu yüzden resmî sürümler yerelde derlenip imzalanır ve özel anahtar hiçbir zaman GitHub'da tutulmaz: ele geçirilmiş bir GitHub
 hesabı, sunucunun resmî olarak kabul edeceği bir paket üretemez.
 
+## Resmî katalog dosyaları
+
+Uygulama resmî kataloğu `website/public/catalog/` klasöründeki iki imzalı dosyadan okur:
+
+- `index.signed.json`: `macrogrid-index.json` ile aynı liste.
+- `revoked.signed.json`: güvenlik listesi, `{ "formatVersion": 1, "plugins": [ { "id": "...", "versions": ["1.0.0"], "reason": "..." } ] }`. `versions` yazılmazsa eklentinin her sürümü kapsanır.
+  Listedeki resmî eklenti sürümü uygulamada nedeniyle birlikte kapatılır.
+
+Her dosya `{ "payload": "<base64>", "signature": "<base64>" }` biçimindedir. İmza, paketlerle aynı anahtarla, çözülmüş payload baytları üzerinde ECDSA P-256 / SHA-256'dır ve payload okunmadan önce denetlenir.
+Payload'ın başında `kind`, her imzalamada artan `sequence` ve `issuedAt` bulunur; uygulama kabul ettiğinden düşük bir sıra numarasını reddeder. Dosya alınamazsa hiçbir şey değişmez:
+**bir eklenti yalnızca doğrulanmış bir listeyle kapatılır, bir indirme başarısız oldu diye asla.**
+
 ## CI sizin için ne yapar
 
 Eklentiniz bu deponun `scripts/release-plugin.ps1` betiğiyle yayımlanıyorsa, ya da `examples/third-party-release.yml` dosyasını kendi çok eklentili deponuza kopyaladıysanız (bkz.

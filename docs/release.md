@@ -44,6 +44,19 @@ version from `plugin.json` and refuses a tag that already exists. The server, th
 6. Every official release must be signed, so there is no unsigned path. Keep the key folder backed up and out of every repository (the guide above says why and what happens if it is lost).
    `.github/workflows` has no release workflow on purpose; `examples/third-party-release.yml` is a signing-free template for other repositories.
 
+## Switching a version off, or withdrawing it
+
+The app reads two signed files, `website/public/catalog/index.signed.json` and `revoked.signed.json` (format: [Source index](../website/reference/source-index.md)). A normal release signs the index for you.
+For the other cases, edit the source file on `main` and sign again with the same key:
+
+- **Switch an official version off** (unsafe): add it to `revoked.json` (`id`, `versions`, a short `reason` the person will read), then `scripts/publish-catalog.ps1 -Only revoked`. Apps that have the plugin stop it on their next check
+  (within about 8 hours, or at once with Refresh) and show the reason. Publish the fixed version first when you can, so the person can update.
+- **Withdraw a version**: set `"withdrawn": true` on it in `macrogrid-index.json`, then `scripts/publish-catalog.ps1 -Only index`. It is no longer offered; installed copies keep running with a warning.
+- Add `-Push` to commit and push the signed files from a clean, up-to-date `main`; without it the files are only written for you to review.
+
+The sequence number rises with every signing, so never copy an older signed file back over a newer one: apps refuse a lower sequence. The first signed files must exist before an app version that reads them ships;
+until then apps fall back to the plain `macrogrid-index.json`.
+
 ## Installing a released plugin
 
 Unzip the archive into `%AppData%\MacroGrid\plugins\<id>\` (the folder that holds `plugin.json`), or use **Plugins > Manage Plugins >
