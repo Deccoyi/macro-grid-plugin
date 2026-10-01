@@ -53,6 +53,8 @@ host.variables.describe([
 | `set(name, value)` | Değişkenlerinizden birini yayınlar veya günceller. `undefined` `null` olur; başka her tür (nesne, dizi) dizeye çevrilir. |
 | `get(name)` | `system.*` ve başka eklentilerinkiler dahil, herhangi bir değişkenin güncel değerini okur. Olmayan değişken `null` verir. |
 | `remove(name)` | Değişkenlerinizden birini kaldırır. |
+
+`user.` ile başlayan adlar kişinin kendi Genel Değişken Listesi'ne aittir: `get` ile okuyabilirsiniz, ama `set` ve `remove` onları yok sayar.
 | `describe(list)` | Değişkenleri düzenleyicinin değişken seçicisinde listeler; kimse adı tahmin etmek zorunda kalmaz. En üst düzeyde bir kez çağırın. |
 
 **Adlar** `<plugin id>.` ile başlamalı, en çok 120 karakter olmalı ve yalnızca harf, rakam, `.`, `_` ve `-` içermelidir.
