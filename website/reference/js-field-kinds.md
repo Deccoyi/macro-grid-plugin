@@ -27,7 +27,14 @@ two places:
 | `File` | a path box with a **Browse** button (native file picker) | the path (string) | `fileFilter` |
 | `List` | repeated rows, the user adds and removes them | an array of objects | `itemFields` |
 | `Notice` | read-only warning text | none, never saved | `label`, `description` |
+| `Variable` | a variable picker (widget settings only) | the variable's name (string) | none |
+| `Color` | a color picker | a `#rrggbb` string | `default` |
+| `Hotkey` | a box that captures the keys the user presses | a key combination as text such as `ctrl+shift+s`, empty when none | `default` |
+| `Duration` | a number box with a unit choice (ms, s, min) | whole milliseconds (number) | `min`, `max`, `step`, `default`, all in milliseconds |
+| `MultiSelect` | a list of checkboxes | an array of the chosen options' `value`s, in option order | `options`, `default` |
 | `Button` | a button | none | not usable from JavaScript (see below) |
+
+`Hotkey`, `Duration` and `MultiSelect` need a Macro Grid version that has them (set `minMacroGrid` to it). An older version says the field could not be read. In the `settings` of a widget in `plugin.json` the older version cannot read the whole file ("plugin.json could not be parsed"), whatever `minMacroGrid` says. A `MultiSelect` cannot drive `visibleWhen`, which compares with a single text.
 
 ## Options
 
@@ -36,8 +43,8 @@ two places:
 | `description` | all | Help text under the field. |
 | `placeholder` | text kinds | A hint shown while the box is empty. |
 | `default` | value kinds | The initial value. Also what `settings` and `host.settings.get()` hold until the user changes it. |
-| `min`, `max`, `step` | `Number`, `Slider` | Limits and increment. |
-| `options` | `Select`, `Segmented` | A fixed list of `{ value, label }`. Optional `group` indents the row as *Group › Item*, optional `icon` shows an icon. |
+| `min`, `max`, `step` | `Number`, `Slider`, `Duration` (milliseconds) | Limits and increment. |
+| `options` | `Select`, `Segmented`, `MultiSelect` | A fixed list of `{ value, label }`. Optional `group` indents the row as *Group › Item*, optional `icon` shows an icon. |
 | `allowVariables` | `Text` | Shows the `{var}` insert button. You receive the raw text with the `{...}` still in it. Read the value yourself with `host.variables.get`. |
 | `visibleWhen` | all | Show the field only when another field has a value, written `"key=value"`, for example `"mode=pause"`. Inside a `List` row it is checked against that row's own values. |
 | `fileFilter` | `File` | Required. A Windows file filter such as `"Audio files (*.wav;*.mp3)\|*.wav;*.mp3"`. |
