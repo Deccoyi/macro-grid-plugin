@@ -18,7 +18,7 @@ internal static class SoundBoardOptionsSource
 
 /// <summary>Plays a sound. Settings: <c>sound</c> (id), <c>playMode</c> (full/hold/toggle),
 /// <c>stopStyle</c> (default/immediate/fade, applied on a hold release or a toggle stop).</summary>
-public sealed class SoundBoardPlayAction(SoundBoardEngine engine) : IActionHandler, IActionDescriptor, IOptionsSource, IReleaseAwareAction
+public sealed class SoundBoardPlayAction(SoundBoardEngine engine) : IActionHandler, IActionDescriptor, IOptionsSource, IReleaseAwareAction, IActionOutcomeHandler
 {
     public const string TypeId = "soundboard.play";
     public string Type => TypeId;
@@ -46,24 +46,29 @@ public sealed class SoundBoardPlayAction(SoundBoardEngine engine) : IActionHandl
     public Task<OptionsResult> GetOptionsAsync(string sourceId, JsonObject currentValues, CancellationToken cancellationToken) =>
         Task.FromResult(sourceId == "sounds" ? SoundBoardOptionsSource.GetSounds(engine) : new OptionsResult([], $"Unknown options source: {sourceId}"));
 
-    public Task ExecuteAsync(ActionContext context, JsonObject settings, CancellationToken cancellationToken)
+    public async Task ExecuteAsync(ActionContext context, JsonObject settings, CancellationToken cancellationToken) =>
+        (await ExecuteWithOutcomeAsync(context, settings, cancellationToken)).ThrowIfFailed();
+
+    public Task<ActionOutcome> ExecuteWithOutcomeAsync(ActionContext context, JsonObject settings, CancellationToken cancellationToken)
     {
         var soundId = settings["sound"]?.GetValue<string>();
-        if (string.IsNullOrEmpty(soundId)) return Task.CompletedTask;
+        if (string.IsNullOrEmpty(soundId)) return Task.FromResult(ActionOutcome.Failed(ActionFailureCode.NotConfigured, "No sound is chosen."));
 
         var playMode = settings["playMode"]?.GetValue<string>() ?? "full";
         if (playMode == "toggle" && engine.IsPlaying(soundId))
         {
             var stopStyle = settings["stopStyle"]?.GetValue<string>() ?? "default";
             engine.Stop(new VoiceFilter(SoundId: soundId, IsPreview: false), stopStyle);
-            return Task.CompletedTask;
+            return Task.FromResult(ActionOutcome.Success);
         }
+
+        if (engine.CheckSound(soundId) is { } problem) return Task.FromResult(problem);
 
         if (engine.Settings.OverlapMode == "cut")
             engine.StopAll(engine.Settings.StopStyle);
 
         engine.Play(soundId, context);
-        return Task.CompletedTask;
+        return Task.FromResult(engine.HasOutput ? ActionOutcome.Success : ActionOutcome.Failed(ActionFailureCode.Unavailable, "No audio output is available."));
     }
 
     /// <summary>Only in "hold" mode: stops the voices this exact widget (on this exact device/page) started.</summary>
@@ -82,7 +87,7 @@ public sealed class SoundBoardPlayAction(SoundBoardEngine engine) : IActionHandl
 
 /// <summary>Stops one sound or every sound. Settings: <c>target</c> (all/one), <c>sound</c> (id, only for
 /// "one"), <c>stopStyle</c> (default/immediate/fade).</summary>
-public sealed class SoundBoardStopAction(SoundBoardEngine engine) : IActionHandler, IActionDescriptor, IOptionsSource
+public sealed class SoundBoardStopAction(SoundBoardEngine engine) : IActionHandler, IActionDescriptor, IOptionsSource, IActionOutcomeHandler
 {
     public const string TypeId = "soundboard.stop";
     public string Type => TypeId;
@@ -109,7 +114,11 @@ public sealed class SoundBoardStopAction(SoundBoardEngine engine) : IActionHandl
     public Task<OptionsResult> GetOptionsAsync(string sourceId, JsonObject currentValues, CancellationToken cancellationToken) =>
         Task.FromResult(sourceId == "sounds" ? SoundBoardOptionsSource.GetSounds(engine) : new OptionsResult([], $"Unknown options source: {sourceId}"));
 
-    public Task ExecuteAsync(ActionContext context, JsonObject settings, CancellationToken cancellationToken)
+    public async Task ExecuteAsync(ActionContext context, JsonObject settings, CancellationToken cancellationToken) =>
+        (await ExecuteWithOutcomeAsync(context, settings, cancellationToken)).ThrowIfFailed();
+
+    /// <summary>Stopping when nothing plays is a success.</summary>
+    public Task<ActionOutcome> ExecuteWithOutcomeAsync(ActionContext context, JsonObject settings, CancellationToken cancellationToken)
     {
         var stopStyle = settings["stopStyle"]?.GetValue<string>() ?? "default";
         var target = settings["target"]?.GetValue<string>() ?? "all";
@@ -117,14 +126,14 @@ public sealed class SoundBoardStopAction(SoundBoardEngine engine) : IActionHandl
         if (target == "one")
         {
             var soundId = settings["sound"]?.GetValue<string>();
-            if (string.IsNullOrEmpty(soundId)) return Task.CompletedTask;
+            if (string.IsNullOrEmpty(soundId)) return Task.FromResult(ActionOutcome.Failed(ActionFailureCode.NotConfigured, "No sound is chosen."));
             engine.Stop(new VoiceFilter(SoundId: soundId, IsPreview: false), stopStyle);
         }
         else
         {
             engine.StopAll(stopStyle);
         }
-        return Task.CompletedTask;
+        return Task.FromResult(ActionOutcome.Success);
     }
 }
 

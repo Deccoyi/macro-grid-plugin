@@ -27,7 +27,10 @@ public sealed class FakePluginHost(string dataDirectory) : IPluginHost
     public string DataDirectory { get; } = dataDirectory;
     public IPluginSecrets Secrets => throw new NotSupportedException("SoundBoard does not store secrets.");
 
-    public void Log(string message) { }
+    public IPluginWidgets Widgets => throw new NotSupportedException("SoundBoard has no widgets.");
+    public List<string> Logs { get; } = [];
+
+    public void Log(string message) => Logs.Add(message);
     public void RegisterAction(IActionHandler handler) { }
     public void RegisterVariableProvider(IVariableProvider provider) { }
     public void RegisterSettingsPage(IPluginSettingsPage page) { }
