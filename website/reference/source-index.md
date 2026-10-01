@@ -1,6 +1,6 @@
 # Plugin source index
 
-The host installs plugins from GitHub without ever calling the GitHub API (no rate limit): it reads a fixed
+The host installs plugins from GitHub without ever calling the GitHub API for an added source (no rate limit; the official source also reads the signed catalog files, see the release guide): it reads a fixed
 `raw.githubusercontent.com` URL for metadata and downloads release assets from a fixed `releases/download` URL. This
 page is the format for both, and applies to the official repository and to any third-party repository people add as a
 source.
@@ -54,6 +54,10 @@ https://raw.githubusercontent.com/<owner>/<repo>/HEAD/macrogrid-index.json
 | `versions[].signature` | Only meaningful for the official source (see below); other sources are third-party even when this is present. |
 | `versions[].withdrawn` | Optional, `true` when the publisher withdrew this version. It is no longer offered or installable; a copy that is already installed keeps running and the person is asked to update or remove it. |
 | `versions[].urls` | Optional, at most 3 download addresses tried in order after `url`. Only the signed official index may list addresses outside its own repository, and only because the package signature is checked afterwards; any other source can only point at its own repository. |
+
+Every released version stays listed: nothing is pruned. The app offers the newest compatible version and lets a person go back through the five newest ones that are
+compatible and not withdrawn, so keep the release files of those versions online. A package must not contain a file the plugin writes to at run time (for example saved data), because an official
+package is checked file by file every time it starts.
 
 The host also checks, after download: the zip's own `plugin.json` (`id`, `version`, `minMacroGrid`, `kind`,
 `permissions`) must equal the index entry exactly, or the install is refused.
