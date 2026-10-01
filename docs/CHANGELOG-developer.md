@@ -4,6 +4,7 @@ Repository-level developer log. Plugins keep their own `CHANGELOG-developer.md` 
 
 ## [Unreleased]
 ### Added
+- **Signed official catalog files:** `scripts/publish-catalog.ps1` (and `scripts/release-plugin.ps1` for the index) sign `website/public/catalog/index.signed.json` and `revoked.signed.json` with `scripts/sign-catalog.cs`; `revoked.json` is the source of the safety list. Index versions accept `withdrawn` and `urls`. A plugin `id` must now be 1 to 64 characters of letters, digits, `.`, `-`, `_`, starting with a letter or digit. See `docs/release.md` and `website/reference/source-index.md`.
 - **`HelloGauge/`, an example plugin with a custom widget (needs Macro Grid 1.4.0):** an animated gauge drawn on a canvas that follows any variable (a `Variable` setting), with a demo value published by the plugin. New section 8 "Custom widgets" in `docs/plugin-authoring.md`: the `widgets` array of `plugin.json`, the worker and the `macroGrid` object, `host.widgets.onMessage/post`, limits, options that the person approves, and the unverified limits for JavaScript plugins.
 
 ### Changed

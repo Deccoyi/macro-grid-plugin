@@ -52,6 +52,8 @@ https://raw.githubusercontent.com/<owner>/<repo>/HEAD/macrogrid-index.json
 | `versions[].sha256` / `.size` | Required. Checked against the downloaded file before it is unzipped. |
 | `versions[].permissions` | JavaScript only; empty array otherwise. Must match the zip's `plugin.json` exactly. |
 | `versions[].signature` | Only meaningful for the official source (see below); other sources are third-party even when this is present. |
+| `versions[].withdrawn` | Optional, `true` when the publisher withdrew this version. It is no longer offered or installable; a copy that is already installed keeps running and the person is asked to update or remove it. |
+| `versions[].urls` | Optional, at most 3 download addresses tried in order after `url`. Only the signed official index may list addresses outside its own repository, and only because the package signature is checked afterwards; any other source can only point at its own repository. |
 
 The host also checks, after download: the zip's own `plugin.json` (`id`, `version`, `minMacroGrid`, `kind`,
 `permissions`) must equal the index entry exactly, or the install is refused.
@@ -91,6 +93,19 @@ release with a dedicated ECDSA P-256 key that never leaves the maintainer's mach
 
 This is why the official releases are built and signed locally and the private key is never stored on GitHub: a compromised
 GitHub account cannot produce a package the host accepts as official.
+
+## Official catalog files
+
+The app reads the official catalog as two signed files in `website/public/catalog/` (served by the GitHub contents API and by the Pages site):
+
+- `index.signed.json`: the same list as `macrogrid-index.json` (`formatVersion` 1 or 2).
+- `revoked.signed.json`: the safety list, `{ "formatVersion": 1, "plugins": [ { "id": "...", "versions": ["1.0.0"], "reason": "..." } ] }`. Leave `versions` out to cover every version of the plugin;
+  an empty `versions` array is ignored. A listed official plugin version is switched off in the app with the reason shown (at most 200 characters, at most 500 entries).
+
+Each file is `{ "payload": "<base64>", "signature": "<base64>" }`. The payload is the JSON above with `kind` (`index` or `revoked`), `sequence` (a whole number from 1 that rises with every
+signing; the app refuses a lower one than it has accepted) and `issuedAt` (UTC) in front. The signature is ECDSA P-256 over the decoded payload bytes with SHA-256, with the same key as the packages,
+checked before the payload is read. The app keeps its last good copy, so a missing or broken file never changes anything: **a plugin is switched off only by a verified list, never because a fetch failed.**
+Maintainers sign them with `scripts/publish-catalog.ps1` (see [Releasing a plugin](https://github.com/Deccoyi/macro-grid-plugin/blob/main/docs/release.md)).
 
 ## What CI does for you
 
