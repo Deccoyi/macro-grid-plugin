@@ -175,6 +175,13 @@ Rules the server enforces:
 
 A plugin can draw its own widgets: see section 8.
 
+### Check, try and package your plugin
+
+The plugin tool (a separate download on the Macro Grid release page) checks, starts and packages a JavaScript plugin with the same rules and runtime as the app:
+`macrogrid-plugin new <id>` starts a plugin, `validate <folder>` checks it without running it, `run <folder> --action <type>` starts it in a temporary data folder
+and runs one action, and `pack <folder>` writes `<id>-<version>.zip` with its `.sha256` (it never signs). Exit code 0 is done, 1 is errors, 2 is a usage mistake.
+Use `run` on your own plugin; to try someone else's, install it in the app. See the website guide "Check and package your plugin".
+
 ## 8. Custom widgets
 
 A plugin can add its own widgets to the Toolbox. The widget's code is one JavaScript file that runs on the phone (or in the browser deck, or in the
