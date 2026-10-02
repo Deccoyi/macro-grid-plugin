@@ -5,7 +5,7 @@
 let count = 0;
 
 host.variables.describe([
-  { name: 'hellojs.count', description: 'How many times the counter was bumped', example: '3', category: 'Hello' },
+  { name: 'hellojs.count', description: 'How many times the counter was bumped', example: '{hellojs.count}', type: 'number', category: 'Hello' },
 ]);
 host.variables.set('hellojs.count', count);
 
