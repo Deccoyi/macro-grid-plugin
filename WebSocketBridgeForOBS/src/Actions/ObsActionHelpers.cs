@@ -42,12 +42,12 @@ internal static class ObsTargetCheck
     public static void RequireScene(ObsConnection obs, string sceneName)
     {
         if (!obs.Cache.Scenes.Contains(sceneName))
-            throw new InvalidOperationException($"Scene '{sceneName}' no longer exists in OBS.");
+            throw new ObsTargetMissingException($"Scene '{sceneName}' no longer exists in OBS.");
     }
 
     public static void RequireAudioInput(ObsConnection obs, string inputName)
     {
         if (!obs.Cache.AudioInputNames.Contains(inputName))
-            throw new InvalidOperationException($"Audio source '{inputName}' no longer exists in OBS.");
+            throw new ObsTargetMissingException($"Audio source '{inputName}' no longer exists in OBS.");
     }
 }

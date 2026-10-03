@@ -10,6 +10,9 @@ public sealed class ObsRequestException(string requestType, int statusCode, stri
     : Exception($"obs-websocket request '{requestType}' failed ({statusCode}){(comment is null ? "" : $": {comment}")}")
 {
     public int StatusCode { get; } = statusCode;
+
+    /// <summary>OBS's own explanation, when it gave one.</summary>
+    public string? Comment { get; } = comment;
 }
 
 /// <summary>Thrown when the initial Hello/Identify handshake itself fails (bad password, protocol mismatch, timeout).</summary>

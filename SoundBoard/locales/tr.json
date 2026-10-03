@@ -35,5 +35,9 @@
   "Cut": "Kes",
   "Default stop style": "Varsayılan durdurma şekli",
   "Fade in (ms)": "Kısılarak başlama (ms)",
-  "Fade out (ms)": "Kısılarak bitiş (ms)"
+  "Fade out (ms)": "Kısılarak bitiş (ms)",
+  "No sound is chosen.": "Ses seçilmemiş.",
+  "The sound is no longer in the sound board.": "Ses artık ses tahtasında yok.",
+  "The file of the sound '{0}' was not found. Pick it again in the settings.": "'{0}' adlı sesin dosyası bulunamadı. Ayarlardan yeniden seçin.",
+  "No audio output is available.": "Kullanılabilir ses çıkışı yok."
 }

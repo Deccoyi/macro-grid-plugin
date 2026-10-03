@@ -79,6 +79,12 @@ The Plugins window lists every folder that has a `plugin.json`:
 
 Official C# plugins only: see [official-csharp-plugins.md](official-csharp-plugins.md).
 
+### Reporting what an action did
+
+A C# action can also implement `IActionOutcomeHandler` and return `ActionOutcome.Success`, `Failed(code, message)` or `Accepted(message)` instead of throwing; the host then shows
+the failure's short text. A plugin that uses it needs an editor that has the interface, so set `minMacroGrid` to the first version that does. A script action returns
+`{ ok: false, code, message }` (see the host API reference).
+
 ## 5. Actions, widgets and dynamic values in one picture
 
 A widget's events (press, release, long press, double tap, toggle on/off, value change) each run a list of actions in order.
@@ -139,7 +145,7 @@ host.variables.get(name)
 host.variables.remove(name)
 host.variables.describe([{ name, description, example, category }])   // list them in the editor's variable picker
 
-host.registerAction({ type, name, category, description, icon, fields, run(context, settings) {} })
+host.registerAction({ type, name, category, description, icon, fields, outcome, run(context, settings) {} })   // run may return { ok: false, code, message } or { ok: 'accepted' }; outcome: true waits for an async run
 // context: { deviceId, pageId, widgetId, value }; settings: the values of the action's fields
 // fields: the same shape as the C# SettingField, e.g. { key, label, kind: 'Text' | 'Number' | 'Bool' | 'Select' | ..., default, min, max, options }
 
