@@ -86,7 +86,7 @@ public sealed class ObsSettingsPage(IPluginHost host, ObsConnection connection) 
         new("host", "Host", SettingFieldKind.Text) { Default = "127.0.0.1", Placeholder = "127.0.0.1" },
         new("port", "Port", SettingFieldKind.Number) { Min = 1, Max = 65535, Step = 1, Default = 4455 },
         new("password", "Password", SettingFieldKind.Password),
-        new("disclaimer", Disclaimer, SettingFieldKind.Notice),
+        new("disclaimer", "Disclaimer", SettingFieldKind.Notice) { Description = Disclaimer },
     ];
 
     public JsonObject Load()
