@@ -71,6 +71,22 @@ jobs:
           $permissions = @($manifest.permissions | Where-Object { $_ })
           $permissionsJson = ConvertTo-Json -InputObject $permissions -Compress -AsArray
           "permissionsJson=$permissionsJson" | Out-File -Append -Encoding utf8 $env:GITHUB_OUTPUT
+          # Store fields (category, tags, icon). The icon is a .png or .svg, at most 100 KB, copied next to the package as a release asset;
+          # the index records only its file name. A bad icon stops the release so the author sees it.
+          "category=$($manifest.category)" | Out-File -Append -Encoding utf8 $env:GITHUB_OUTPUT
+          $tagsJson = ConvertTo-Json -InputObject @($manifest.tags | Where-Object { $_ }) -Compress -AsArray
+          "tagsJson=$tagsJson" | Out-File -Append -Encoding utf8 $env:GITHUB_OUTPUT
+          $iconName = ''
+          if ($manifest.icon) {
+            $iconSource = Join-Path $entry.dir $manifest.icon
+            $iconExt = [IO.Path]::GetExtension($iconSource).ToLowerInvariant()
+            if (-not (Test-Path $iconSource)) { throw "The manifest icon '$($manifest.icon)' does not exist in $($entry.dir)." }
+            if ($iconExt -notin '.png', '.svg') { throw "The manifest icon '$($manifest.icon)' must be a .png or .svg file." }
+            if ((Get-Item $iconSource).Length -gt 102400) { throw "The manifest icon '$($manifest.icon)' is over 100 KB." }
+            $iconName = "$($manifest.id)-$version.icon$iconExt"
+            Copy-Item $iconSource $iconName -Force
+          }
+          "icon=$iconName" | Out-File -Append -Encoding utf8 $env:GITHUB_OUTPUT
           "downloadUrl=https://github.com/${{ github.repository }}/releases/download/$tag/$zip" | Out-File -Append -Encoding utf8 $env:GITHUB_OUTPUT
           "homepage=https://github.com/${{ github.repository }}/tree/main/$($entry.dir)" | Out-File -Append -Encoding utf8 $env:GITHUB_OUTPUT
 
@@ -120,7 +136,8 @@ jobs:
           $zip = '${{ steps.plugin.outputs.zip }}'
           $version = '${{ steps.plugin.outputs.version }}'
           $notes = "See $dir/CHANGELOG.md for what changed in this version."
-          $args = @('release', 'create', '${{ github.ref_name }}', $zip, "$zip.sha256",
+          $icon = '${{ steps.plugin.outputs.icon }}'
+          $args = @('release', 'create', '${{ github.ref_name }}', $zip, "$zip.sha256") + @($icon | Where-Object { $_ }) + @(
             '--title', "$dir $version", '--notes', $notes)
           if ($version -match '-') { $args += '--prerelease' }
           gh @args
@@ -137,6 +154,9 @@ jobs:
           IDX_AUTHOR: ${{ github.repository_owner }}
           IDX_HOMEPAGE: ${{ steps.plugin.outputs.homepage }}
           IDX_KIND: ${{ steps.plugin.outputs.kind }}
+          IDX_ICON: ${{ steps.plugin.outputs.icon }}
+          IDX_CATEGORY: ${{ steps.plugin.outputs.category }}
+          IDX_TAGS_JSON: ${{ steps.plugin.outputs.tagsJson }}
           IDX_VERSION: ${{ steps.plugin.outputs.version }}
           IDX_MIN_MACRO_GRID: ${{ steps.plugin.outputs.minMacroGrid }}
           IDX_MACRO_GRID: ${{ steps.plugin.outputs.macroGrid }}
@@ -161,6 +181,9 @@ jobs:
             -Author $env:IDX_AUTHOR `
             -Homepage $env:IDX_HOMEPAGE `
             -Kind $env:IDX_KIND `
+            -Icon $env:IDX_ICON `
+            -Category $env:IDX_CATEGORY `
+            -Tags @($env:IDX_TAGS_JSON | ConvertFrom-Json) `
             -Version $env:IDX_VERSION `
             -MinMacroGrid $env:IDX_MIN_MACRO_GRID `
             -MacroGrid $env:IDX_MACRO_GRID `
