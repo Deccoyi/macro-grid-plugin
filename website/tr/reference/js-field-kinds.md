@@ -25,6 +25,13 @@
 | `File` | **Gözat** butonlu yol kutusu (yerel dosya seçici) | yol (string) | `fileFilter` |
 | `List` | kullanıcının ekleyip sildiği tekrarlı satırlar | nesne dizisi | `itemFields` |
 | `Notice` | salt okunur uyarı metni | yok, hiç kaydedilmez | `label`, `description` |
+| `Variable` | değişken seçici (yalnızca widget ayarları) | değişkenin adı (metin) | yok |
+| `Color` | renk seçici | `#rrggbb` metni | `default` |
+| `Hotkey` | kullanıcının bastığı tuşları yakalayan kutu | `ctrl+shift+s` gibi bir tuş birleşimi metni, yoksa boş | `default` |
+| `Duration` | birim seçimli (ms, sn, dk) sayı kutusu | tam milisaniye (sayı) | `min`, `max`, `step`, `default`, hepsi milisaniye |
+| `MultiSelect` | onay kutuları listesi | seçilen seçeneklerin `value` dizisi, seçenek sırasıyla | `options`, `default` |
+
+`Hotkey`, `Duration` ve `MultiSelect` bunlara sahip bir Macro Grid sürümü ister (`minMacroGrid` değerini ona ayarlayın). Daha eski sürüm alanın okunamadığını söyler. `plugin.json` içindeki bir widget'ın `settings` bölümünde eski sürüm dosyanın tamamını okuyamaz ("plugin.json could not be parsed"), `minMacroGrid` ne olursa olsun. `MultiSelect` `visibleWhen` koşulunu yönetemez, çünkü o tek bir metinle karşılaştırır.
 | `Button` | bir buton | yok | JavaScript'ten kullanılamaz (aşağıya bakın) |
 
 ## Seçenekler

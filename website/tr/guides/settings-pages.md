@@ -14,7 +14,7 @@ Ayar sayfası olan bir eklenti, Eklentiler penceresinde bir **dişli düğmesi**
 
 ## Alan türleri ve seçenekler
 
-`kind` değeri `Text`, `Password`, `Number`, `Slider`, `Bool`, `Select`, `Segmented`, `File`, `List`, `Button` veya `Notice` olabilir. `File` Gözat düğmeli bir yol kutusudur, `List` tekrarlanan satırlardır, `Button` eklentide bir komut çalıştırır (yalnızca resmî C# eklentileri), `Notice` salt okunur uyarı metnidir (`Button` ve `Notice` değer olarak kaydedilmez). Kullanışlı alan seçenekleri:
+`kind` değeri `Text`, `Password`, `Number`, `Slider`, `Bool`, `Select`, `Segmented`, `File`, `List`, `Button`, `Notice`, `Variable`, `Color`, `Hotkey`, `Duration` veya `MultiSelect` olabilir. `Hotkey` bir tuş birleşimi yakalar, `Duration` birim seçimli milisaniye sayısıdır, `MultiSelect` değeri dizi olan bir onay kutuları kümesidir. `File` Gözat düğmeli bir yol kutusudur, `List` tekrarlanan satırlardır, `Button` eklentide bir komut çalıştırır (yalnızca resmî C# eklentileri), `Notice` salt okunur uyarı metnidir (`Button` ve `Notice` değer olarak kaydedilmez). Kullanışlı alan seçenekleri:
 
 | Seçenek | Anlamı |
 |---|---|
