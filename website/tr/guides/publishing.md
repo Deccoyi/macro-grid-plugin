@@ -33,6 +33,14 @@ Sunucu, kullanıcının eklediği herhangi bir genel GitHub deposundan da bir Ja
 
 Kökte `plugin.json` yerine `macrogrid-index.json` bulunması, sunucuya "bu çok eklentili bir depo" olduğunu söyler — tam şema için bkz. [Kaynak dizini](/tr/reference/source-index).
 
+## Keşfet'te simge, kategori ve etiketler
+
+`plugin.json` içindeki üç isteğe bağlı alan, eklentinizin Keşfet'te nasıl göründüğünü belirler: `icon` (eklenti klasörünüzde kare bir `.png` veya `.svg`, en çok
+100 KB), `category` (en çok 32 karakter) ve `tags` (en çok 5, her biri en çok 24 karakter). Sürüm adımı simgeyi paketin yanına `<id>-<version>.icon.<ext>`
+adıyla kopyalar; dosya adını, kategoriyi ve etiketleri `macrogrid-index.json` içine yazar. Eksik, yanlış türde veya çok büyük bir simge sürümü bir iletiyle durdurur;
+böylece hiçbir şey yayımlanmadan hatayı görürsünüz. `examples/third-party-release.yml` dosyasını bu alanlardan önce kopyaladıysanız yeniden kopyalayın: eski sürüm her
+yayımda üçünü de dizininizden siliyordu. Bkz. [Kaynak dizini](/reference/source-index).
+
 ## Mağaza
 
 [Mağaza](/tr/store/), bu deponun resmî eklentilerini listeler ve kendini depodan ve GitHub sürümlerinden oluşturur. Bir eklentinin oraya nasıl girdiği şöyledir (bu depoya yalnızca bakımcı eklenti ekler; bkz. [Depo kuralları](/tr/guides/repo-rules)):
