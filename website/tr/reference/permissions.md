@@ -2,7 +2,7 @@
 
 İzinler **JavaScript eklentileri** için geçerlidir; üçüncü taraflar yalnızca bu türü yazabilir. (C# eklentileri resmî ve imzalıdır; sunucu başkasını yüklemez ve izin kullanmazlar.) Bir betik hiçbir yetkisiz başlar: yalnızca hesaplama yapabilir, zamanlayıcı kurabilir, ayar sayfası gösterebilir, günlüğe yazabilir ve durum çubuğunu güncelleyebilir. Dış dünyaya dokunan her şey (diğer değişkenler, klavye, ağ, aksiyon listesi) kullanıcının onayladığı bir izin ister.
 
-## Dört izin
+## İzinler
 
 | İzin | Betiğin yapmasına izin verir | Açtığı çağrılar |
 |---|---|---|
@@ -10,8 +10,11 @@
 | `actions` | düzenleyicinin aksiyon seçicisine kendi aksiyonlarını eklemek | `host.registerAction` |
 | `input` | bilgisayarda tuş kombinasyonlarına basmak ve metin yazmak; yalnızca bir buton basışı işlenirken ([sınırlar](#input-izni)) | `host.input.hotkey / type` |
 | `http:<host>:<port>` | tam olarak o ana bilgisayara ve porta HTTP istekleri göndermek | `host.http.get / post / getAsync / postAsync` |
+| `ws:<host>:<port>` | tam olarak o ana bilgisayara ve porta açık bir web socket tutmak | `host.ws.connect` |
+| `storage` | bu bilgisayarda kendi küçük verisini saklamak | `host.storage.get / set / remove / keys` |
+| `notify` | tepside kısa bildirimler göstermek | `host.notify` |
 
-Başka izin adı yoktur. Değer alan tek izin `http:` iznidir ve her hedef için ayrı bir girdi yazılır.
+Başka izin adı yoktur. `http:` ve `ws:` bir değer alır ve her hedef için ayrı bir girdi yazılır. `storage`, `notify` ve `ws:` yalnızca yeni Macro Grid sürümlerinde vardır: `plugin.json` içindeki `minMacroGrid` değerini bunlara sahip bir sürüme ayarlayın; eski bir sunucu bilmediği bir izin içeren manifesti reddeder.
 
 ### `variables`
 
@@ -61,6 +64,33 @@ Kuralların hepsini sunucu uygular:
 | Yanıt boyutu | En çok 1 MB metin. Daha büyük yanıt hata verir. |
 | Eşzamanlılık | Async çağrılar: eklenti başına en çok 4 istek aynı anda. |
 
+### `ws:<host>:<port>`
+
+Web socket, açık kalan bir bağlantıdır; eklenti böylece canlı veri alabilir. `http:` izninden ayrı bir izindir ve aynı tam hedef kurallarına uyar: her hedef için bir girdi yazılır, örneğin `"ws:localhost:4455"`; port her zaman yazılır (portsuz `wss://` 443 kullanır, yani `ws:<host>:443` gerekir).
+
+| Kural | Ayrıntı |
+|---|---|
+| Şemalar | Onaylı her hedef için `wss://` serbesttir. Düz `ws://` yalnızca bu bilgisayara ve yerel ağa. |
+| Mesajlar | Yalnızca metin, her yönde en fazla 64 KB. |
+| Sınırlar | Eklenti başına aynı anda en fazla 2 soket ve dakikada 10 bağlanma. Saniyede en fazla 50 gelen mesaj (bağlantı bekler, hiçbiri kaybolmaz) ve 20 giden mesaj (fazlasında `send` hata fırlatır). |
+| Yeniden bağlanma | Yok. Yeniden denemek için `onClose` içinden `host.after` çağırın. |
+| Klavye | Bir sokete gelen mesaj, soket bir buton basışı sırasında açılmış olsa bile `host.input` kullanımına asla izin vermez. |
+
+### Bir isteğin gidebileceği yer
+
+Bu, `http:` ve `ws:` için aynen geçerlidir. Bir adı onaylamak yalnızca adla ilgili değildir: bağlantı, adın söylediği türde bir adrese ulaşmalıdır. Bu bilgisayardaki bir ad (`localhost`) yalnızca bu bilgisayara, yerel ağdaki bir ad (`nas`, `printer.local`, özel bir adres) yalnızca yerel ağa, diğer her ad yalnızca genel bir adrese ulaşır. Macro Grid'in bu bilgisayardaki kendi portlarına, ne onaylanmış olursa olsun, hiçbir zaman ulaşılamaz. `Host`, `Origin`, `Connection`, `Upgrade`, `Content-Length`, `Transfer-Encoding`, `TE`, `Trailer`, `Expect`, `Sec-*` ve `Proxy-*` başlıkları ayarlanamaz; satır sonu içeren bir başlık reddedilir. Bir ret, betiğin yakalayabileceği bir `Error` fırlatır ve düzenleyicinin Tanılama Mesajları penceresinde görünür.
+
+### `storage`
+
+- Eklentinin kendi verisini çalıştırmalar ve yeniden başlatmalar arasında, klasöründeki bir dosyada (`storage.json`) tutmasını sağlar; betik dosyanın yolunu hiç yazmaz. Veri güncellemede kalır, kaldırmada silinir.
+- Anahtarlar 1-64 harf, rakam, `.`, `_` veya `-` olur. En fazla 64 anahtar, değer başına 16 KB, toplam 256 KB. Değer, `JSON.stringify` kabul eden her şeydir. Sınırın aşılması hata fırlatır.
+- Düz metindir ve değişiklikten yaklaşık 2 saniye içinde yazılır; bir çökme son 2 saniyeyi kaybettirebilir. Gizli bilgi için uygun değildir.
+
+### `notify`
+
+- `host.notify(metin)` tepside kısa bir bildirim gösterir. Başlık her zaman eklentinin kendi adıdır, metin 200 karakterde kesilir ve tıklamak bir şey yapmaz.
+- Hız sınırı: art arda 3, sonra eklenti başına 30 saniyede bir; fazlası atılır.
+
 ## Kullanıcı ne görür
 
 Eklenti çalışmadan önce (ve bir klasörden kurulmadan önce) Eklentiler penceresi izinleri sade bir dille listeler:
@@ -70,14 +100,17 @@ Eklenti çalışmadan önce (ve bir klasörden kurulmadan önce) Eklentiler penc
 | `variables` | Değişkenleri okumak ve kendi değişkenlerini yayınlamak |
 | `actions` | Kendi aksiyonlarını eklemek |
 | `input` | Butonlarından birine bastığınızda, klavyenizin başındaymış gibi bilgisayarınızda tuşlara basabilir ve yazı yazabilir. Yalnızca güvendiğiniz eklentilere izin verin. |
+| `storage` | Bu bilgisayarda kendi küçük verisini saklayabilir |
+| `notify` | Tepside, başlığı kendi adı olan kısa bildirimler gösterebilir |
+| `ws:<host>:<port>` | *hedef* adresine canlı bir bağlantı açık tutmak: **bu bilgisayarda**, **yerel ağınızda** veya **internette (ağınızın dışına veri gönderebilir)** |
 | `http:<host>:<port>` | *hedef* adresine web istekleri göndermek: **bu bilgisayarda**, **yerel ağınızda** veya **internette (ağınızın dışına veri gönderebilir)** |
 
-HTTP satırı, hedefin nerede olduğuna göre etiketlenir: `localhost`, `127.x.x.x` ve `::1` *bu bilgisayar*; `10.x`, `172.16-31.x`, `192.168.x`, `169.254.x`, tek sözcüklü adlar (`nas`) ve `.local`, `.lan`, `.home.arpa` veya `.internal` ile biten adlar *yerel ağ*; geri kalan her şey *internettir*. Kullanıcılar internet hedeflerine daha dikkatli bakar; mümkün olan en dar hedefi isteyin.
+`http:` ve `ws:` satırları, hedefin nerede olduğuna göre etiketlenir: `localhost`, `127.x.x.x` ve `::1` *bu bilgisayar*; `10.x`, `172.16-31.x`, `192.168.x`, `169.254.x`, tek sözcüklü adlar (`nas`) ve `.local`, `.lan`, `.home.arpa` veya `.internal` ile biten adlar *yerel ağ*; geri kalan her şey *internettir*. Kullanıcılar internet hedeflerine daha dikkatli bakar; mümkün olan en dar hedefi isteyin.
 
 ## Onay
 
 1. Kullanıcı onaylayana kadar eklentinin durumu *Needs approval* (onay bekliyor) kalır. Betiğin hiçbir kısmı ondan önce çalışmaz.
-2. Onay **tam o küme** içindir. Bir izin (veya yeni bir `http:` hedefi) ekleyen güncelleme yeniden onay bekler.
+2. Onay **tam o küme** içindir. Bir izin (veya yeni bir `http:` ya da `ws:` hedefi) ekleyen güncelleme yeniden onay bekler.
 3. Eklenti kaldırılınca onay unutulur. Yeniden kurmak yeniden sorar.
 4. Onaylar, kurulumlar ve kaldırmalar günlük dosyalarına yazılır.
 
@@ -127,6 +160,8 @@ onaylamadan önce izinleri okuyun ve tetikte olun.
 | sistem değerlerine tepki veriyor (`system.cpu` yükselince durumu kırmızı yapmak gibi) | `variables` |
 | kullanıcı butona basınca kısayol veya metin gönderiyor | `input` + `actions` (girdi yalnızca aksiyon içinde çalışır) |
 | HTTP API'si olan yerel bir uygulamayla konuşuyor | `http:localhost:<port>` |
+| canlı bir akışı dinliyor | `ws:<host>:<port>` |
+| bir ayarı veya konumu çalıştırmalar arasında hatırlıyor | `storage` |
 
 Yalnızca kullandığınız şeyi isteyin. Hiçbir şey istemeyen eklenti "özel bir izin istemiyor" olarak görünür.
 

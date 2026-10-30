@@ -52,6 +52,8 @@ For the other cases, edit the source file on `main` and sign again with the same
 - **Switch an official version off** (unsafe): add it to `revoked.json` (`id`, `versions`, a short `reason` the person will read), then `scripts/publish-catalog.ps1 -Only revoked`. Apps that have the plugin stop it on their next check
   (within about 8 hours, or at once with Refresh) and show the reason. Publish the fixed version first when you can, so the person can update.
 - **Withdraw a version**: set `"withdrawn": true` on it in `macrogrid-index.json`, then `scripts/publish-catalog.ps1 -Only index`. It is no longer offered; installed copies keep running with a warning.
+- Do not delete the release files of the five newest versions: the app lets a person go back to them. To make one of them unavailable use `withdrawn` or the safety list.
+- A package never ships a file the plugin writes to; official packages are verified file by file at every start.
 - Add `-Push` to commit and push the signed files from a clean, up-to-date `main`; without it the files are only written for you to review.
 
 The sequence number rises with every signing, so never copy an older signed file back over a newer one: apps refuse a lower sequence. The first signed files must exist before an app version that reads them ships;

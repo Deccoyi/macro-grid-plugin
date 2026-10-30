@@ -112,12 +112,12 @@ public class StreamTextsEngineTests
         using (new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.None))
         {
             engine.Tick(store);
-            Assert.Equal(StatusLevel.Warning, host.Status.LastLevel);
+            Assert.Equal(StatusLevel.Warning, host.StatusItems["files"].LastLevel);
         }
 
         engine.Tick(store);
         Assert.Equal("two", File.ReadAllText(path));
-        Assert.Equal(StatusLevel.Ok, host.Status.LastLevel);
+        Assert.Equal(StatusLevel.Ok, host.StatusItems["files"].LastLevel);
     }
 
     [Fact]
@@ -183,7 +183,7 @@ public class StreamTextsEngineTests
 
         engine.Tick(new FakeVariableStore());
 
-        Assert.Equal(StatusLevel.Warning, host.Status.LastLevel);
+        Assert.Equal(StatusLevel.Warning, host.StatusItems["files"].LastLevel);
         Assert.False(Directory.Exists("relative"));
     }
 

@@ -129,9 +129,20 @@ Removing a plugin forgets its approval.
 | `actions` | register actions |
 | `input` | press key combinations and type text on the PC |
 | `http:<host>:<port>` | send HTTP requests to exactly that host and port (one entry per target, e.g. `http:localhost:4455`) |
+| `ws:<host>:<port>` | keep a web socket open to exactly that host and port (one entry per target, e.g. `ws:localhost:4455`). Separate from `http:` |
+| `storage` | keep a small amount of its own data on this computer |
+| `notify` | show short notices in the tray, titled with the plugin's name |
 
 Timers, settings pages, status items and logging need no permission. An unknown permission string makes the plugin an *Error*.
 A call without its permission throws an ordinary JavaScript `Error` that the script can catch.
+
+`storage`, `notify` and `ws:` need a Macro Grid version that has them: set `minMacroGrid` in `plugin.json` accordingly, because an older server refuses a manifest with a permission it does not know.
+
+**Where a request may go.** Approving `http:<host>:<port>` or `ws:<host>:<port>` is not only about the name: the connection must reach the kind of address the name says.
+A name on this computer (`localhost`) reaches only this computer, a local-network name (`nas`, `printer.local`, a private address) only the local network, and any other
+name only a public address. Macro Grid's own ports on this computer are never reachable. `Host`, `Origin`, `Connection`, `Upgrade`, `Content-Length`,
+`Transfer-Encoding`, `TE`, `Trailer`, `Expect`, `Sec-*` and `Proxy-*` headers cannot be set, and a header with a line break is refused. A refusal throws an `Error`
+and shows up in the editor's Diagnostic Messages.
 
 ### The `host` object
 
@@ -159,6 +170,21 @@ host.input.type('hello')             // needs 'input'
 host.http.get(url, { headers })          // needs http:<host>:<port>; returns { status, body } (body is text), synchronous
 host.http.post(url, body, { headers })   // the body is sent as JSON
 
+host.storage.get(key)                // needs 'storage'; null when missing. A value is anything JSON.stringify accepts
+host.storage.set(key, value)         // keys: 1-64 letters, digits, . _ -; at most 64 keys, 16 KB a value, 256 KB in total
+host.storage.remove(key)
+host.storage.keys()                  // plain text on disk, written within about 2 seconds: not a place for secrets
+
+host.notify('Backup finished')       // needs 'notify'; 200 characters; 3 in a row, then one every 30 seconds
+
+const socket = host.ws.connect('wss://example.com:443/feed', {   // needs ws:<host>:<port>
+  protocols: ['v1'], headers: { Authorization: '...' },          // both optional
+  onOpen() { socket.send('hello'); },
+  onMessage(text) {},                                            // text messages only, up to 64 KB
+  onClose(info) {},                                              // { code, reason, error }; a failed connect ends here too
+});
+socket.send(text); socket.close();
+
 const id = host.every(ms, fn)        // repeat; the shortest interval is 100 ms
 host.after(ms, fn)                   // once
 host.cancel(id)
@@ -177,9 +203,20 @@ Rules the server enforces:
 - **One thing at a time.** The script runs on its own thread, one call at a time, so a slow plugin never blocks the server or
   another plugin. `host.http` blocks the plugin's own other callbacks while it waits. At most 20 timers per plugin; ticks that
   pile up while the script is busy are dropped.
+- **Web sockets:** `wss://` is always allowed for an approved target; plain `ws://` only to `localhost` and local-network names. At most 2 sockets open at a time,
+  10 connects a minute, 50 incoming and 20 outgoing messages a second (20 a second is a hard limit: `send` throws). There is no automatic reconnect: call
+  `host.after` from `onClose`. A message from a socket never allows `host.input`, even when the socket was opened during a button press. Keep a cursor in
+  `host.storage` if the plugin has to continue where it stopped after a restart.
 - **A plugin that fails 5 times in a row is switched off** (status *Error* with the last message). Reload starts it again.
 
 A plugin can draw its own widgets: see section 8.
+
+### Check, try and package your plugin
+
+The plugin tool (a separate download on the Macro Grid release page) checks, starts and packages a JavaScript plugin with the same rules and runtime as the app:
+`macrogrid-plugin new <id>` starts a plugin, `validate <folder>` checks it without running it, `run <folder> --action <type>` starts it in a temporary data folder
+and runs one action, and `pack <folder>` writes `<id>-<version>.zip` with its `.sha256` (it never signs). Exit code 0 is done, 1 is errors, 2 is a usage mistake.
+Use `run` on your own plugin; to try someone else's, install it in the app. See the website guide "Check and package your plugin".
 
 ## 8. Custom widgets
 

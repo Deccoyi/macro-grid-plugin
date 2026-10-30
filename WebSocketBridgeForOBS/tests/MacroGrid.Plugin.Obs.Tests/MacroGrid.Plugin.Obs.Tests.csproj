@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <Using Include="Xunit" />
+    <Using Include="MacroGrid.Plugin.Testing" />
   </ItemGroup>
 
   <ItemGroup>
@@ -25,6 +26,7 @@
     <ProjectReference Include="..\..\src\MacroGrid.Plugin.Obs.csproj" />
     <!-- Tests need the SDK at runtime (plugin types are loaded), so no ExcludeAssets here. -->
     <ProjectReference Include="$(LocalSdkProject)" />
+    <ProjectReference Include="$(LocalSdkTestingProject)" />
   </ItemGroup>
 
 </Project>

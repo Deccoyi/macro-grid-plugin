@@ -41,15 +41,15 @@ jobs:
         run: |
           version=$(sed -n 's:.*<MacroGridSdkVersion[^>]*>\([0-9][0-9.]*\)</MacroGridSdkVersion>.*:\1:p' macro-grid-plugin/Directory.Build.props | head -n1)
           test -n "$version" || { echo "::error::MacroGridSdkVersion not found in Directory.Build.props."; exit 1; }
-          tag=$(git ls-remote --tags https://github.com/Deccoyi/macro-grid "refs/tags/server-v${version}*" | sed -n 's:.*refs/tags/::p' | grep -v '\^{}' | head -n1)
+          tag=$(git ls-remote --tags https://github.com/Deccoyi/macro-grid "refs/tags/server-v${version}*" | sed -n 's:.*refs/tags/::p' | grep -v '\^{}' | head -n1 || true)
           if [ -n "$tag" ]; then
             git clone --depth 1 --branch "$tag" https://github.com/Deccoyi/macro-grid macro-grid
+            have=$(sed -n 's:.*<Version>\([0-9][0-9.]*\)</Version>.*:\1:p' macro-grid/Directory.Build.props | head -n1)
+            test "$have" = "$version" || { echo "::error::MacroGridSdkVersion is $version but the SDK checkout is version $have."; exit 1; }
           else
             echo "::warning title=Unreleased SDK::The server repository has no tag server-v${version}*, so this build used the server main branch. It proves the plugins build against the current SDK, not against a released one. Do not release a plugin until that tag exists."
             git clone --depth 1 --branch main https://github.com/Deccoyi/macro-grid macro-grid
           fi
-          have=$(sed -n 's:.*<Version>\([0-9][0-9.]*\)</Version>.*:\1:p' macro-grid/Directory.Build.props | head -n1)
-          test "$have" = "$version" || { echo "::error::MacroGridSdkVersion is $version but the SDK checkout is version $have."; exit 1; }
       - name: Stop on known vulnerable dependencies
         working-directory: macro-grid-plugin
         shell: pwsh
