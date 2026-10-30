@@ -5,8 +5,10 @@ needs and git history cannot carry — everything else is in commit messages and
 changelog is [CHANGELOG.md](CHANGELOG.md).
 
 ## [Unreleased]
+
+## [0.2.0] - 2026-10-30
 ### Changed
-- Actions implement `IActionOutcomeHandler` (a coded outcome). Needs an editor that has the interface, so `minMacroGrid` must be raised before this is released. A play action with no sound chosen now reports "not configured"; a missing file names the sound instead of the file path.
+- Actions implement `IActionOutcomeHandler` (a coded outcome). Built for SDK 1.4.0, so `minMacroGrid` is now `1.4.0`; an older editor shows the plugin as incompatible. A play action with no sound chosen now reports "not configured"; a missing file names the sound instead of the file path.
 
 ## [0.1.2] - 2026-09-29
 ### Changed
