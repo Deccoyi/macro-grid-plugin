@@ -68,6 +68,19 @@
                         "kind":  "csharp",
                         "versions":  [
                                          {
+                                             "version":  "0.4.0",
+                                             "minMacroGrid":  "1.4.0",
+                                             "sdkVersion":  "^0.4.0",
+                                             "minServerVersion":  "0.3.2",
+                                             "url":  "https://github.com/Deccoyi/macro-grid-plugin/releases/download/plugin-obs-v0.4.0/obs-0.4.0.zip",
+                                             "sha256":  "0468386e362e126a9e118f91a5590bec038f738f924444659def07827516c62c",
+                                             "size":  50862,
+                                             "permissions":  [
+
+                                                             ],
+                                             "signature":  "8d+A0MHJZqm0bmonxphtkVSErbUoGZNeOp/NQgw7fkPEKqaO4trf7TGTSqUjZ+TBt2qmiyWU7dWVFAjzeQ1Lmg=="
+                                         },
+                                         {
                                              "version":  "0.3.1",
                                              "minMacroGrid":  "1.1.0",
                                              "sdkVersion":  "^0.4.0",
@@ -105,7 +118,14 @@
                                                              ],
                                              "signature":  "ncDrDPfT2+pJjtzQ115V68+kScfX71nrumpVtV4YcbOKeqtjKoZMUtbV+DEPiInCLyuxDwRZ95pNgYqAvW/zRg=="
                                          }
-                                     ]
+                                     ],
+                        "category":  "Streaming",
+                        "tags":  [
+                                     "obs",
+                                     "stream",
+                                     "record",
+                                     "scenes"
+                                 ]
                     },
                     {
                         "id":  "plc-icons",
