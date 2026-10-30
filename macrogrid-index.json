@@ -116,6 +116,19 @@
                         "kind":  "csharp",
                         "versions":  [
                                          {
+                                             "version":  "0.1.5",
+                                             "minMacroGrid":  "1.0.0",
+                                             "sdkVersion":  "^0.4.0",
+                                             "minServerVersion":  "0.3.2",
+                                             "url":  "https://github.com/Deccoyi/macro-grid-plugin/releases/download/plugin-plc-icons-v0.1.5/plc-icons-0.1.5.zip",
+                                             "sha256":  "c61636e91f284ef5e86d91905b0fdcd56c5cb2b767b91dc3db65fad8fd53be72",
+                                             "size":  9146,
+                                             "permissions":  [
+
+                                                             ],
+                                             "signature":  "VzySs4d6xyr7mSZ42tu+ecK96J26T7XiorvROvPbq58l0FlW3fjjNjBKIOq23vCMc+Ojib3/iwVQ63LKqQ/wNw=="
+                                         },
+                                         {
                                              "version":  "0.1.4",
                                              "minMacroGrid":  "1.0.0",
                                              "sdkVersion":  "^0.4.0",
@@ -140,7 +153,13 @@
                                                              ],
                                              "signature":  "UtkrZOi+8DVSb6A8b/d099cHUZrDe1gZXN7cujuZCAt5ozhCs9vxHIf0nd/v5xlttIzhi4L0Jx/boz2jXyYBvA=="
                                          }
-                                     ]
+                                     ],
+                        "category":  "Icons",
+                        "tags":  [
+                                     "plc",
+                                     "icons",
+                                     "ladder"
+                                 ]
                     },
                     {
                         "id":  "soundboard",
