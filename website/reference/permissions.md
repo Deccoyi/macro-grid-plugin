@@ -4,7 +4,7 @@ Permissions apply to **JavaScript plugins**, which are the only kind third parti
 page, write to the log and update the status bar. Anything that touches the outside (other variables, the keyboard, the network,
 the action list) needs a permission that the user has approved.
 
-## The four permissions
+## The permissions
 
 | Permission | Lets the script | Calls it unlocks |
 |---|---|---|
@@ -12,8 +12,11 @@ the action list) needs a permission that the user has approved.
 | `actions` | add its own actions to the editor's action picker | `host.registerAction` |
 | `input` | press key combinations and type text on the PC, but only while a button press is being handled ([limits](#the-input-permission)) | `host.input.hotkey / type` |
 | `http:<host>:<port>` | send HTTP requests to exactly that host and port | `host.http.get / post / getAsync / postAsync` |
+| `ws:<host>:<port>` | keep a web socket open to exactly that host and port | `host.ws.connect` |
+| `storage` | keep a small amount of its own data on this computer | `host.storage.get / set / remove / keys` |
+| `notify` | show short notices in the tray | `host.notify` |
 
-There are no other permission names. `http:` is the only one that takes a value, and you write one entry per target.
+There are no other permission names. `http:` and `ws:` take a value, and you write one entry per target. `storage`, `notify` and `ws:` exist only in newer Macro Grid versions: set `minMacroGrid` in `plugin.json` to a version that has them, because an older server refuses a manifest with a permission it does not know.
 
 ### `variables`
 
@@ -64,6 +67,33 @@ Rules, all enforced by the server:
 | Response size | At most 1 MB of text. A bigger response fails. |
 | Concurrency | Async calls: at most 4 requests in flight per plugin. |
 
+### `ws:<host>:<port>`
+
+A web socket is a connection that stays open, so a plugin can receive live data. It is a separate permission from `http:` and follows the same exact-target rules: write one entry per target, such as `"ws:localhost:4455"`, with the port always written (`wss://` without a port uses 443, so it needs `ws:<host>:443`).
+
+| Rule | Detail |
+|---|---|
+| Schemes | `wss://` is allowed for every approved target. Plain `ws://` only to this computer and the local network. |
+| Messages | Text only, up to 64 KB each way. |
+| Limits | At most 2 sockets open at a time and 10 connects a minute per plugin. Up to 50 incoming messages a second (the connection waits, nothing is dropped) and 20 outgoing a second (`send` throws beyond that). |
+| Reconnect | None. Call `host.after` from `onClose` to try again. |
+| Keyboard | A message from a socket never allows `host.input`, even when the socket was opened during a button press. |
+
+### Where a request may go
+
+This applies to `http:` and `ws:` alike. Approving a name is not only about the name: the connection must reach the kind of address the name says. A name on this computer (`localhost`) reaches only this computer, a local-network name (`nas`, `printer.local`, a private address) only the local network, and any other name only a public address. Macro Grid's own ports on this computer are never reachable, whatever was approved. `Host`, `Origin`, `Connection`, `Upgrade`, `Content-Length`, `Transfer-Encoding`, `TE`, `Trailer`, `Expect`, `Sec-*` and `Proxy-*` headers cannot be set, and a header with a line break is refused. A refusal throws an `Error` that the script can catch and shows up in the editor's Diagnostic Messages.
+
+### `storage`
+
+- Lets the plugin keep its own data between runs and restarts, in a file in its folder (`storage.json`) that the script never names. The data stays over an update and goes away with uninstall.
+- Keys are 1-64 letters, digits, `.`, `_` or `-`. At most 64 keys, 16 KB per value, 256 KB in total. A value is anything `JSON.stringify` accepts. Going over a limit throws.
+- It is plain text, written within about 2 seconds of a change, so a crash can lose the last 2 seconds. It is not a place for secrets.
+
+### `notify`
+
+- `host.notify(text)` shows a short notice in the tray. The title is always the plugin's own name, the text is cut to 200 characters and a click does nothing.
+- Rate limit: 3 in a row, then one every 30 seconds per plugin; the rest are dropped.
+
 ## What the user sees
 
 Before the plugin runs (and before it is installed from a folder), the Plugins window lists the permissions in plain language:
@@ -73,16 +103,19 @@ Before the plugin runs (and before it is installed from a folder), the Plugins w
 | `variables` | Read variables and publish its own |
 | `actions` | Add its own actions |
 | `input` | Can press keys and type on your PC as if it were at your keyboard, when you press one of its buttons. Allow only for plugins you trust. |
+| `storage` | Keep a small amount of its own data on this computer |
+| `notify` | Show short notices in the tray, with the plugin's name as the title |
+| `ws:<host>:<port>` | Keep a live connection open to *target* **on this computer**, **on your local network**, or **on the internet (it can send data out of your network)** |
 | `http:<host>:<port>` | Send web requests to *target* **on this computer**, **on your local network**, or **on the internet (it can send data out of your network)** |
 
-The HTTP line is labelled by where the target is: `localhost`, `127.x.x.x` and `::1` are *this computer*; `10.x`, `172.16-31.x`, `192.168.x`,
+The `http:` and `ws:` lines are labelled by where the target is: `localhost`, `127.x.x.x` and `::1` are *this computer*; `10.x`, `172.16-31.x`, `192.168.x`,
 `169.254.x`, single-word names (`nas`) and names ending in `.local`, `.lan`, `.home.arpa` or `.internal` are the *local network*;
 everything else is *the internet*. Users are more careful about internet targets, so ask for the narrowest one you can.
 
 ## Approval
 
 1. The plugin's status is *Needs approval* until the user approves. Nothing of the script runs before that.
-2. The approval is for **that exact set**. An update that adds a permission (or a new `http:` target) waits for approval again.
+2. The approval is for **that exact set**. An update that adds a permission (or a new `http:` or `ws:` target) waits for approval again.
 3. Removing a plugin forgets its approval. Installing it again asks again.
 4. Approvals, installs and removals are written to the log files.
 
@@ -146,6 +179,8 @@ its button. Allow `input` only for plugins you trust.
 | reacts to system values (say, turns a status red when `system.cpu` is high) | `variables` |
 | sends a shortcut or text when the user presses its button | `input` + `actions` (input works only inside an action) |
 | talks to a local app with an HTTP API | `http:localhost:<port>` |
+| listens to a live feed | `ws:<host>:<port>` |
+| remembers a setting or a position between runs | `storage` |
 
 Ask only for what you use. A plugin that asks for nothing shows "asks for no special permissions".
 

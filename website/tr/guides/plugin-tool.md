@@ -13,4 +13,4 @@ Eklenti aracı, JavaScript eklentisi yazanlar için küçük bir komut satırı 
 
 `run` komutunu kendi eklentiniz için kullanın. Başkasının eklentisini denemek için uygulamaya kurun; orada eklenti izinlerinin onayını ister. `run` ile başlatılan bir eklenti Macro Grid'in kendi bağlantı noktalarına hiçbir zaman ulaşamaz.
 
-`pack` ile hazırladığınız paketi açtıktan sonra Eklentiler penceresindeki **Klasörden kur** ile kurabilir veya [Eklentinizi yayımlama](/tr/guides/publishing) bölümündeki gibi yayımlayabilirsiniz.
+`pack` ile hazırladığınız paketi açtıktan sonra Eklentiler penceresindeki **Klasörden Yükle…** ile kurabilir veya [Eklentinizi yayımlama](/tr/guides/publishing) bölümündeki gibi yayımlayabilirsiniz.

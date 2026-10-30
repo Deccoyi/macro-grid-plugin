@@ -18,6 +18,9 @@ ideas built from these pieces see [What you can build](/guides/js-recipes).
 | [Status bar](#host-status) | `host.status` | none |
 | [Keyboard](#host-input) | `host.input.hotkey / type` | `input`, and only during a button press |
 | [HTTP](#host-http) | `host.http.get / post / getAsync / postAsync` | `http:<host>:<port>` |
+| [Web sockets](#host-ws) | `host.ws.connect` | `ws:<host>:<port>` |
+| [Storage](#host-storage) | `host.storage.get / set / remove / keys` | `storage` |
+| [Notices](#host-notify) | `host.notify` | `notify` |
 | [Timers](#host-every-host-after-host-cancel) | `host.every / after / cancel` | none |
 | [Granted permissions](#host-permissions) | `host.permissions` | none |
 | Translations | `locales/<language>.json` next to `plugin.json` | none |
@@ -230,6 +233,51 @@ await host.http.postAsync(url, { on: true }, { headers: {} })
 - **Blocking vs async:** `get`/`post` hold the plugin's thread until the answer arrives, so its timers and other actions wait. Use the
   async calls inside `async` actions and timers to keep everything else running. At most 4 async requests in flight per plugin.
 - The rules (exact host and port, no redirects, 5 s timeout, 1 MB, GET and POST only) are in [Permissions](/reference/permissions#http-host-port).
+
+## host.ws
+
+Needs `ws:<host>:<port>` for the exact target of the address.
+
+```js
+const socket = host.ws.connect('wss://example.com:443/feed', {
+  protocols: ['v1'],                        // optional
+  headers: { Authorization: 'Bearer ...' },  // optional, the header rules apply
+  onOpen() { socket.send('hello'); },
+  onMessage(text) { /* text messages only, up to 64 KB */ },
+  onClose(info) { /* { code, reason, error } */ },
+})
+socket.send('text')
+socket.close()
+```
+
+- `connect` throws at once for a missing permission, a refused scheme (plain `ws://` is allowed only for this computer and the local network), a refused header or a limit. Everything later, also a failed connect, arrives in `onClose`, where `error` is set.
+- There is no automatic reconnect: call `host.after` from `onClose`.
+- Limits: 2 sockets open at a time, 10 connects a minute, a 10 second connect timeout, 20 outgoing messages a second (`send` throws beyond that).
+- A message from a socket never allows `host.input`.
+- The address rules and the headers that cannot be set are in [Permissions](/reference/permissions#where-a-request-may-go).
+
+## host.storage
+
+Needs `storage`.
+
+```js
+host.storage.set('cursor', { page: 3 })
+const cursor = host.storage.get('cursor')   // null when missing
+host.storage.remove('cursor')
+const names = host.storage.keys()
+```
+
+Keys are 1-64 letters, digits, `.`, `_` or `-`; at most 64 keys, 16 KB per value, 256 KB in total. A value is anything `JSON.stringify` accepts. The data is plain text on disk, written within about 2 seconds of a change: not a place for secrets.
+
+## host.notify
+
+Needs `notify`.
+
+```js
+host.notify('Backup finished')
+```
+
+Shows a short notice in the tray, titled with the plugin's name. The text is cut to 200 characters. Three notices in a row are shown, then one every 30 seconds; the rest are dropped.
 
 ## host.every, host.after, host.cancel
 
