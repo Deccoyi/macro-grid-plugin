@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Target framework, SDK reference and the files that travel with the plugin: see build/Plugin.props. -->
+  <Import Project="$(MSBuildThisFileDirectory)..\..\build\Plugin.props" />
+
+  <PropertyGroup>
+    <RootNamespace>MacroGrid.Plugin.StreamTexts</RootNamespace>
+    <AssemblyName>MacroGrid.Plugin.StreamTexts</AssemblyName>
+  </PropertyGroup>
+
+</Project>

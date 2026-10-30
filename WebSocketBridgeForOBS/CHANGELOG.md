@@ -2,6 +2,20 @@
 
 New features and fixes in the OBS plugin. For technical details, see [CHANGELOG-developer.md](CHANGELOG-developer.md).
 
+## Unreleased
+
+## 0.4.0 - 2026-10-30
+### New
+- **Clear results:** when an OBS action does not work, Macro Grid now says why (OBS not connected, nothing chosen, not found, refused, no answer).
+- **Easier to find:** the plugin has a category and search tags in the plugin catalog.
+
+### Changed
+- **Needs Macro Grid 1.4.0 or newer.**
+- **Lighter on the PC:** looking for the OBS program uses less work.
+
+### Fixed
+- **Settings window:** the notice about OBS being independent shows its text again.
+
 ## 0.3.1 - 2026-09-29
 ### Changed
 - **Signed for a stricter check:** this version is signed in the new way Macro Grid checks every time the plugin starts. There is nothing else new in it.

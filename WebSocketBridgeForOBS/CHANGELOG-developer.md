@@ -4,6 +4,10 @@ This file tracks the version of this plugin only (independent of the main progra
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-30
+### Changed
+- Actions implement `IActionOutcomeHandler` (a coded outcome: not connected, not configured, not found, rejected, timeout). Built for SDK 1.4.0, so `minMacroGrid` is now `1.4.0`; an older editor shows the plugin as incompatible. An action with an empty required setting (no scene, no audio source, no scene item) now reports "not configured" instead of doing nothing.
+
 ## [0.3.1] - 2026-09-29
 ### Changed
 - `plugin.json` declares `"minMacroGrid": "1.1.0"` (the field's new name, same value as the old `macroGrid`).

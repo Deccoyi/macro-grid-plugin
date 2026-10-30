@@ -47,6 +47,14 @@ plugin only from the official source. Two shapes are supported:
 Either way, `macrogrid-index.json` at your root instead of `plugin.json` is what tells the host "this is a multi-plugin
 repository" — see [Source index](/reference/source-index) for the exact schema.
 
+## Icon, category and tags in Discover
+
+Three optional fields in `plugin.json` decide how your plugin looks in Discover: `icon` (a square `.png` or `.svg` inside your plugin folder, at most
+100 KB), `category` (at most 32 characters) and `tags` (at most 5, each at most 24 characters). The release step copies the icon next to the package as
+`<id>-<version>.icon.<ext>` and writes the file name, the category and the tags into `macrogrid-index.json`. A missing, wrongly typed or oversized icon
+stops the release with a message, so you see the mistake before anything is published. If you copied `examples/third-party-release.yml` before these
+fields existed, copy it again: the old version dropped all three from your index on every release. See [Source index](/reference/source-index).
+
 ## The Store
 
 The [Store](/store/) lists the official plugins of this repository and builds itself from the repository and its GitHub releases. This is how

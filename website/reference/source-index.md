@@ -1,6 +1,6 @@
 # Plugin source index
 
-The host installs plugins from GitHub without ever calling the GitHub API (no rate limit): it reads a fixed
+The host installs plugins from GitHub without ever calling the GitHub API for an added source (no rate limit; the official source also reads the signed catalog files, see the release guide): it reads a fixed
 `raw.githubusercontent.com` URL for metadata and downloads release assets from a fixed `releases/download` URL. This
 page is the format for both, and applies to the official repository and to any third-party repository people add as a
 source.
@@ -47,11 +47,20 @@ https://raw.githubusercontent.com/<owner>/<repo>/HEAD/macrogrid-index.json
 | `formatVersion` | Always `1` today, also with `minMacroGrid` (or the legacy `macroGrid`) entries (a server before 1.0.0 refuses any other number). A host that does not understand a future version ignores that source rather than crashing. |
 | `plugins[].id` / `.name` / `.description` / `.author` / `.homepage` | Shown in Discover before anything is downloaded. |
 | `plugins[].kind` | `"csharp"` or `"js"`, matching `plugin.json`. Only the official source may list `"csharp"` plugins; the host hides and refuses a `"csharp"` entry of any other source. Third-party sources list `"js"` plugins. |
+| `plugins[].icon` | Optional. The file name of the plugin's icon, a release asset next to the package (`<id>-<version>.icon.png` or `.svg`), never a URL. At most 80 characters, `.png` or `.svg`; the file is at most 100 KB. The host fetches it from the newest version's release and checks the bytes, not the name. |
+| `plugins[].category` | Optional. One short word or phrase for browsing; the host keeps at most 32 characters. |
+| `plugins[].tags` | Optional. Search words; the host keeps at most 5 tags of 24 characters each. |
 | `versions[].minMacroGrid` | Copied from the released `plugin.json` so the host can grey out an incompatible version without downloading it. `macroGrid` (the field's earlier name, read only when `minMacroGrid` is absent), `sdkVersion` and `minServerVersion` (legacy, for servers before 1.0.0) are copied too when `plugin.json` still has them. |
 | `versions[].url` | Must be `https://github.com/<same owner>/<same repo>/releases/download/...` — **an index can only point at its own repository's releases.** A host refuses any other host or repository. |
 | `versions[].sha256` / `.size` | Required. Checked against the downloaded file before it is unzipped. |
 | `versions[].permissions` | JavaScript only; empty array otherwise. Must match the zip's `plugin.json` exactly. |
 | `versions[].signature` | Only meaningful for the official source (see below); other sources are third-party even when this is present. |
+| `versions[].withdrawn` | Optional, `true` when the publisher withdrew this version. It is no longer offered or installable; a copy that is already installed keeps running and the person is asked to update or remove it. |
+| `versions[].urls` | Optional, at most 3 download addresses tried in order after `url`. Only the signed official index may list addresses outside its own repository, and only because the package signature is checked afterwards; any other source can only point at its own repository. |
+
+Every released version stays listed: nothing is pruned. The app offers the newest compatible version and lets a person go back through the five newest ones that are
+compatible and not withdrawn, so keep the release files of those versions online. A package must not contain a file the plugin writes to at run time (for example saved data), because an official
+package is checked file by file every time it starts.
 
 The host also checks, after download: the zip's own `plugin.json` (`id`, `version`, `minMacroGrid`, `kind`,
 `permissions`) must equal the index entry exactly, or the install is refused.
@@ -91,6 +100,19 @@ release with a dedicated ECDSA P-256 key that never leaves the maintainer's mach
 
 This is why the official releases are built and signed locally and the private key is never stored on GitHub: a compromised
 GitHub account cannot produce a package the host accepts as official.
+
+## Official catalog files
+
+The app reads the official catalog as two signed files in `website/public/catalog/` (served by the GitHub contents API and by the Pages site):
+
+- `index.signed.json`: the same list as `macrogrid-index.json` (`formatVersion` 1 or 2).
+- `revoked.signed.json`: the safety list, `{ "formatVersion": 1, "plugins": [ { "id": "...", "versions": ["1.0.0"], "reason": "..." } ] }`. Leave `versions` out to cover every version of the plugin;
+  an empty `versions` array is ignored. A listed official plugin version is switched off in the app with the reason shown (at most 200 characters, at most 500 entries).
+
+Each file is `{ "payload": "<base64>", "signature": "<base64>" }`. The payload is the JSON above with `kind` (`index` or `revoked`), `sequence` (a whole number from 1 that rises with every
+signing; the app refuses a lower one than it has accepted) and `issuedAt` (UTC) in front. The signature is ECDSA P-256 over the decoded payload bytes with SHA-256, with the same key as the packages,
+checked before the payload is read. The app keeps its last good copy, so a missing or broken file never changes anything: **a plugin is switched off only by a verified list, never because a fetch failed.**
+Maintainers sign them with `scripts/publish-catalog.ps1` (see [Releasing a plugin](https://github.com/Deccoyi/macro-grid-plugin/blob/main/docs/release.md)).
 
 ## What CI does for you
 

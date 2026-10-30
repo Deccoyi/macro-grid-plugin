@@ -4,6 +4,15 @@ New features and fixes in the SoundBoard plugin. For technical details, see [CHA
 
 ## Unreleased
 
+## 0.2.0 - 2026-10-30
+### New
+- **Clear results:** when a sound cannot play, Macro Grid now says why (no sound chosen, sound missing, no audio output).
+- **Easier to find:** the plugin has a category and search tags in the plugin catalog.
+
+### Changed
+- **Needs Macro Grid 1.4.0 or newer.**
+- **Faster:** the length of a sound is read once per file version.
+
 ## 0.1.2 - 2026-09-29
 ### Changed
 - **Signed for a stricter check:** this version is signed in the new way Macro Grid checks every time the plugin starts. There is nothing else new in it.

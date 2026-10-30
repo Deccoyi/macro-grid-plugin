@@ -8,7 +8,7 @@ Her eklenti klasörünün kökünde bir `plugin.json` bulunur. Aşağıdaki, Jav
 
 | Alan | Zorunlu | Anlamı |
 |---|---|---|
-| `id` | evet | Benzersiz, sabit kimlik. Klasör adında, aksiyon türlerinde ve değişken adlarında, ayrıca onaylar için kullanılır. Sunucu aynı kimlikli ikinci bir eklentiyi reddeder. |
+| `id` | evet | Benzersiz, sabit kimlik. Klasör adında, aksiyon türlerinde ve değişken adlarında, ayrıca onaylar için kullanılır. 1 ile 64 karakter: harf, rakam, `.`, `-` ve `_`; harf veya rakamla başlar, noktayla bitmez (ayrılmış Windows aygıt adları reddedilir). Sunucu aynı kimlikli ikinci bir eklentiyi reddeder. |
 | `name` | evet | Eklentiler penceresinde görünen ad. |
 | `version` | evet | Eklentinin kendi anlamsal sürümü, sunucununkinden bağımsız. |
 | `minMacroGrid` | evet | Eklentinin çalıştığı en eski Macro Grid, `1.3.0` gibi `MAJOR.MINOR.PATCH` biçiminde. **Bu bir minimum değerdir, birebir eşleşme değil:** eklenti, o sürümden bir sonraki MAJOR'a kadar (o hariç) her Macro Grid'de çalışır — daha eski bir sunucuda (örn. `1.2.1` yazıp sunucu `1.1.1` ise) **çalışmaz**. Macro Grid ve eklenti SDK'sı tek sürümü paylaşır; derlediğiniz SDK sürümünü, daha yenisini kullanmıyorsanız daha eskisini yazın. Uymayan bir sunucu eklentiyi *Incompatible* (uyumsuz) listeler ve yüklemez. Macro Grid 1.2.x'e kadar adı `macroGrid` idi; o ad hâlâ çalışır — yalnızca `minMacroGrid` yoksa okunur — ve yeniden adlandırmadan sonra en az bir MAJOR boyunca okunabilir kalır. |

@@ -15,7 +15,7 @@ read with `host.settings.get()`. Register the page at the top level of the scrip
 
 ## Field kinds and options
 
-`kind` is `Text`, `Password`, `Number`, `Slider`, `Bool`, `Select`, `Segmented`, `File`, `List`, `Button` or `Notice`. `File` is a path box with
+`kind` is `Text`, `Password`, `Number`, `Slider`, `Bool`, `Select`, `Segmented`, `File`, `List`, `Button`, `Notice`, `Variable`, `Color`, `Hotkey`, `Duration` or `MultiSelect`. `Hotkey` captures a key combination, `Duration` is a number of milliseconds with a unit choice, and `MultiSelect` is a set of checkboxes whose value is an array. `File` is a path box with
 a Browse button, `List` is a set of repeated rows, `Button` runs a command in the plugin (official C# plugins only), and `Notice` is read-only warning text (`Button` and `Notice` are
 never saved as values). Useful field options:
 

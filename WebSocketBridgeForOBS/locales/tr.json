@@ -106,5 +106,9 @@
   "Volume (%)": "Ses seviyesi (%)",
   "Text": "Metin",
   "{0} — muted": "{0} — sessiz mi",
-  "{0} — volume (dB)": "{0} — ses seviyesi (dB)"
+  "{0} — volume (dB)": "{0} — ses seviyesi (dB)",
+  "No scene is chosen.": "Sahne seçilmemiş.",
+  "No scene item is chosen.": "Sahne öğesi seçilmemiş.",
+  "No audio source is chosen.": "Ses kaynağı seçilmemiş.",
+  "Nothing is chosen.": "Seçim yapılmamış."
 }

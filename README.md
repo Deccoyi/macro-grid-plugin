@@ -27,6 +27,7 @@ and every plugin here is versioned on its own. Documentation site: <https://decc
 | [WebSocketBridgeForOBS/](WebSocketBridgeForOBS/) | C# | Controls OBS Studio over obs-websocket v5: scenes, streaming, recording, audio, scene items, text sources, plus about 45 live `obs.*` variables. |
 | [PLCIcons/](PLCIcons/) | C# | A static icon pack of ladder-logic (PLC) symbols for the editor's icon picker. |
 | [SoundBoard/](SoundBoard/) | C# | Plays local sound files from buttons: named clips with volume, loop, overlap and fade control, plus live `soundboard.*` variables. |
+| [StreamTexts/](StreamTexts/) | C# | Writes live text files from variables (CPU, RAM, your own) for the text sources of a streaming app. |
 | [HelloJs/](HelloJs/) | JavaScript | A small example of a sandboxed script plugin: a counter variable, a settings page, one action. |
 
 ## Installing a plugin
@@ -58,6 +59,8 @@ dotnet test  WebSocketBridgeForOBS\tests\MacroGrid.Plugin.Obs.Tests\MacroGrid.Pl
 dotnet build PLCIcons\src\MacroGrid.Plugin.PlcIcons.csproj
 dotnet build SoundBoard\src\MacroGrid.Plugin.SoundBoard.csproj
 dotnet test  SoundBoard\tests\MacroGrid.Plugin.SoundBoard.Tests\MacroGrid.Plugin.SoundBoard.Tests.csproj
+dotnet build StreamTexts\src\MacroGrid.Plugin.StreamTexts.csproj
+dotnet test  StreamTexts\tests\MacroGrid.Plugin.StreamTexts.Tests\MacroGrid.Plugin.StreamTexts.Tests.csproj
 ```
 
 ## Writing your own

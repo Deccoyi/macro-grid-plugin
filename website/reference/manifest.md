@@ -8,7 +8,7 @@ Every plugin folder has a `plugin.json` at its root. This is the JavaScript exam
 
 | Field | Required | Meaning |
 |---|---|---|
-| `id` | yes | Unique, stable id. Used in the folder name, in action types and variable names, and for approvals. The server refuses a second plugin with the same id. |
+| `id` | yes | Unique, stable id. Used in the folder name, in action types and variable names, and for approvals. 1 to 64 characters: letters, digits, `.`, `-` and `_`, starting with a letter or digit and not ending with a dot (reserved Windows device names are refused). The server refuses a second plugin with the same id. |
 | `name` | yes | Display name in the Plugins window. |
 | `version` | yes | The plugin's own semantic version, independent of the server's. |
 | `minMacroGrid` | yes | The oldest Macro Grid the plugin runs on, as `MAJOR.MINOR.PATCH` such as `1.3.0`. **It is a minimum, not an exact match:** the plugin runs on every Macro Grid from that version up to, but not including, the next MAJOR — an older server (say `1.2.1` written but the server is `1.1.1`) does *not* run it. Macro Grid and the plugin SDK share one version, so use the SDK version you build against, or an older one if you use nothing newer. A server that does not fit lists the plugin as *Incompatible* and does not load it. Was called `macroGrid` up to Macro Grid 1.2.x; that name still works, read only when `minMacroGrid` is absent, and stays readable for at least one MAJOR after the rename. |

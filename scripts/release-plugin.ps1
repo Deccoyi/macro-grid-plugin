@@ -19,7 +19,7 @@
   ./scripts/release-plugin.ps1 -Name hellojs -Publish   # also release and update the index
 #>
 param(
-    [Parameter(Mandatory)] [ValidateSet('obs', 'plc-icons', 'hellojs', 'soundboard')] [string]$Name,
+    [Parameter(Mandatory)] [ValidateSet('obs', 'plc-icons', 'hellojs', 'soundboard', 'streamtexts')] [string]$Name,
     [string]$KeyPath = (Join-Path $env:USERPROFILE 'signing\plugin-signing\plugin-signing-private.pem'),
     [string]$OutDir = (Join-Path ([System.IO.Path]::GetTempPath()) 'macrogrid-plugin-release'),
     # A server repository checkout to build the SDK from, when the sibling ..\macro-grid is not at MacroGridSdkVersion
@@ -38,6 +38,7 @@ $plugins = @{
     'plc-icons' = @{ dir = 'PLCIcons'; proj = 'PLCIcons/src/MacroGrid.Plugin.PlcIcons.csproj' }
     'hellojs'   = @{ dir = 'HelloJs';  proj = '' }
     'soundboard' = @{ dir = 'SoundBoard'; proj = 'SoundBoard/src/MacroGrid.Plugin.SoundBoard.csproj' }
+    'streamtexts' = @{ dir = 'StreamTexts'; proj = 'StreamTexts/src/MacroGrid.Plugin.StreamTexts.csproj' }
 }
 $entry = $plugins[$Name]
 $owner = 'Deccoyi'
@@ -66,6 +67,11 @@ if ($entry.proj) {
     $have = [regex]::Match((Get-Content (Join-Path $SdkPath 'Directory.Build.props') -Raw), '<Version>([\d.]+)</Version>').Groups[1].Value
     # Every dotnet command below (restore, list, build) reads this as the MSBuild property LocalSdkProject (Directory.Build.props).
     $env:LocalSdkProject = (Resolve-Path $sdkProject).Path
+    # A release is built against a RELEASED SDK only: the checkout must sit exactly on the server tag of MacroGridSdkVersion.
+    if ($Publish) {
+        if (-not (@(git -C $SdkPath tag --points-at HEAD) -like "server-v$wanted*")) { throw "The SDK checkout at $SdkPath is not at a tag server-v$wanted*. A plugin is released only against a released SDK: wait for the server tag, check it out and pass -SdkPath." }
+        if (git -C $SdkPath status --porcelain) { throw "The SDK checkout at $SdkPath has local changes; check out the clean tag server-v$wanted*." }
+    }
     if ($wanted -ne $have) { throw "The SDK checkout at $SdkPath is version $have, but MacroGridSdkVersion is $wanted. Check out the server tag for $wanted (a worktree is fine) and pass -SdkPath." }
 }
 
@@ -155,6 +161,19 @@ if ($entry.proj) {
     Write-Host "SBOM: $sbomName"
 }
 
+# The plugin's icon (manifest "icon", .png or .svg, at most 100 KB) goes next to the package so Discover can show it; the index records only the file name.
+# It is checked and copied before the dry-run return, and a bad icon stops the release, so the author sees the mistake.
+$iconAsset = $null
+if ($manifest.icon) {
+    $iconSource = Join-Path $entry.dir $manifest.icon
+    $iconExt = [IO.Path]::GetExtension($iconSource).ToLowerInvariant()
+    if (-not (Test-Path $iconSource)) { throw "The manifest icon '$($manifest.icon)' does not exist in $($entry.dir)." }
+    if ($iconExt -notin '.png', '.svg') { throw "The manifest icon '$($manifest.icon)' must be a .png or .svg file." }
+    if ((Get-Item $iconSource).Length -gt 102400) { throw "The manifest icon '$($manifest.icon)' is over 100 KB." }
+    $iconAsset = Join-Path $OutDir "$($manifest.id)-$version.icon$iconExt"
+    Copy-Item $iconSource $iconAsset -Force
+}
+
 if (-not $Publish) {
     Write-Host "Dry run: nothing was published. Files are in $OutDir"
     return
@@ -162,7 +181,7 @@ if (-not $Publish) {
 
 # Publish the GitHub release; the tag is created on main's current commit.
 $notes = "$($manifest.name) ${version}: see $($entry.dir)/CHANGELOG.md for what changed in this version."
-$assets = @($zip, "$zip.sha256", "$zip.sig") + @($sbom | Where-Object { $_ })
+$assets = @($zip, "$zip.sha256", "$zip.sig") + @($sbom | Where-Object { $_ }) + @($iconAsset | Where-Object { $_ })
 $ghArgs = @('release', 'create', $tag) + $assets + @('--repo', "$owner/$repo",
     '--target', 'main', '--title', "$($manifest.name) $version", '--notes', $notes)
 if ($version -match '-') { $ghArgs += '--prerelease' }
@@ -178,6 +197,9 @@ if ($LASTEXITCODE -ne 0) { throw 'gh release create failed' }
     -Author $owner `
     -Homepage "https://github.com/$owner/$repo/tree/main/$($entry.dir)" `
     -Kind $manifest.kind `
+    -Icon $(if ($iconAsset) { Split-Path $iconAsset -Leaf } else { '' }) `
+    -Category "$($manifest.category)" `
+    -Tags @($manifest.tags | Where-Object { $_ }) `
     -Version $version `
     -MinMacroGrid $manifest.minMacroGrid `
     -MacroGrid "$($manifest.macroGrid)" `
@@ -189,7 +211,11 @@ if ($LASTEXITCODE -ne 0) { throw 'gh release create failed' }
     -Signature $result.signature `
     -Permissions @($manifest.permissions | Where-Object { $_ })
 
-git add macrogrid-index.json
+# The signed copy of the index is what the app reads first; it is signed here, with the same key, and committed with the plain one.
+& (Join-Path $PSScriptRoot 'publish-catalog.ps1') -Only index -KeyPath $KeyPath
+if ($LASTEXITCODE -ne 0) { throw 'Signing the catalog index failed' }
+
+git add macrogrid-index.json website/public/catalog/index.signed.json
 git commit -m "chore(index): add $($manifest.id) $version to the plugin index"
 git push origin main
 Write-Host "Released $tag and updated macrogrid-index.json"

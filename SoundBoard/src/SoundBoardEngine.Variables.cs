@@ -111,13 +111,28 @@ public sealed partial class SoundBoardEngine
         }
     }
 
-    private static TimeSpan TryGetDuration(string file)
+    /// <summary>Durations already read, keyed by file. A file whose size or change time differs is read again, so a
+    /// replaced sound never shows the old length; opening an MP3 scans the whole file, which is worth doing once.</summary>
+    private readonly Dictionary<string, (long Length, DateTime Written, TimeSpan Duration)> _durations = new(StringComparer.OrdinalIgnoreCase);
+
+    private TimeSpan TryGetDuration(string file)
     {
-        if (file.Length == 0 || !File.Exists(file)) return TimeSpan.Zero;
+        if (file.Length == 0) return TimeSpan.Zero;
         try
         {
+            var info = new FileInfo(file);
+            if (!info.Exists) return TimeSpan.Zero;
+
+            lock (_durations)
+            {
+                if (_durations.TryGetValue(file, out var known) && known.Length == info.Length && known.Written == info.LastWriteTimeUtc)
+                    return known.Duration;
+            }
+
             using var reader = new NAudio.Wave.AudioFileReader(file);
-            return reader.TotalTime;
+            var duration = reader.TotalTime;
+            lock (_durations) _durations[file] = (info.Length, info.LastWriteTimeUtc, duration);
+            return duration;
         }
         catch (Exception)
         {

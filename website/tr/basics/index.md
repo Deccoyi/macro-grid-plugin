@@ -79,5 +79,5 @@ metinde gösterir veya koşullu kurallarda (renk, metin, simge, animasyon) kulla
 
 ## Mevcut SDK'nın sınırları
 
-- Bir eklenti widget türü ekleyemez ya da kendi widget'ını çizemez (bir `plugin-html` widget'ı planlanıyor).
+- Eklentinin betiği çizim yapamaz. Bir eklenti kendi widget'larını getirebilir (uygulamada güvenli bir worker içinde, ağ erişimi olmadan çalışan ayrı betikler), ama yeni bir widget türü ekleyemez.
 - Sunucu yalnızca Windows'ta çalışır, dolayısıyla eklentiler fiilen yalnızca Windows içindir.

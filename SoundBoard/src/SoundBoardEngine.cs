@@ -47,6 +47,22 @@ public sealed partial class SoundBoardEngine : IVariableProvider, IVariableCatal
         UpdateFileStatus();
     }
 
+    /// <summary>True while the audio output is open (it opens on the first sound and closes after a while of silence).</summary>
+    public bool HasOutput { get { lock (_lock) return _output is not null; } }
+
+    /// <summary>Why a sound cannot be played right now, or null when it can: the row is gone, or its file is missing. The person is told the
+    /// sound's name, never the file path (the path goes to the plugin log).</summary>
+    public ActionOutcome? CheckSound(string soundId)
+    {
+        SoundEntry? entry;
+        lock (_lock) entry = _settings.Sounds.FirstOrDefault(s => s.Id == soundId);
+        if (entry is null) return ActionOutcome.Failed(ActionFailureCode.NotFound, "The sound is no longer in the sound board.");
+        if (entry.File.Length > 0 && File.Exists(entry.File)) return null;
+
+        _host.Log($"Sound file not found: {entry.File}");
+        return ActionOutcome.Failed(ActionFailureCode.NotFound, $"The file of the sound '{DisplayName(entry)}' was not found. Pick it again in the settings.");
+    }
+
     public SoundBoardSettingsData Settings { get { lock (_lock) return _settings; } }
 
     /// <summary>Applied by <see cref="SoundBoardSettingsPage.Save"/>. Persists, updates the master and every
@@ -96,7 +112,10 @@ public sealed partial class SoundBoardEngine : IVariableProvider, IVariableCatal
         }
         if (entry is null) throw new InvalidOperationException($"Unknown sound: {soundId}");
         if (entry.File.Length == 0 || !File.Exists(entry.File))
-            throw new InvalidOperationException($"Sound file not found: {entry.File} — pick it again in the settings.");
+        {
+            _host.Log($"Sound file not found: {entry.File}");
+            throw new InvalidOperationException($"The file of the sound '{DisplayName(entry)}' was not found. Pick it again in the settings.");
+        }
 
         EnsureOutputOpen();
 

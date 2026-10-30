@@ -46,6 +46,9 @@ https://raw.githubusercontent.com/<owner>/<repo>/HEAD/macrogrid-index.json
 | `formatVersion` | Bugün her zaman `1`. Gelecekteki bir sürümü anlamayan bir sunucu çökmek yerine o kaynağı yok sayar. |
 | `plugins[].id` / `.name` / `.description` / `.author` / `.homepage` | Herhangi bir şey indirilmeden önce Keşfet'te gösterilir. |
 | `plugins[].kind` | `"csharp"` veya `"js"`, `plugin.json` ile eşleşir. Yalnızca resmî kaynak `"csharp"` eklentileri listeleyebilir; sunucu başka bir kaynağın `"csharp"` girdisini gizler ve reddeder. Üçüncü taraf kaynaklar `"js"` eklentileri listeler. |
+| `plugins[].icon` | İsteğe bağlı. Eklentinin simgesinin dosya adı; paketin yanındaki bir sürüm varlığıdır (`<id>-<version>.icon.png` veya `.svg`), asla bir URL değildir. En çok 80 karakter, `.png` veya `.svg`; dosya en çok 100 KB. Sunucu onu en yeni sürümün release'inden alır ve adı değil baytları denetler. |
+| `plugins[].category` | İsteğe bağlı. Gezinmek için kısa bir sözcük veya tamlama; sunucu en çok 32 karakter tutar. |
+| `plugins[].tags` | İsteğe bağlı. Arama sözcükleri; sunucu her biri en çok 24 karakterlik en çok 5 etiket tutar. |
 | `versions[].minMacroGrid` | Yayımlanan `plugin.json`'dan kopyalanır; böylece sunucu, indirmeden önce uyumsuz bir sürümü soluklaştırabilir. `plugin.json`'da hâlâ varsa `macroGrid` (alanın önceki adı, yalnızca `minMacroGrid` yoksa okunur), `sdkVersion` ve `minServerVersion` (1.0.0 öncesi sunucular için eski alanlar) de kopyalanır. |
 | `versions[].url` | `https://github.com/<aynı owner>/<aynı repo>/releases/download/...` olmalıdır — **bir dizin yalnızca kendi deposunun sürümlerine işaret edebilir.** Sunucu başka bir host veya depoyu reddeder. |
 | `versions[].sha256` / `.size` | Zorunlu. İndirilen dosya, zip'i açmadan önce buna göre denetlenir. |
@@ -90,6 +93,18 @@ makinesinden hiç çıkmayan özel bir ECDSA P-256 anahtarıyla imzalar:
 
 Bu yüzden resmî sürümler yerelde derlenip imzalanır ve özel anahtar hiçbir zaman GitHub'da tutulmaz: ele geçirilmiş bir GitHub
 hesabı, sunucunun resmî olarak kabul edeceği bir paket üretemez.
+
+## Resmî katalog dosyaları
+
+Uygulama resmî kataloğu `website/public/catalog/` klasöründeki iki imzalı dosyadan okur:
+
+- `index.signed.json`: `macrogrid-index.json` ile aynı liste.
+- `revoked.signed.json`: güvenlik listesi, `{ "formatVersion": 1, "plugins": [ { "id": "...", "versions": ["1.0.0"], "reason": "..." } ] }`. `versions` yazılmazsa eklentinin her sürümü kapsanır.
+  Listedeki resmî eklenti sürümü uygulamada nedeniyle birlikte kapatılır.
+
+Her dosya `{ "payload": "<base64>", "signature": "<base64>" }` biçimindedir. İmza, paketlerle aynı anahtarla, çözülmüş payload baytları üzerinde ECDSA P-256 / SHA-256'dır ve payload okunmadan önce denetlenir.
+Payload'ın başında `kind`, her imzalamada artan `sequence` ve `issuedAt` bulunur; uygulama kabul ettiğinden düşük bir sıra numarasını reddeder. Dosya alınamazsa hiçbir şey değişmez:
+**bir eklenti yalnızca doğrulanmış bir listeyle kapatılır, bir indirme başarısız oldu diye asla.**
 
 ## CI sizin için ne yapar
 

@@ -2,9 +2,12 @@
   <PropertyGroup>
     <!-- The plugin SDK (MacroGrid.Plugin.Abstractions) is no longer published to NuGet. The official plugins build against a checkout of the
          server repository: the sibling ..\macro-grid by default, or another checkout with -p:LocalSdkProject=<path to
-         MacroGrid.Plugin.Abstractions.csproj>. CI checks out the server tag of MacroGridSdkVersion, and scripts/release-plugin.ps1 refuses to build
+         MacroGrid.Plugin.Abstractions.csproj>. CI checks out the server tag of MacroGridSdkVersion (main, with a warning, while that tag does not exist yet), and scripts/release-plugin.ps1 refuses to build
          unless the checkout's <Version> equals it. See docs/official-csharp-plugins.md. -->
-    <MacroGridSdkVersion Condition="'$(MacroGridSdkVersion)' == ''">1.1.0</MacroGridSdkVersion>
+    <MacroGridSdkVersion Condition="'$(MacroGridSdkVersion)' == ''">1.4.0</MacroGridSdkVersion>
     <LocalSdkProject Condition="'$(LocalSdkProject)' == ''">$(MSBuildThisFileDirectory)..\macro-grid\src\MacroGrid.Plugin.Abstractions\MacroGrid.Plugin.Abstractions.csproj</LocalSdkProject>
+    <!-- The shared test doubles (fake IPluginHost, variable store, status item) sit next to the SDK in the same checkout; the test projects reference
+         them from there instead of keeping a copy each. -->
+    <LocalSdkTestingProject Condition="'$(LocalSdkTestingProject)' == ''">$([System.IO.Path]::GetFullPath('$(LocalSdkProject)\..\..\..\tests\MacroGrid.Plugin.Testing\MacroGrid.Plugin.Testing.csproj'))</LocalSdkTestingProject>
   </PropertyGroup>
 </Project>

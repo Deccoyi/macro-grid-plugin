@@ -15,6 +15,9 @@ Bu sayfa her fonksiyonu, her seçeneği ve her sınırı listeler. İzin tarafı
 | [Durum çubuğu](#host-status) | `host.status` | yok |
 | [Klavye](#host-input) | `host.input.hotkey / type` | `input`, yalnızca buton basışı sırasında |
 | [HTTP](#host-http) | `host.http.get / post / getAsync / postAsync` | `http:<host>:<port>` |
+| [Web socket](#host-ws) | `host.ws.connect` | `ws:<host>:<port>` |
+| [Depolama](#host-storage) | `host.storage.get / set / remove / keys` | `storage` |
+| [Bildirimler](#host-notify) | `host.notify` | `notify` |
 | [Zamanlayıcılar](#host-every-host-after-host-cancel) | `host.every / after / cancel` | yok |
 | [Verilen izinler](#host-permissions) | `host.permissions` | yok |
 | Çeviriler | `plugin.json` yanında `locales/<language>.json` | yok |
@@ -53,6 +56,8 @@ host.variables.describe([
 | `set(name, value)` | Değişkenlerinizden birini yayınlar veya günceller. `undefined` `null` olur; başka her tür (nesne, dizi) dizeye çevrilir. |
 | `get(name)` | `system.*` ve başka eklentilerinkiler dahil, herhangi bir değişkenin güncel değerini okur. Olmayan değişken `null` verir. |
 | `remove(name)` | Değişkenlerinizden birini kaldırır. |
+
+`user.` ile başlayan adlar kişinin kendi Genel Değişken Listesi'ne aittir: `get` ile okuyabilirsiniz, ama `set` ve `remove` onları yok sayar.
 | `describe(list)` | Değişkenleri düzenleyicinin değişken seçicisinde listeler; kimse adı tahmin etmek zorunda kalmaz. En üst düzeyde bir kez çağırın. |
 
 **Adlar** `<plugin id>.` ile başlamalı, en çok 120 karakter olmalı ve yalnızca harf, rakam, `.`, `_` ve `-` içermelidir.
@@ -110,6 +115,23 @@ host.registerAction({
 Aksiyonun hangi olaylara bağlanacağını kullanıcı belirler: basma, bırakma, uzun basma, çift dokunma, aç/kapa, değer değişti. Tek aksiyon hepsine hizmet eder; slider'a tepki vermek için `context.value`'yu okuyun.
 
 Aksiyon, `run` döndüğünde bitmiş sayılır. `async run` içinde `await` ettiğiniz işler bundan sonra da sürer.
+
+### Sonucu bildirmek
+
+Ne olduğunu söylemek için `run` içinden bir nesne döndürün:
+
+```js
+return { ok: false, code: 'NotConnected', message: 'Işık merkezine ulaşılamıyor.' }   // hata
+return { ok: 'accepted', message: 'Gönderildi, doğrulanamıyor.' }                     // iletildi, doğrulanamıyor
+```
+
+`code` şunlardan biridir: `NotConfigured`, `NotConnected`, `PermissionDenied`, `ProviderError`, `ProviderRejected`, `InvalidParameter`, `NotFound`,
+`Timeout`, `Unavailable` (büyük/küçük harf fark etmez; eksik veya bilinmeyen kod `ProviderError` sayılır). `message` kişiye gösterilen sade bir cümledir ve 200 karaktere
+kısaltılır; içine parola, kimlik bilgili adres veya dosya yolu yazmayın. Döndürülen başka her değer eskisi gibi başarıdır. Bildirilen hata bir betik hatası
+değildir: Hata Listesi'ne satır eklemez ve eklentinin kapatılmasına doğru sayılmaz.
+
+`async run` beklenmez. Aksiyonu `outcome: true` ile kaydederseniz sunucu promise'i bekler (en çok 10 saniye, sonra `Timeout`), çözdüğünüz nesneyi okur ve
+reddedilmeyi hatanın mesajıyla `ProviderError` sayar. Aynı anda en çok 16 böyle bekleme açık olabilir. Bekleyen bir basış aynı cihazın sonraki basışını geciktirir; kısa tutun.
 
 ## host.settings
 
@@ -193,6 +215,51 @@ await host.http.postAsync(url, { on: true }, { headers: {} })
 - **Engelleyici ve async:** `get`/`post`, yanıt gelene kadar eklentinin iş parçacığını tutar; zamanlayıcıları ve diğer aksiyonları bekler. Diğer her şeyin çalışmaya devam etmesi için `async` aksiyon ve zamanlayıcılarda async çağrıları kullanın. Eklenti başına aynı anda en çok 4 async istek.
 - Kurallar (tam ana bilgisayar ve port, yönlendirme yok, 5 sn zaman aşımı, 1 MB, yalnızca GET ve POST) [İzinler](/tr/reference/permissions#http-host-port) sayfasındadır.
 
+## host.ws
+
+Adresin tam hedefi için `ws:<host>:<port>` ister.
+
+```js
+const socket = host.ws.connect('wss://example.com:443/feed', {
+  protocols: ['v1'],                        // isteğe bağlı
+  headers: { Authorization: 'Bearer ...' },  // isteğe bağlı, başlık kuralları geçerlidir
+  onOpen() { socket.send('hello'); },
+  onMessage(text) { /* yalnızca metin mesajları, en fazla 64 KB */ },
+  onClose(info) { /* { code, reason, error } */ },
+})
+socket.send('text')
+socket.close()
+```
+
+- `connect`, eksik izin, reddedilen şema (düz `ws://` yalnızca bu bilgisayara ve yerel ağa serbesttir), reddedilen başlık veya sınır için hemen hata fırlatır. Sonrası, başarısız bir bağlanma dahil, `onClose` içine gelir ve orada `error` doludur.
+- Otomatik yeniden bağlanma yoktur: `onClose` içinden `host.after` çağırın.
+- Sınırlar: aynı anda 2 açık soket, dakikada 10 bağlanma, 10 saniyelik bağlanma zaman aşımı, saniyede 20 giden mesaj (fazlasında `send` hata fırlatır).
+- Bir sokete gelen mesaj `host.input` kullanımına asla izin vermez.
+- Adres kuralları ve ayarlanamayan başlıklar [İzinler](/tr/reference/permissions#bir-isteğin-gidebileceği-yer) sayfasındadır.
+
+## host.storage
+
+`storage` ister.
+
+```js
+host.storage.set('cursor', { page: 3 })
+const cursor = host.storage.get('cursor')   // yoksa null
+host.storage.remove('cursor')
+const names = host.storage.keys()
+```
+
+Anahtarlar 1-64 harf, rakam, `.`, `_` veya `-` olur; en fazla 64 anahtar, değer başına 16 KB, toplam 256 KB. Değer, `JSON.stringify` kabul eden her şeydir. Veri diskte düz metindir ve değişiklikten yaklaşık 2 saniye içinde yazılır: gizli bilgi için uygun değildir.
+
+## host.notify
+
+`notify` ister.
+
+```js
+host.notify('Backup finished')
+```
+
+Tepside, başlığı eklentinin adı olan kısa bir bildirim gösterir. Metin 200 karakterde kesilir. Art arda üç bildirim gösterilir, sonra 30 saniyede bir; fazlası atılır.
+
 ## host.every, host.after, host.cancel
 
 ```js
@@ -236,7 +303,7 @@ Her metni tek bir dilde yazın (`plugin.json` içindeki `defaultLanguage`, varsa
 
 ## Henüz mümkün olmayanlar
 
-- Eklenti kendi widget'ını çizemez (bir `plugin-html` widget'ı planlı), simge paketi veya yeni widget türü ekleyemez.
+- Eklentinin betiği çizim yapamaz. Bir eklenti kendi widget'larını getirebilir, ama bunlar uygulamada güvenli bir worker içinde çalışan ayrı betiklerdir (eklenti yazım rehberindeki "Custom widgets" bölümüne bakın). Eklenti simge paketi ekleyemez.
 - Dosya, soket, WebSocket, `fetch`, `setTimeout` (yerine `host.after`), modül yok.
 - Ayar formunda buton yok (`Button` alanı sunucuda kod ister, bu yüzden yalnızca resmî C# eklentilerinde vardır).
 - Dinamik açılır liste yok: `Select` seçenekleri sabittir (dinamik listeler yalnızca resmî C# eklentilerindedir).

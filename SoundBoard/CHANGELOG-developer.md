@@ -6,6 +6,10 @@ changelog is [CHANGELOG.md](CHANGELOG.md).
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-30
+### Changed
+- Actions implement `IActionOutcomeHandler` (a coded outcome). Built for SDK 1.4.0, so `minMacroGrid` is now `1.4.0`; an older editor shows the plugin as incompatible. A play action with no sound chosen now reports "not configured"; a missing file names the sound instead of the file path.
+
 ## [0.1.2] - 2026-09-29
 ### Changed
 - `plugin.json` declares `"minMacroGrid": "1.0.0"` (the field's new name; built against SDK 1.0.0). The old `sdkVersion` / `minServerVersion` stay so servers before 1.0.0 still load it.

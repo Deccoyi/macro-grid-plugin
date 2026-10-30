@@ -32,22 +32,30 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
-      # The plugin SDK is not on NuGet any more: build against the server repository at the tag of MacroGridSdkVersion, checked out next to this one.
-      - name: Check out the plugin SDK (the server repository at its tag)
+      # The plugin SDK is not on NuGet any more: build against the server repository, checked out next to this one.
+      # The honest build uses the tag server-v<MacroGridSdkVersion>*, a RELEASED SDK. Only while that tag does not exist yet (the server is
+      # ahead of its last release, so the plugins here already use SDK types that only the server main branch has) the job falls back to main
+      # and says so with a warning. A plugin release must wait for the tag: scripts/release-plugin.ps1 refuses a checkout that is not at it.
+      - name: Check out the plugin SDK (the server repository, at its tag when it exists)
         shell: bash
         run: |
           version=$(sed -n 's:.*<MacroGridSdkVersion[^>]*>\([0-9][0-9.]*\)</MacroGridSdkVersion>.*:\1:p' macro-grid-plugin/Directory.Build.props | head -n1)
           test -n "$version" || { echo "::error::MacroGridSdkVersion not found in Directory.Build.props."; exit 1; }
-          tag=$(git ls-remote --tags https://github.com/Deccoyi/macro-grid "refs/tags/server-v${version}*" | sed -n 's:.*refs/tags/::p' | grep -v '\^{}' | head -n1)
-          test -n "$tag" || { echo "::error::The server repository has no tag server-v${version}*."; exit 1; }
-          git clone --depth 1 --branch "$tag" https://github.com/Deccoyi/macro-grid macro-grid
-
+          tag=$(git ls-remote --tags https://github.com/Deccoyi/macro-grid "refs/tags/server-v${version}*" | sed -n 's:.*refs/tags/::p' | grep -v '\^{}' | head -n1 || true)
+          if [ -n "$tag" ]; then
+            git clone --depth 1 --branch "$tag" https://github.com/Deccoyi/macro-grid macro-grid
+            have=$(sed -n 's:.*<Version>\([0-9][0-9.]*\)</Version>.*:\1:p' macro-grid/Directory.Build.props | head -n1)
+            test "$have" = "$version" || { echo "::error::MacroGridSdkVersion is $version but the SDK checkout is version $have."; exit 1; }
+          else
+            echo "::warning title=Unreleased SDK::The server repository has no tag server-v${version}*, so this build used the server main branch. It proves the plugins build against the current SDK, not against a released one. Do not release a plugin until that tag exists."
+            git clone --depth 1 --branch main https://github.com/Deccoyi/macro-grid macro-grid
+          fi
       - name: Stop on known vulnerable dependencies
         working-directory: macro-grid-plugin
         shell: pwsh
         run: |
           $failed = @()
-          foreach ($proj in 'WebSocketBridgeForOBS/src/MacroGrid.Plugin.Obs.csproj', 'PLCIcons/src/MacroGrid.Plugin.PlcIcons.csproj', 'SoundBoard/src/MacroGrid.Plugin.SoundBoard.csproj') {
+          foreach ($proj in 'WebSocketBridgeForOBS/src/MacroGrid.Plugin.Obs.csproj', 'PLCIcons/src/MacroGrid.Plugin.PlcIcons.csproj', 'SoundBoard/src/MacroGrid.Plugin.SoundBoard.csproj', 'StreamTexts/src/MacroGrid.Plugin.StreamTexts.csproj') {
             dotnet restore $proj --verbosity quiet
             if ($LASTEXITCODE -ne 0) { throw "restore failed: $proj" }
             $report = dotnet list $proj package --vulnerable --include-transitive 2>&1 | Out-String
@@ -60,6 +68,23 @@ jobs:
         working-directory: macro-grid-plugin
         shell: pwsh
         run: ./scripts/tests/test-package-signature.ps1
+
+      - name: Test catalog signing script
+        working-directory: macro-grid-plugin
+        shell: pwsh
+        run: ./scripts/tests/test-catalog-signing.ps1
+
+      # Passes while no signed file exists yet. The signature itself cannot be checked here (the private key is not on GitHub); this checks structure, kind and size.
+      - name: Check the signed catalog files
+        working-directory: macro-grid-plugin
+        shell: pwsh
+        run: |
+          foreach ($pair in @(@('index', 'index.signed.json'), @('revoked', 'revoked.signed.json'))) {
+            $file = Join-Path 'website/public/catalog' $pair[1]
+            if (-not (Test-Path $file)) { Write-Host "no $($pair[1]) yet"; continue }
+            dotnet run scripts/sign-catalog.cs -- verify $file $pair[0]
+            if ($LASTEXITCODE -ne 0) { throw "$file is not valid" }
+          }
 
       - name: Build OBS plugin
         working-directory: macro-grid-plugin
@@ -80,6 +105,14 @@ jobs:
       - name: Test SoundBoard plugin
         working-directory: macro-grid-plugin
         run: dotnet test SoundBoard/tests/MacroGrid.Plugin.SoundBoard.Tests/MacroGrid.Plugin.SoundBoard.Tests.csproj -c Release
+
+      - name: Build Stream Texts plugin
+        working-directory: macro-grid-plugin
+        run: dotnet build StreamTexts/src/MacroGrid.Plugin.StreamTexts.csproj -c Release
+
+      - name: Test Stream Texts plugin
+        working-directory: macro-grid-plugin
+        run: dotnet test StreamTexts/tests/MacroGrid.Plugin.StreamTexts.Tests/MacroGrid.Plugin.StreamTexts.Tests.csproj -c Release
 
   dependency-review:
     name: Dependencies added by this pull request
