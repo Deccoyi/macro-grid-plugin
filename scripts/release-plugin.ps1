@@ -19,7 +19,7 @@
   ./scripts/release-plugin.ps1 -Name hellojs -Publish   # also release and update the index
 #>
 param(
-    [Parameter(Mandatory)] [ValidateSet('obs', 'plc-icons', 'hellojs', 'soundboard')] [string]$Name,
+    [Parameter(Mandatory)] [ValidateSet('obs', 'plc-icons', 'hellojs', 'soundboard', 'streamtexts')] [string]$Name,
     [string]$KeyPath = (Join-Path $env:USERPROFILE 'signing\plugin-signing\plugin-signing-private.pem'),
     [string]$OutDir = (Join-Path ([System.IO.Path]::GetTempPath()) 'macrogrid-plugin-release'),
     # A server repository checkout to build the SDK from, when the sibling ..\macro-grid is not at MacroGridSdkVersion
@@ -38,6 +38,7 @@ $plugins = @{
     'plc-icons' = @{ dir = 'PLCIcons'; proj = 'PLCIcons/src/MacroGrid.Plugin.PlcIcons.csproj' }
     'hellojs'   = @{ dir = 'HelloJs';  proj = '' }
     'soundboard' = @{ dir = 'SoundBoard'; proj = 'SoundBoard/src/MacroGrid.Plugin.SoundBoard.csproj' }
+    'streamtexts' = @{ dir = 'StreamTexts'; proj = 'StreamTexts/src/MacroGrid.Plugin.StreamTexts.csproj' }
 }
 $entry = $plugins[$Name]
 $owner = 'Deccoyi'
@@ -66,6 +67,11 @@ if ($entry.proj) {
     $have = [regex]::Match((Get-Content (Join-Path $SdkPath 'Directory.Build.props') -Raw), '<Version>([\d.]+)</Version>').Groups[1].Value
     # Every dotnet command below (restore, list, build) reads this as the MSBuild property LocalSdkProject (Directory.Build.props).
     $env:LocalSdkProject = (Resolve-Path $sdkProject).Path
+    # A release is built against a RELEASED SDK only: the checkout must sit exactly on the server tag of MacroGridSdkVersion.
+    if ($Publish) {
+        if (-not (@(git -C $SdkPath tag --points-at HEAD) -like "server-v$wanted*")) { throw "The SDK checkout at $SdkPath is not at a tag server-v$wanted*. A plugin is released only against a released SDK: wait for the server tag, check it out and pass -SdkPath." }
+        if (git -C $SdkPath status --porcelain) { throw "The SDK checkout at $SdkPath has local changes; check out the clean tag server-v$wanted*." }
+    }
     if ($wanted -ne $have) { throw "The SDK checkout at $SdkPath is version $have, but MacroGridSdkVersion is $wanted. Check out the server tag for $wanted (a worktree is fine) and pass -SdkPath." }
 }
 

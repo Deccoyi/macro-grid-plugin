@@ -33,17 +33,29 @@ jobs:
           dotnet-version: 10.0.x
 
       # The plugin SDK is not on NuGet any more: build against the server repository, checked out next to this one.
-      # CI uses the server main branch, not the tag of MacroGridSdkVersion: plugin work on dev is ahead of the last released SDK (new SDK types exist only on server main until the next server release). The release workflow still builds against the tag.
-      - name: Check out the plugin SDK (the server repository, main branch)
+      # The honest build uses the tag server-v<MacroGridSdkVersion>*, a RELEASED SDK. Only while that tag does not exist yet (the server is
+      # ahead of its last release, so the plugins here already use SDK types that only the server main branch has) the job falls back to main
+      # and says so with a warning. A plugin release must wait for the tag: scripts/release-plugin.ps1 refuses a checkout that is not at it.
+      - name: Check out the plugin SDK (the server repository, at its tag when it exists)
         shell: bash
-        run: git clone --depth 1 --branch main https://github.com/Deccoyi/macro-grid macro-grid
-
+        run: |
+          version=$(sed -n 's:.*<MacroGridSdkVersion[^>]*>\([0-9][0-9.]*\)</MacroGridSdkVersion>.*:\1:p' macro-grid-plugin/Directory.Build.props | head -n1)
+          test -n "$version" || { echo "::error::MacroGridSdkVersion not found in Directory.Build.props."; exit 1; }
+          tag=$(git ls-remote --tags https://github.com/Deccoyi/macro-grid "refs/tags/server-v${version}*" | sed -n 's:.*refs/tags/::p' | grep -v '\^{}' | head -n1)
+          if [ -n "$tag" ]; then
+            git clone --depth 1 --branch "$tag" https://github.com/Deccoyi/macro-grid macro-grid
+          else
+            echo "::warning title=Unreleased SDK::The server repository has no tag server-v${version}*, so this build used the server main branch. It proves the plugins build against the current SDK, not against a released one. Do not release a plugin until that tag exists."
+            git clone --depth 1 --branch main https://github.com/Deccoyi/macro-grid macro-grid
+          fi
+          have=$(sed -n 's:.*<Version>\([0-9][0-9.]*\)</Version>.*:\1:p' macro-grid/Directory.Build.props | head -n1)
+          test "$have" = "$version" || { echo "::error::MacroGridSdkVersion is $version but the SDK checkout is version $have."; exit 1; }
       - name: Stop on known vulnerable dependencies
         working-directory: macro-grid-plugin
         shell: pwsh
         run: |
           $failed = @()
-          foreach ($proj in 'WebSocketBridgeForOBS/src/MacroGrid.Plugin.Obs.csproj', 'PLCIcons/src/MacroGrid.Plugin.PlcIcons.csproj', 'SoundBoard/src/MacroGrid.Plugin.SoundBoard.csproj') {
+          foreach ($proj in 'WebSocketBridgeForOBS/src/MacroGrid.Plugin.Obs.csproj', 'PLCIcons/src/MacroGrid.Plugin.PlcIcons.csproj', 'SoundBoard/src/MacroGrid.Plugin.SoundBoard.csproj', 'StreamTexts/src/MacroGrid.Plugin.StreamTexts.csproj') {
             dotnet restore $proj --verbosity quiet
             if ($LASTEXITCODE -ne 0) { throw "restore failed: $proj" }
             $report = dotnet list $proj package --vulnerable --include-transitive 2>&1 | Out-String
@@ -93,6 +105,14 @@ jobs:
       - name: Test SoundBoard plugin
         working-directory: macro-grid-plugin
         run: dotnet test SoundBoard/tests/MacroGrid.Plugin.SoundBoard.Tests/MacroGrid.Plugin.SoundBoard.Tests.csproj -c Release
+
+      - name: Build Stream Texts plugin
+        working-directory: macro-grid-plugin
+        run: dotnet build StreamTexts/src/MacroGrid.Plugin.StreamTexts.csproj -c Release
+
+      - name: Test Stream Texts plugin
+        working-directory: macro-grid-plugin
+        run: dotnet test StreamTexts/tests/MacroGrid.Plugin.StreamTexts.Tests/MacroGrid.Plugin.StreamTexts.Tests.csproj -c Release
 
   dependency-review:
     name: Dependencies added by this pull request
