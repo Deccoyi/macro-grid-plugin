@@ -14,17 +14,19 @@ internal sealed class LoopingSampleProvider(AudioFileReader reader) : ISamplePro
 
     /// <summary>Fills the whole buffer while looping (rewinding as often as needed): the mixer drops any input
     /// that returns fewer samples than it asked for, which would end a looping voice at the first end of file.</summary>
-    public int Read(float[] buffer, int offset, int count)
+    public int Read(float[] buffer, int offset, int count) => Read(buffer.AsSpan(offset, count));
+
+    public int Read(Span<float> buffer)
     {
         var total = 0;
-        while (total < count)
+        while (total < buffer.Length)
         {
-            var read = reader.Read(buffer, offset + total, count - total);
+            var read = reader.Read(buffer[total..]);
             if (read == 0)
             {
                 if (!Loop) break;
                 reader.Position = 0;
-                read = reader.Read(buffer, offset + total, count - total);
+                read = reader.Read(buffer[total..]);
                 if (read == 0) break; // an empty file: nothing to loop
             }
             total += read;
@@ -99,12 +101,14 @@ internal sealed class SoundVoice : ISampleProvider, IDisposable
         }
     }
 
-    public int Read(float[] buffer, int offset, int count)
+    public int Read(float[] buffer, int offset, int count) => Read(buffer.AsSpan(offset, count));
+
+    public int Read(Span<float> buffer)
     {
-        var read = _output.Read(buffer, offset, count);
+        var read = _output.Read(buffer);
         // A short read is the end: the mixer removes an input on its first short read and never reads it again,
         // so waiting for a read of exactly 0 would leave the voice (and its "playing" variable) stuck on.
-        if (read < count) Finished = true;
+        if (read < buffer.Length) Finished = true;
         return read;
     }
 

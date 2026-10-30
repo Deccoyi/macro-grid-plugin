@@ -77,7 +77,7 @@ public sealed class SoundBoardEngineTests : IDisposable
 
         var buffer = new float[512];
         for (var i = 0; i < 200; i++)
-            Assert.Equal(buffer.Length, mixer.Read(buffer, 0, buffer.Length));
+            Assert.Equal(buffer.Length, mixer.Read(buffer));
     }
 
     [Fact]
@@ -91,7 +91,7 @@ public sealed class SoundBoardEngineTests : IDisposable
         mixer.AddMixerInput(voice);
 
         var buffer = new float[4096];
-        for (var i = 0; i < 20; i++) mixer.Read(buffer, 0, buffer.Length);
+        for (var i = 0; i < 20; i++) mixer.Read(buffer);
 
         Assert.True(voice.Finished);
         voice.Dispose();
