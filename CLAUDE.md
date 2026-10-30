@@ -19,6 +19,12 @@ Read `CONTRIBUTING.md` first: it covers plugin versioning, isolation, the manife
 - A plugin's `version` is its own; `minMacroGrid` in `plugin.json` is the oldest Macro Grid it runs on (three parts, same MAJOR as the SDK it is built against, never newer than it). Called `macroGrid` up to Macro Grid 1.2.x; that name is still read as a fallback.
 - A plugin release (`scripts/release-plugin.ps1 -Publish`) signs with a key that stays on the maintainer's PC and publishes outward: ask the owner before each one, and never print or copy the key.
 
+## Merging dev into main
+- Preparing the release content is part of sending `dev` to `main`, in EVERY repository (server, phone app, plugins). The owner has asked for this more than once: do it before the `dev` to `main` pull request is opened, never after, and never wait to be asked.
+- Before opening that pull request, on `dev`: (1) choose the new version by the rules in the versioning guide and set it where that repository keeps it (server: `<Version>` in `Directory.Build.props`; phone app: `version` in `package.json`; plugins: `version` in each changed plugin's `plugin.json`); (2) move every `[Unreleased]` entry of both changelogs under the new version and the date and leave a new empty `Unreleased`; (3) compare the changelog entries with the real changes since the last release and fix gaps; (4) update the docs and website pages for every user-visible change; (5) run the tests and the docs build.
+- The pull request description names the chosen version. Tags, GitHub releases, installers, signing and release scripts stay with the owner.
+- Never use a squash or rebase merge for `dev` to `main`.
+
 ## Commits
 - Conventional Commits (`type(scope): description`), always in English.
 
