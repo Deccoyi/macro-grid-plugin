@@ -54,3 +54,5 @@ finally {
 
 if ($failures.Count) { Write-Host "$($failures.Count) check(s) failed"; exit 1 }
 Write-Host 'All checks passed'
+# The last native call above was a verify that must fail; do not let its exit code become the script result.
+exit 0
