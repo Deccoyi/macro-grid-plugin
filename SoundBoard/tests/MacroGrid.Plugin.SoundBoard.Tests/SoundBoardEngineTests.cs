@@ -197,8 +197,8 @@ public sealed class SoundBoardEngineTests : IDisposable
         using var _ = engine;
         var action = new SoundBoardPlayAction(engine);
 
-        await action.ExecuteAsync(Context(), SoundBoardSettingsForPlay(soundA), default);
-        await action.ExecuteAsync(Context(), SoundBoardSettingsForPlay(soundB), default);
+        await action.ExecuteWithOutcomeAsync(Context(), SoundBoardSettingsForPlay(soundA), default);
+        await action.ExecuteWithOutcomeAsync(Context(), SoundBoardSettingsForPlay(soundB), default);
 
         Assert.True(engine.IsPlaying(soundA));
         Assert.True(engine.IsPlaying(soundB));
@@ -212,10 +212,10 @@ public sealed class SoundBoardEngineTests : IDisposable
         SetOverlapMode(engine, "cut");
         var action = new SoundBoardPlayAction(engine);
 
-        await action.ExecuteAsync(Context(), SoundBoardSettingsForPlay(soundA), default);
+        await action.ExecuteWithOutcomeAsync(Context(), SoundBoardSettingsForPlay(soundA), default);
         Assert.True(engine.IsPlaying(soundA));
 
-        await action.ExecuteAsync(Context(), SoundBoardSettingsForPlay(soundB), default);
+        await action.ExecuteWithOutcomeAsync(Context(), SoundBoardSettingsForPlay(soundB), default);
 
         Assert.False(engine.IsPlaying(soundA));
         Assert.True(engine.IsPlaying(soundB));
@@ -229,10 +229,10 @@ public sealed class SoundBoardEngineTests : IDisposable
         var action = new SoundBoardPlayAction(engine);
         var settings = SoundBoardSettingsForPlay(soundA, playMode: "toggle");
 
-        await action.ExecuteAsync(Context(), settings, default);
+        await action.ExecuteWithOutcomeAsync(Context(), settings, default);
         Assert.True(engine.IsPlaying(soundA));
 
-        await action.ExecuteAsync(Context(), settings, default);
+        await action.ExecuteWithOutcomeAsync(Context(), settings, default);
         Assert.False(engine.IsPlaying(soundA));
     }
 
@@ -244,7 +244,7 @@ public sealed class SoundBoardEngineTests : IDisposable
         var action = new SoundBoardPlayAction(engine);
         var settings = SoundBoardSettingsForPlay(soundA, playMode: "hold");
 
-        await action.ExecuteAsync(Context(deviceId: "dev1", widgetId: "w1"), settings, default);
+        await action.ExecuteWithOutcomeAsync(Context(deviceId: "dev1", widgetId: "w1"), settings, default);
         Assert.True(engine.IsPlaying(soundA));
 
         // A release from a different widget must not stop it.
@@ -264,7 +264,7 @@ public sealed class SoundBoardEngineTests : IDisposable
         var action = new SoundBoardPlayAction(engine);
         var settings = SoundBoardSettingsForPlay(soundA, playMode: "full");
 
-        await action.ExecuteAsync(Context(), settings, default);
+        await action.ExecuteWithOutcomeAsync(Context(), settings, default);
         await action.ReleaseAsync(Context(), settings, default);
 
         Assert.True(engine.IsPlaying(soundA));
