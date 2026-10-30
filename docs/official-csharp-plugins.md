@@ -194,6 +194,13 @@ Example: [PLCIcons/](../PLCIcons/).
 `ActionContext.Device` (`IDeviceController`) navigates the one phone that triggered the action: `ShowPageAsync`, `NextPageAsync`,
 `PreviousPageAsync`, `BackAsync`, `SwitchProfileAsync`.
 
+### Testing a plugin
+
+The test doubles for `IPluginHost` (`FakePluginHost`, `FakeVariableStore`, `FakeStatusItem`, `FakePluginSecrets`, `FakePluginWidgets`) live in the server repository,
+in `tests/MacroGrid.Plugin.Testing`, next to the SDK, so a new member of the interface has to be handled in one place. A test project references it with
+`$(LocalSdkTestingProject)` (set in `Directory.Build.props`, found from the same checkout as `LocalSdkProject`) and adds `<Using Include="MacroGrid.Plugin.Testing" />`.
+A plugin's own helpers, such as a generated sound file, stay in its test project.
+
 ## The C# SDK interfaces
 
 
