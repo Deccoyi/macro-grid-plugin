@@ -190,6 +190,19 @@
                         "kind":  "csharp",
                         "versions":  [
                                          {
+                                             "version":  "0.2.0",
+                                             "minMacroGrid":  "1.4.0",
+                                             "sdkVersion":  "^0.4.0",
+                                             "minServerVersion":  "0.3.2",
+                                             "url":  "https://github.com/Deccoyi/macro-grid-plugin/releases/download/plugin-soundboard-v0.2.0/soundboard-0.2.0.zip",
+                                             "sha256":  "357f32e284b1f941def11148889f12a1c03c7c64f8f2ff2e923976b9d4891d54",
+                                             "size":  586319,
+                                             "permissions":  [
+
+                                                             ],
+                                             "signature":  "HKs2XKh+ZBvjRSMrqYl4P5HCvmozUmxjrL8JM40l/QmA/SzWc02nvO/J6oY/Buxm3YlybZ2UBtMGUivFU1Yx9Q=="
+                                         },
+                                         {
                                              "version":  "0.1.2",
                                              "minMacroGrid":  "1.0.0",
                                              "sdkVersion":  "^0.4.0",
@@ -226,7 +239,13 @@
                                                              ],
                                              "signature":  "47Fh/ko5Vt0snGOCe+Yr2h6W2pwallLzgwMO6t5Q8vZgWYCFDENKC0Uv0k741DIvUovikH1+v5kKGZyKIPJHtA=="
                                          }
-                                     ]
+                                     ],
+                        "category":  "Audio",
+                        "tags":  [
+                                     "sound",
+                                     "clips",
+                                     "soundboard"
+                                 ]
                     }
                 ]
 }
