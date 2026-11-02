@@ -4,7 +4,7 @@
 
 ## Plugin(s) affected
 
-<!-- OBS / PLCIcons / HelloJs / WeatherPlugin / docs / repo tooling -->
+<!-- OBS / PLCIcons / HelloJs / WeatherPlugin / VoiceChangerControl / docs / repo tooling -->
 
 ## Checklist
 

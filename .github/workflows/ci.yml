@@ -114,6 +114,13 @@ jobs:
         working-directory: macro-grid-plugin
         run: dotnet test StreamTexts/tests/MacroGrid.Plugin.StreamTexts.Tests/MacroGrid.Plugin.StreamTexts.Tests.csproj -c Release
 
+      - name: Test Voice Changer Control plugin (needs Node 22 or newer for the WebSocket client)
+        working-directory: macro-grid-plugin
+        shell: bash
+        run: |
+          node --version
+          node --test scripts/tests/voice-changer.test.mjs
+
   dependency-review:
     name: Dependencies added by this pull request
     if: github.event_name == 'pull_request'
