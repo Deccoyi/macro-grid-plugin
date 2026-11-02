@@ -28,4 +28,29 @@ Toggle voice changer, Toggle microphone mute, Toggle hear myself, Toggle backgro
 
 The key is stored protected for the current Windows user, is sent only to the Voicemod app on this PC and is never written to a log. The plugin makes no connection to the internet.
 
+## Host limits (for developers)
+
+A JavaScript plugin runs under fixed limits of the Macro Grid server (`JsPluginLimits` and the host API; server 1.6.0). What each does here:
+
+| Limit | Value | When it is hit | This plugin |
+|---|---|---|---|
+| Script call time | 2 s per call | the call fails | calls are tiny |
+| Memory, statements, recursion | 32 MB, 2 million, 100 | the call fails | far below |
+| Failures in a row | 5 | the plugin is switched off | socket callbacks never throw |
+| Timers | 20, shortest 100 ms | `every`/`after` throws | 2 timers, 1 s tick |
+| Open web sockets | 2 | `connect` throws, P103 line | 1, closed before the next is opened |
+| Web socket connects | 10 a minute | `connect` throws, P103 line | at most 8, at least 7 s apart |
+| Incoming message | 64 KB | that socket is closed, P103 line | no large reply is requested on its own; the voice list (about 33 KB for 200 voices) only by **Refresh voice list**; a closed socket turns it off with a message |
+| Incoming messages | 50 a second | the read waits, nothing is lost | events are cheap; unchanged variable values are not written again |
+| Outgoing messages | 20 a second, 32 waiting, 64 KB each | `send` throws, P103 line | at most 10 a second, a button pressed faster is refused with a message |
+| Variable name | own id as prefix, at most 120 characters | the call throws | `voicechanger.*` |
+| Variable value | no host limit | none | cut at 8000 characters |
+| Status text | 80 characters | cut | every text fits; an unchanged status is not sent again |
+| Error List | 10 calls a second, 20 lines per plugin, 300 characters | dropped | 3 keyed lines |
+| Settings file | 64 KB | save is refused | one key |
+| Permissions | `ws:localhost:<port>` for each of the 11 ports, plus `variables` and `actions` | the call throws | all declared; plain `ws://` is allowed to localhost |
+| Macro Grid's own ports | never reachable | the connect is refused | none of the 11 ports is one |
+
+Not used: HTTP, storage, notices, input, widgets.
+
 License: MIT, see [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md). This plugin was created by AI tools and is provided "as is", without warranty of any kind; the authors accept no responsibility or liability for it, and you use it at your own risk.

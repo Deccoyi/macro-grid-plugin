@@ -12,6 +12,11 @@ const SLOW_AFTER = 22;
 const MAX_CONNECTS_PER_MINUTE = 8; // the host stops a plugin at 10
 const REGISTER_TIMEOUT_MS = 5000;
 const TICK_MS = 1000;
+// Host limits this plugin stays under (see the table in the README): 20 messages a second out, 80 characters in a status text, no cap on variable writes.
+const MAX_SENDS_PER_SECOND = 10;
+const MAX_STATUS_CHARS = 80;
+const MAX_VARIABLE_CHARS = 8000;
+const LOG_EVERY_MS = 10000;
 
 host.variables.describe([
   { name: 'voicechanger.enabled', description: 'Whether the voice changer is on', example: 'true', type: 'boolean', category: 'Voice Changer' },
@@ -40,21 +45,50 @@ const state = {
   connects: [], // timestamps of the connects of the last minute
   bulkPending: false, // a getVoices reply is awaited: the host closes a socket when one message is over 64 KB
   voicesTooBig: false,
+  sends: [], // timestamps of the messages sent in the last second
+  lastStatus: '',
+  lastLog: 0,
+  vars: {}, // the last value written to each variable: unchanged values are not written again
 };
 
 // A callback must never throw: the host switches a plugin off after five failures in a row. The message is not shown, it could hold the reply.
 function guard(fn) {
-  try { fn(); } catch (e) { setStatus('internal error, see the plugin log', 'Error'); host.log('callback failed: ' + (e && e.name ? e.name : 'error')); }
+  try { fn(); } catch (e) {
+    setStatus('internal error, see the plugin log', 'Error');
+    if (Date.now() - state.lastLog > LOG_EVERY_MS) { state.lastLog = Date.now(); host.log('callback failed: ' + (e && e.name ? e.name : 'error')); }
+  }
 }
 
-function setStatus(text, level) { host.status('voicechanger', 'Voice Changer: ' + text, level); }
+// The host cuts a status text at 80 characters, so the long explanation goes to the Error List. An unchanged status is not sent again.
+function setStatus(text, level) {
+  const full = ('Voice Changer: ' + text).slice(0, MAX_STATUS_CHARS);
+  if (full + level === state.lastStatus) return;
+  state.lastStatus = full + level;
+  host.status('voicechanger', full, level);
+}
+
+function setVar(name, value) {
+  if (typeof value === 'string' && value.length > MAX_VARIABLE_CHARS) value = value.slice(0, MAX_VARIABLE_CHARS);
+  if (state.vars[name] === value) return;
+  state.vars[name] = value;
+  host.variables.set(name, value);
+}
+
+// The host allows 20 messages a second and throws when the socket is closed; both end here as a refusal, never as a failure of the plugin.
+function rawSend(socket, text) {
+  const now = Date.now();
+  state.sends = state.sends.filter((t) => now - t < 1000);
+  if (state.sends.length >= MAX_SENDS_PER_SECOND) return false;
+  state.sends.push(now);
+  try { socket.send(text); } catch (e) { return false; }
+  return true;
+}
 
 function currentKey() { return String(host.settings.get().apiKey || '').trim(); }
 
 function send(action, payload) {
   if (!state.registered) return false;
-  state.socket.send(JSON.stringify({ id: String(state.nextId++), action, payload: payload || {} }));
-  return true;
+  return rawSend(state.socket, JSON.stringify({ id: String(state.nextId++), action, payload: payload || {} }));
 }
 
 function portForAttempt(n) {
@@ -81,7 +115,8 @@ function connect(key) {
   } catch (e) {
     state.attempts++;
     state.nextAt = Date.now() + RETRY_SLOW_MS;
-    setStatus('cannot open a connection (' + (e && e.message ? e.message : 'refused') + ')', 'Error');
+    setStatus('cannot open a connection', 'Error');
+    host.diagnostics.report('error', 'The connection to the Voicemod app was refused by Macro Grid: ' + (e && e.message ? e.message : 'refused'), 'voicechanger-connect');
     return;
   }
   state.socket = socket;
@@ -94,7 +129,7 @@ function onOpen(socket, port, key) {
   state.registerId = String(state.nextId++);
   setStatus('connecting', 'Busy');
   // The registerClient message must be the first one on the connection.
-  socket.send(JSON.stringify({ id: state.registerId, action: 'registerClient', payload: { clientKey: key } }));
+  rawSend(socket, JSON.stringify({ id: state.registerId, action: 'registerClient', payload: { clientKey: key } }));
 }
 
 function onClose(socket) {
@@ -109,10 +144,11 @@ function onClose(socket) {
   if (state.bulkPending) {
     state.bulkPending = false;
     state.voicesTooBig = true;
-    setStatus('a reply of the Voicemod app was too large for Macro Grid (over 64 KB); the voice list is switched off', 'Warning');
+    setStatus('a reply was over 64 KB, voice list off', 'Warning');
+    host.diagnostics.report('warning', 'A reply of the Voicemod app was over 64 KB, more than Macro Grid accepts from a web socket, so the voice list is switched off.', 'voicechanger-big');
     return;
   }
-  setStatus('Voicemod is not running or its Control API is off. Start the Voicemod app.', 'Warning');
+  setStatus('Voicemod is not running (start the app)', 'Warning');
 }
 
 // ---- messages ----
@@ -142,17 +178,17 @@ function onMessage(text, port) {
   const key = name.toLowerCase();
   if (key === 'voicechangedevent' || key === 'getcurrentvoice') {
     const id = obj.voiceID !== undefined ? obj.voiceID : obj.voiceId !== undefined ? obj.voiceId : obj.currentVoice;
-    if (typeof id === 'string') host.variables.set('voicechanger.voice', id);
+    if (typeof id === 'string') setVar('voicechanger.voice', id);
   } else if (key === 'getvoices') {
     state.bulkPending = false;
-    if (typeof msg.currentVoice === 'string') host.variables.set('voicechanger.voice', msg.currentVoice);
+    if (typeof msg.currentVoice === 'string') setVar('voicechanger.voice', msg.currentVoice);
     const list = Array.isArray(obj.voices) ? obj.voices : [];
     const pairs = list.map((v) => (v.id || v.voiceID || v.voiceId) + '=' + (v.friendlyName || v.name || '')).filter((p) => p.length > 1);
-    if (pairs.length) host.variables.set('voicechanger.voices', pairs.join(', '));
+    if (pairs.length) setVar('voicechanger.voices', pairs.join(', '));
   } else if (typeof obj.value === 'boolean') {
     // toggle... events and get...Status answers; the meme sound "mute for me" switch is not the microphone.
-    if (key.includes('voicechanger')) host.variables.set('voicechanger.enabled', obj.value);
-    else if (key.includes('mutemic')) host.variables.set('voicechanger.micmuted', obj.value);
+    if (key.includes('voicechanger')) setVar('voicechanger.enabled', obj.value);
+    else if (key.includes('mutemic')) setVar('voicechanger.micmuted', obj.value);
   }
 }
 
@@ -165,6 +201,7 @@ function onRegister(msg, port) {
     state.attempts = 0;
     state.lastGoodPort = port;
     host.diagnostics.resolve('voicechanger-auth');
+    host.diagnostics.resolve('voicechanger-connect');
     setStatus('connected', 'Ok');
     send('getCurrentVoice');
     send('getVoiceChangerStatus');
@@ -174,7 +211,7 @@ function onRegister(msg, port) {
   if (code === 401) {
     state.rejectedKey = state.keyUsed;
     const message = 'Voicemod refused the API key (401). Paste the key from your Voicemod e-mail again, with no spaces. How to get a key: ' + TUTORIAL_URL;
-    setStatus('the API key was refused (401)', 'Error');
+    setStatus('API key refused (401), see Error List', 'Error');
     host.diagnostics.report('error', message, 'voicechanger-auth');
   } else {
     setStatus('Voicemod answered with an error' + (code ? ' (' + code + ')' : ''), 'Error');
@@ -188,8 +225,8 @@ function tick() {
   const key = currentKey();
   if (!key) {
     if (state.socket) { state.socket.close(); }
-    host.variables.set('voicechanger.enabled', false);
-    setStatus('enter your Voicemod Control API key in the plugin settings', 'Warning');
+    setVar('voicechanger.enabled', false);
+    setStatus('enter your API key in the settings', 'Warning');
     return;
   }
   if (state.rejectedKey !== null && state.rejectedKey !== key) { state.rejectedKey = null; state.attempts = 0; state.nextAt = 0; }
@@ -206,7 +243,8 @@ function tick() {
 
 function run(action, payload, after) {
   if (!currentKey()) return { ok: false, code: 'Unavailable', message: 'Enter your Voicemod Control API key in the plugin settings.' };
-  if (!send(action, payload)) return { ok: false, code: 'Unavailable', message: 'Not connected to the Voicemod app. Start Voicemod and check the plugin status.' };
+  if (!state.registered) return { ok: false, code: 'Unavailable', message: 'Not connected to the Voicemod app. Start Voicemod and check the plugin status.' };
+  if (!send(action, payload)) return { ok: false, code: 'Unavailable', message: 'Too many commands at once. Try again in a moment.' };
   if (after) send(after);
   return { ok: true };
 }
