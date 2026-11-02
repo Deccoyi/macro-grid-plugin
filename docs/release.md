@@ -16,6 +16,7 @@ plugin-<name>-v<version>
 | `PLCIcons/` | `plc-icons` | `plugin-plc-icons-v0.1.3` |
 | `SoundBoard/` | `soundboard` | `plugin-soundboard-v0.1.1` |
 | `HelloJs/` | `hellojs` | `plugin-hellojs-v0.1.1` |
+| `WeatherPlugin/` | `weather` | `plugin-weather-v0.1.0` |
 
 `<version>` is the plugin's own semantic version and must equal `version` in that plugin's `plugin.json`; the release script takes the
 version from `plugin.json` and refuses a tag that already exists. The server, the SDK and the phone app use their own tag schemes (`server-v...`, `client-v...`) in their own repositories.
@@ -31,7 +32,7 @@ version from `plugin.json` and refuses a tag that already exists. The server, th
    powershell -NoProfile -ExecutionPolicy Bypass -File scripts/release-plugin.ps1 -Name obs
    powershell -NoProfile -ExecutionPolicy Bypass -File scripts/release-plugin.ps1 -Name obs -Publish
    ```
-   `-Name` is `obs`, `plc-icons`, `hellojs` or `soundboard`. The key defaults to `%USERPROFILE%\signing\plugin-signing\plugin-signing-private.pem`
+   `-Name` is `obs`, `plc-icons`, `hellojs`, `soundboard`, `streamtexts` or `weather`. The key defaults to `%USERPROFILE%\signing\plugin-signing\plugin-signing-private.pem`
    (`-KeyPath` overrides it); it is never in a repository and is never printed.
 5. The script builds that plugin, adds `LICENSE`, `NOTICE.md` and `THIRD_PARTY_NOTICES.md`, and signs the folder's contents: it writes
    `signature.json` (id, version, kind and the SHA-256 of every file) and `signature.sig` (the signature over those exact bytes) into the

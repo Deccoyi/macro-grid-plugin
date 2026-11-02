@@ -23,7 +23,9 @@ jobs:
                 "plc-icons": "plugin: plc-icons",
                 "plc icons": "plugin: plc-icons",
                 "hellojs": "plugin: hello-js",
-                "hello-js": "plugin: hello-js"
+                "hello-js": "plugin: hello-js",
+                "weather": "plugin: weather",
+                "weatherplugin": "plugin: weather"
               },
               "areaHeading": "Plugin",
               "areaText": "Plugin",

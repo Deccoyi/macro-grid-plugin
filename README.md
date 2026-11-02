@@ -28,6 +28,7 @@ and every plugin here is versioned on its own. Documentation site: <https://decc
 | [PLCIcons/](PLCIcons/) | C# | A static icon pack of ladder-logic (PLC) symbols for the editor's icon picker. |
 | [SoundBoard/](SoundBoard/) | C# | Plays local sound files from buttons: named clips with volume, loop, overlap and fade control, plus live `soundboard.*` variables. |
 | [StreamTexts/](StreamTexts/) | C# | Writes live text files from variables (CPU, RAM, your own) for the text sources of a streaming app. |
+| [WeatherPlugin/](WeatherPlugin/) | JavaScript | A weather widget for the Toolbox: the current weather at a place you choose, from a public weather service. |
 | [HelloJs/](HelloJs/) | JavaScript | A small example of a sandboxed script plugin: a counter variable, a settings page, one action. |
 
 ## Installing a plugin

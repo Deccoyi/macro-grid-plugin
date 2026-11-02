@@ -10,6 +10,7 @@ body:
         - OBS
         - PLCIcons
         - HelloJs
+        - WeatherPlugin
         - Documentation
         - Other
     validations:

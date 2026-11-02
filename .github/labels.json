@@ -50,6 +50,11 @@
     "description": "The JavaScript example plugin"
   },
   {
+    "name": "plugin: weather",
+    "color": "5319e7",
+    "description": "The WeatherPlugin plugin"
+  },
+  {
     "name": "area: sdk",
     "color": "1d76db",
     "description": "The plugin SDK and its docs"

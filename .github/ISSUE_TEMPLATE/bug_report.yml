@@ -14,6 +14,7 @@ body:
         - OBS
         - PLCIcons
         - HelloJs
+        - WeatherPlugin
         - Other or not sure
     validations:
       required: true
