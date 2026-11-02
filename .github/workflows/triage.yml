@@ -25,7 +25,9 @@ jobs:
                 "hellojs": "plugin: hello-js",
                 "hello-js": "plugin: hello-js",
                 "weather": "plugin: weather",
-                "weatherplugin": "plugin: weather"
+                "weatherplugin": "plugin: weather",
+                "voicechanger": "plugin: voicechanger",
+                "voice changer control": "plugin: voicechanger"
               },
               "areaHeading": "Plugin",
               "areaText": "Plugin",
