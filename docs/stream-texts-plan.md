@@ -33,7 +33,7 @@ The host must stay light because people run it next to their streaming app and g
 
 ## Design (phase 1: TXT)
 
-- **Location:** a new `StreamTexts/` folder in this repo. Follow HelloWeather and SoundBoard for structure, and the usual versioning and signing rules (`official-csharp-plugins.md`).
+- **Location:** a new `StreamTexts/` folder in this repo. Follow WeatherPlugin and SoundBoard for structure, and the usual versioning and signing rules (`official-csharp-plugins.md`).
 - **Entry point:** an `IPlugin` that registers one `IVariableProvider`. Its `RunAsync`:
   - loops every 500 ms (configurable, minimum 250 ms);
   - renders each entry's template;

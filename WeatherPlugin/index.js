@@ -1,10 +1,10 @@
-// A small example of a plugin whose widget shows data from the internet. Only the plugin talks to the network: it asks a weather service now and then
+// A plugin whose widget shows data from the internet. Only the plugin talks to the network: it asks a weather service now and then
 // and publishes the answer as variables. The widget (widgets/weather.js) has no network access and just draws those variables.
 
 host.variables.describe([
-  { name: 'helloweather.temperature', description: 'Temperature in degrees Celsius', example: '18.4', category: 'Weather' },
-  { name: 'helloweather.code', description: 'Weather code: 0 clear, 1-3 clouds, 45-48 fog, 51-67 rain, 71-77 snow, 80-99 showers and thunder', example: '3', category: 'Weather' },
-  { name: 'helloweather.wind', description: 'Wind speed in km/h', example: '12', category: 'Weather' },
+  { name: 'weather.temperature', description: 'Temperature in degrees Celsius', example: '18.4', category: 'Weather' },
+  { name: 'weather.code', description: 'Weather code: 0 clear, 1-3 clouds, 45-48 fog, 51-67 rain, 71-77 snow, 80-99 showers and thunder', example: '3', category: 'Weather' },
+  { name: 'weather.wind', description: 'Wind speed in km/h', example: '12', category: 'Weather' },
 ]);
 
 host.settings.page([
@@ -23,9 +23,9 @@ function refresh() {
     return;
   }
   const current = JSON.parse(response.body).current;
-  host.variables.set('helloweather.temperature', current.temperature_2m);
-  host.variables.set('helloweather.code', current.weather_code);
-  host.variables.set('helloweather.wind', current.wind_speed_10m);
+  host.variables.set('weather.temperature', current.temperature_2m);
+  host.variables.set('weather.code', current.weather_code);
+  host.variables.set('weather.wind', current.wind_speed_10m);
   host.status('weather', 'Weather: ' + current.temperature_2m + ' °C', 'Ok');
 }
 

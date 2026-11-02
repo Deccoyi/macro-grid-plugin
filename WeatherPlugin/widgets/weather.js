@@ -3,7 +3,7 @@ const info = await macroGrid.ready;
 const { canvas } = info;
 const ctx = canvas.getContext('2d');
 
-const names = ['helloweather.temperature', 'helloweather.code', 'helloweather.wind'];
+const names = ['weather.temperature', 'weather.code', 'weather.wind'];
 let temperature = null;
 let code = null;
 let wind = null;
@@ -11,9 +11,9 @@ let unit = info.settings.unit === 'F' ? 'F' : 'C';
 
 macroGrid.subscribe(names);
 macroGrid.onVariables((values) => {
-  if ('helloweather.temperature' in values) temperature = Number(values['helloweather.temperature']);
-  if ('helloweather.code' in values) code = Number(values['helloweather.code']);
-  if ('helloweather.wind' in values) wind = Number(values['helloweather.wind']);
+  if ('weather.temperature' in values) temperature = Number(values['weather.temperature']);
+  if ('weather.code' in values) code = Number(values['weather.code']);
+  if ('weather.wind' in values) wind = Number(values['weather.wind']);
   macroGrid.frame(draw);
 });
 macroGrid.onSettings((change) => { unit = change.settings.unit === 'F' ? 'F' : 'C'; macroGrid.frame(draw); });
