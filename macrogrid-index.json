@@ -246,6 +246,34 @@
                                      "clips",
                                      "soundboard"
                                  ]
+                    },
+                    {
+                        "id":  "weather",
+                        "name":  "WeatherPlugin",
+                        "description":  "A weather widget: the current weather at a place you choose, drawn on a canvas.",
+                        "author":  "Deccoyi",
+                        "homepage":  "https://github.com/Deccoyi/macro-grid-plugin/tree/main/WeatherPlugin",
+                        "kind":  "js",
+                        "versions":  [
+                                         {
+                                             "version":  "0.1.0",
+                                             "minMacroGrid":  "1.4.0",
+                                             "url":  "https://github.com/Deccoyi/macro-grid-plugin/releases/download/plugin-weather-v0.1.0/weather-0.1.0.zip",
+                                             "sha256":  "f653b911b21cd68be9cfe286d2c50b690a09e4a32903cb8072bded6e092fb0d4",
+                                             "size":  8994,
+                                             "permissions":  [
+                                                                 "variables",
+                                                                 "http:api.open-meteo.com:443"
+                                                             ],
+                                             "signature":  "ceK4O23HrM/ny2mkZr9wbURCSJSAug5y1vAsDuBQwgLGlseSw34pmFTOONPDLV0WjtEkck7+9gznD8oBhzQg3g=="
+                                         }
+                                     ],
+                        "category":  "Weather",
+                        "tags":  [
+                                     "weather",
+                                     "widget",
+                                     "forecast"
+                                 ]
                     }
                 ]
 }
