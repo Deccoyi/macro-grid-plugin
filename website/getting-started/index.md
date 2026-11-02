@@ -54,5 +54,5 @@ Several actions bound to the same event run one after the other, which makes a m
 ## 4. Plugins
 
 Open **Plugins, Manage Plugins** in the editor to install plugins. Plugins add new actions to the action picker and new
-variables to the `{...}` picker in text fields. The plugins in this repository (OBS control, PLC icons, SoundBoard, a weather widget, a JavaScript hello
+variables to the `{...}` picker in text fields. The plugins in this repository (OBS control, PLC icons, SoundBoard, a weather widget, Voice Changer Control, a JavaScript hello
 world) are described in the [Guides](/guides/obs-plugin), and you can [write your own](/tutorials/js-hello-world).
