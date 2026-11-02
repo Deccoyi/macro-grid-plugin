@@ -8,7 +8,7 @@ Controls the Voicemod app on this PC: switch the voice changer on and off, mute 
 
 - Windows, with the Voicemod app installed and running.
 - Your own Voicemod Control API key. Voicemod gives it to each person who asks; Macro Grid cannot include one. How to get a key: <https://deccoyi.github.io/macro-grid/tutorials/voicemod>
-- Macro Grid 1.5.0 or newer (the key is a protected setting from that version on).
+- Macro Grid 1.6.0 or newer (the key is a protected setting from that version on).
 
 ## Setup
 

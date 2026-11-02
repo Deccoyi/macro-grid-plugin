@@ -8,4 +8,4 @@ changelog is [CHANGELOG.md](CHANGELOG.md).
 ### Added
 - First version. JavaScript plugin, id `voicechanger`. Action types `voicechanger.togglevoicechanger`, `voicechanger.togglemute`, `voicechanger.togglehearmyself`, `voicechanger.togglebackground`, `voicechanger.stopsounds`, `voicechanger.loadvoice` (field `voiceID`), `voicechanger.randomvoice` (field `mode`) and `voicechanger.playsound` (field `fileName`). Variables `voicechanger.enabled`, `voicechanger.micmuted`, `voicechanger.voice` and `voicechanger.voices`. Setting `apiKey` (`Password` kind).
 - Permissions: `variables`, `actions` and `ws:localhost:<port>` for the eleven ports the Voicemod app can listen on.
-- `minMacroGrid` is a placeholder (`1.5.0`) until the server release that stores JavaScript `Password` settings protected is known.
+- `minMacroGrid` is `1.6.0` (provisional): the first server release that stores JavaScript `Password` settings protected. Do not release before that server version is out.
