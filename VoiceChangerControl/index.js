@@ -9,6 +9,7 @@ const PORTS = [59129, 20000, 39273, 42152, 43782, 46667, 35679, 37170, 38501, 33
 const RETRY_MS = 7000;
 const RETRY_SLOW_MS = 30000;
 const SLOW_AFTER = 22;
+const MAX_CONNECTS_PER_MINUTE = 8; // the host stops a plugin at 10
 const REGISTER_TIMEOUT_MS = 5000;
 const TICK_MS = 1000;
 
@@ -36,7 +37,15 @@ const state = {
   lastGoodPort: null,
   nextId: 1,
   registerId: null,
+  connects: [], // timestamps of the connects of the last minute
+  bulkPending: false, // a getVoices reply is awaited: the host closes a socket when one message is over 64 KB
+  voicesTooBig: false,
 };
+
+// A callback must never throw: the host switches a plugin off after five failures in a row. The message is not shown, it could hold the reply.
+function guard(fn) {
+  try { fn(); } catch (e) { setStatus('internal error, see the plugin log', 'Error'); host.log('callback failed: ' + (e && e.name ? e.name : 'error')); }
+}
 
 function setStatus(text, level) { host.status('voicechanger', 'Voice Changer: ' + text, level); }
 
@@ -57,14 +66,17 @@ function portForAttempt(n) {
 function connect(key) {
   const port = portForAttempt(state.attempts);
   state.keyUsed = key;
+  state.connects = state.connects.filter((t) => Date.now() - t < 60000);
+  if (state.connects.length >= MAX_CONNECTS_PER_MINUTE) { state.nextAt = state.connects[0] + 60000; return; }
+  state.connects.push(Date.now());
   state.open = false;
   state.registered = false;
   let socket;
   try {
     socket = host.ws.connect('ws://localhost:' + port + '/v1/', {
-      onOpen() { onOpen(socket, port, key); },
-      onMessage(text) { if (state.socket === socket) onMessage(text, port); },
-      onClose() { onClose(socket); },
+      onOpen() { guard(() => onOpen(socket, port, key)); },
+      onMessage(text) { guard(() => { if (state.socket === socket) onMessage(text, port); }); },
+      onClose() { guard(() => onClose(socket)); },
     });
   } catch (e) {
     state.attempts++;
@@ -93,7 +105,13 @@ function onClose(socket) {
   state.registered = false;
   if (state.rejectedKey !== null && state.rejectedKey === state.keyUsed) return; // the 401 message is already shown
   state.attempts = wasRegistered ? 0 : state.attempts + 1;
-  state.nextAt = Date.now() + (wasRegistered ? 2000 : state.attempts > SLOW_AFTER ? RETRY_SLOW_MS : RETRY_MS);
+  state.nextAt = Date.now() + (state.attempts > SLOW_AFTER ? RETRY_SLOW_MS : RETRY_MS);
+  if (state.bulkPending) {
+    state.bulkPending = false;
+    state.voicesTooBig = true;
+    setStatus('a reply of the Voicemod app was too large for Macro Grid (over 64 KB); the voice list is switched off', 'Warning');
+    return;
+  }
   setStatus('Voicemod is not running or its Control API is off. Start the Voicemod app.', 'Warning');
 }
 
@@ -126,6 +144,8 @@ function onMessage(text, port) {
     const id = obj.voiceID !== undefined ? obj.voiceID : obj.voiceId !== undefined ? obj.voiceId : obj.currentVoice;
     if (typeof id === 'string') host.variables.set('voicechanger.voice', id);
   } else if (key === 'getvoices') {
+    state.bulkPending = false;
+    if (typeof msg.currentVoice === 'string') host.variables.set('voicechanger.voice', msg.currentVoice);
     const list = Array.isArray(obj.voices) ? obj.voices : [];
     const pairs = list.map((v) => (v.id || v.voiceID || v.voiceId) + '=' + (v.friendlyName || v.name || '')).filter((p) => p.length > 1);
     if (pairs.length) host.variables.set('voicechanger.voices', pairs.join(', '));
@@ -146,7 +166,6 @@ function onRegister(msg, port) {
     state.lastGoodPort = port;
     host.diagnostics.resolve('voicechanger-auth');
     setStatus('connected', 'Ok');
-    send('getVoices');
     send('getCurrentVoice');
     send('getVoiceChangerStatus');
     send('getMuteMicStatus');
@@ -204,12 +223,24 @@ toggle('stopsounds', 'Stop all sounds', 'stopAllMemeSounds');
 
 host.registerAction({
   type: 'voicechanger.loadvoice', name: 'Load voice', category: 'Voice Changer',
-  description: 'Loads a voice by its id. The ids are in the variable voicechanger.voices.',
+  description: 'Loads a voice by its id. Run "Refresh voice list" once, then read the ids from the variable voicechanger.voices.',
   fields: [{ key: 'voiceID', label: 'Voice id', kind: 'Text', default: '' }],
   run(context, settings) {
     const voiceID = String(settings.voiceID || '').trim();
     if (!voiceID) return { ok: false, code: 'ProviderError', message: 'Enter a voice id.' };
     return run('loadVoice', { voiceID }, 'getCurrentVoice');
+  },
+});
+
+host.registerAction({
+  type: 'voicechanger.refreshvoices', name: 'Refresh voice list', category: 'Voice Changer',
+  description: 'Reads the voice ids into the variable voicechanger.voices. A reply over 64 KB is closed by Macro Grid, so this is not done on its own.',
+  fields: [],
+  run() {
+    if (state.voicesTooBig) return { ok: false, code: 'Unavailable', message: 'The voice list of this Voicemod app is too large for Macro Grid (over 64 KB).' };
+    const result = run('getVoices', {});
+    if (result.ok) state.bulkPending = true;
+    return result;
   },
 });
 

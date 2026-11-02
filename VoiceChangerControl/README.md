@@ -18,11 +18,11 @@ Controls the Voicemod app on this PC: switch the voice changer on and off, mute 
 
 ## Actions
 
-Toggle voice changer, Toggle microphone mute, Toggle hear myself, Toggle background effect, Load voice (by id), Random voice, Play sound (by file name), Stop all sounds.
+Toggle voice changer, Toggle microphone mute, Toggle hear myself, Toggle background effect, Refresh voice list, Load voice (by id), Random voice, Play sound (by file name), Stop all sounds.
 
 ## Variables
 
-`voicechanger.enabled`, `voicechanger.micmuted`, `voicechanger.voice` (the current voice id) and `voicechanger.voices` (all voices as `id=name` pairs, to find the id for **Load voice**).
+`voicechanger.enabled`, `voicechanger.micmuted`, `voicechanger.voice` (the current voice id) and `voicechanger.voices` (all voices as `id=name` pairs, filled by **Refresh voice list**).
 
 ## Privacy
 

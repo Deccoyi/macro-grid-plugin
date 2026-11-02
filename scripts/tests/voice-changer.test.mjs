@@ -74,6 +74,7 @@ function fakeVoicemod({ validKey = KEY } = {}) {
 function loadPlugin({ portMap, apiKey = KEY }) {
   let now = 1_000_000;
   const settings = { apiKey };
+  let open = 0, maxOpen = 0;
   const vars = {}, statuses = [], reports = [], actions = {}, every = [], connectPorts = [], clientSockets = [];
   const host = {
     variables: { describe() {}, set: (n, v) => { vars[n] = v; } },
@@ -83,6 +84,7 @@ function loadPlugin({ portMap, apiKey = KEY }) {
     registerAction: (a) => { actions[a.type] = a; },
     every: (ms, fn) => every.push(fn),
     after() {},
+    log() {},
     ws: {
       connect(url, handlers) {
         const port = Number(new URL(url).port);
@@ -94,9 +96,11 @@ function loadPlugin({ portMap, apiKey = KEY }) {
         }
         const ws = new WebSocket('ws://127.0.0.1:' + real + '/v1/');
         clientSockets.push(ws);
+        open++; maxOpen = Math.max(maxOpen, open); // the host counts a socket from connect to close
         ws.onopen = () => handlers.onOpen();
-        ws.onmessage = (e) => handlers.onMessage(String(e.data));
-        ws.onclose = () => handlers.onClose({ code: 1000, reason: '', error: null });
+        // the host closes a socket that receives a message of more than 64 KB
+        ws.onmessage = (e) => { if (String(e.data).length > 64 * 1024) ws.close(1009); else handlers.onMessage(String(e.data)); };
+        ws.onclose = () => { open--; handlers.onClose({ code: 1000, reason: '', error: null }); };
         ws.onerror = () => {};
         return { send: (t) => ws.send(t), close: () => ws.close() };
       },
@@ -104,6 +108,7 @@ function loadPlugin({ portMap, apiKey = KEY }) {
   };
   vm.runInNewContext(script, { host, Date: { now: () => now }, JSON, Number, String, Array, Math });
   return {
+    maxOpen: () => maxOpen, open: () => open,
     vars, statuses, reports, actions, settings, connectPorts,
     tick: () => every[0](),
     advance: (ms) => { now += ms; },
@@ -232,5 +237,78 @@ test('events: both actionID and actionId spellings and the other envelope update
     fake.push({ actionType: 'toggleMuteMemeForMe', actionObject: { value: true } });
     fake.push({ actionType: 'toggleMuteMic', actionObject: { value: false } });
     await wait(() => plugin.vars['voicechanger.micmuted'] === false, 'the meme mute is not the microphone');
+  } finally { plugin.stop(); fake.close(); }
+});
+
+test('never more than one socket open: port fallback, reconnects and a dropped session', async () => {
+  const fake = fakeVoicemod();
+  const port = await fake.listen();
+  const plugin = loadPlugin({ portMap: { 39273: port } }); // two refused ports before the one that answers
+  try {
+    for (let i = 0; i < 12; i++) { plugin.advance(7000); plugin.tick(); await new Promise((r) => setTimeout(r, 30)); }
+    await wait(() => plugin.last().level === 'Ok', 'connected');
+    assert.equal(plugin.open(), 1);
+    fake.close(); // Voicemod quits: the socket is dropped
+    await wait(() => plugin.open() === 0, 'closed');
+    plugin.advance(7000); plugin.tick();
+    await new Promise((r) => setTimeout(r, 30));
+    assert.equal(plugin.maxOpen(), 1);
+  } finally { plugin.stop(); fake.close(); }
+});
+
+test('connects stay under the host limit of 10 a minute, also after a dropped session', async () => {
+  const plugin = loadPlugin({ portMap: {} });
+  let t = 0;
+  while (t < 120_000) { plugin.advance(1000); t += 1000; plugin.tick(); await new Promise((r) => setTimeout(r, 2)); }
+  const perMinute = plugin.connectPorts.length / 2;
+  assert.ok(perMinute <= 8.5, 'connects a minute: ' + perMinute);
+});
+
+test('no big reply is asked for on its own; refresh asks for the voices only when told to', async () => {
+  const { fake, plugin } = await connected();
+  try {
+    await wait(() => plugin.last()?.level === 'Ok', 'connected');
+    await wait(() => fake.received.some((m) => m.action === 'getMuteMicStatus'), 'queries');
+    const asked = fake.received.map((m) => m.action);
+    for (const bad of ['getVoices', 'getMemes', 'getBitmap', 'getAllSoundboard']) assert.ok(!asked.includes(bad), bad);
+    plugin.actions['voicechanger.refreshvoices'].run({}, {});
+    await wait(() => fake.received.some((m) => m.action === 'getVoices'), 'getVoices on request');
+    // about 200 voices as the docs show them: well under the 64 KB cap
+    const voices = Array.from({ length: 200 }, (_, i) => ({ id: 'voice' + i, friendlyName: 'Voice number ' + i, enabled: true, isCustom: false, favorited: false, isNew: false, bitmapChecksum: '9af56b7cb7a87db7b9d4e93852599981' }));
+    const reply = JSON.stringify({ actionType: 'getVoices', actionObject: { voices }, currentVoice: 'nofx' });
+    assert.ok(reply.length < 64 * 1024, 'size ' + reply.length);
+    fake.push(JSON.parse(reply));
+    await wait(() => plugin.vars['voicechanger.voices']?.startsWith('voice0=Voice number 0'), 'voice list');
+    assert.equal(plugin.vars['voicechanger.voice'], 'nofx');
+  } finally { plugin.stop(); fake.close(); }
+});
+
+test('an oversized reply: the host closes the socket, the plugin says why and stops asking', async () => {
+  const { fake, plugin } = await connected();
+  try {
+    await wait(() => plugin.last()?.level === 'Ok', 'connected');
+    plugin.actions['voicechanger.refreshvoices'].run({}, {});
+    await wait(() => fake.received.some((m) => m.action === 'getVoices'), 'getVoices sent');
+    const sounds = Array.from({ length: 700 }, (_, i) => ({ id: 'voice' + i, friendlyName: 'Voice number ' + i, bitmapChecksum: '9af56b7cb7a87db7b9d4e93852599981', pad: 'x'.repeat(40) }));
+    const big = JSON.stringify({ actionType: 'getVoices', actionObject: { voices: sounds } });
+    assert.ok(big.length > 64 * 1024, 'size ' + big.length);
+    fake.push(JSON.parse(big));
+    await wait(() => /too large/.test(plugin.last().text), 'too large status');
+    assert.equal(plugin.last().level, 'Warning');
+    assert.equal(plugin.open(), 0);
+    assert.equal(plugin.actions['voicechanger.refreshvoices'].run({}, {}).ok, false);
+    plugin.advance(7000); plugin.tick(); // the plugin still reconnects, with the voice list off
+    await wait(() => plugin.last().level === 'Ok', 'reconnected');
+    assert.equal(plugin.actions['voicechanger.refreshvoices'].run({}, {}).ok, false);
+  } finally { plugin.stop(); fake.close(); }
+});
+
+test('a message that cannot be read does not throw out of the callback', async () => {
+  const { fake, plugin } = await connected();
+  try {
+    await wait(() => plugin.last()?.level === 'Ok', 'connected');
+    fake.push({ actionType: 'getVoices', actionObject: { voices: [null] } });
+    fake.push({ actionType: 'toggleMuteMic', actionObject: { value: true } });
+    await wait(() => plugin.vars['voicechanger.micmuted'] === true, 'still working');
   } finally { plugin.stop(); fake.close(); }
 });
