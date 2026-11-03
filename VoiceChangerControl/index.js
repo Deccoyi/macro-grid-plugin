@@ -202,32 +202,41 @@ function enc(text) {
   return String(text).replace(/[^A-Za-z0-9.:-]/g, (c) => '_' + ('0000' + c.charCodeAt(0).toString(16)).slice(-4));
 }
 
-function imageRef(imageId, kind, id) {
+// Image ids are stable per item (never based on the picture): voice:<voiceID>, sound:<soundId>. The item's bitmapChecksum is only the version of the
+// picture: when a refreshed list shows another one, the cached picture is dropped so the host asks for it again when it is used.
+function imageRef(imageId, kind, id, version) {
   if (!/^[A-Za-z0-9._:-]{1,128}$/.test(imageId)) return null;
-  if (!state.imageSources.has(imageId)) state.imageSources.set(imageId, { kind, id });
+  const old = state.prevSources && state.prevSources.get(imageId);
+  if (old && version && old.version && old.version !== version && typeof host.images.invalidate === 'function') host.images.invalidate(imageId);
+  state.imageSources.set(imageId, { kind, id, version: version || '' });
   return imageId;
 }
 
+// Before a list is read again: its old entries are kept aside (to compare the versions) and the table starts empty.
+function beginRead(prefix) {
+  state.prevSources = new Map();
+  for (const [k, v] of [...state.imageSources]) if (k.startsWith(prefix)) { state.prevSources.set(k, v); state.imageSources.delete(k); }
+}
+
 function readVoices(obj) {
-  for (const k of [...state.imageSources.keys()]) if (k.startsWith('voice:')) state.imageSources.delete(k);
+  beginRead('voice:');
   const out = [];
   for (const v of Array.isArray(obj.voices) ? obj.voices : []) {
     if (out.length >= MAX_ITEMS) break;
     const id = v && (v.id || v.voiceID || v.voiceId);
-    if (typeof id === 'string' && id) out.push({ id, name: clip(v.friendlyName || v.name || id, 100), favorite: v.favorited === true, image: imageRef('voice:' + enc(id) + (typeof v.bitmapChecksum === 'string' && v.bitmapChecksum ? ':' + enc(v.bitmapChecksum) : ''), 'voice', id) });
+    if (typeof id === 'string' && id) out.push({ id, name: clip(v.friendlyName || v.name || id, 100), favorite: v.favorited === true, image: imageRef('voice:' + enc(id), 'voice', id, typeof v.bitmapChecksum === 'string' ? v.bitmapChecksum : '') });
   }
   return out;
 }
 
 function readSounds(obj) {
-  for (const k of [...state.imageSources.keys()]) if (k.startsWith('sound:')) state.imageSources.delete(k);
+  beginRead('sound:');
   const out = [];
   for (const board of Array.isArray(obj.soundboards) ? obj.soundboards : []) {
     for (const sd of board && Array.isArray(board.sounds) ? board.sounds : []) {
       if (out.length >= MAX_ITEMS) return out;
       if (sd && typeof sd.id === 'string' && sd.id) {
-        const sum = typeof sd.bitmapChecksum === 'string' ? sd.bitmapChecksum : '';
-        out.push({ id: sd.id, name: clip(sd.name || sd.id, 100), board: clip(board.name || 'Sounds', 60), favorite: sd.favorited === true || sd.isFavorite === true, image: sum ? imageRef('sound:' + enc(sum), 'sound', sd.id) : null });
+        out.push({ id: sd.id, name: clip(sd.name || sd.id, 100), board: clip(board.name || 'Sounds', 60), favorite: sd.favorited === true || sd.isFavorite === true, image: imageRef('sound:' + enc(sd.id), 'sound', sd.id, typeof sd.bitmapChecksum === 'string' ? sd.bitmapChecksum : '') });
       }
     }
   }
@@ -353,7 +362,9 @@ function onBitmap(obj) {
   state.pictureInFlight = null;
   if (!flight) return;
   const url = pictureFromReply(obj);
-  if (url) host.images.put(flight.imageId, url);
+  // The version is the item's bitmapChecksum when Voicemod gave one; a host without versions ignores the third argument.
+  const source = state.imageSources.get(flight.imageId);
+  if (url) host.images.put(flight.imageId, url, source && source.version ? source.version : undefined);
 }
 
 host.images.onRequest((ids) => {

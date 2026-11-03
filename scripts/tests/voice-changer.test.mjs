@@ -80,7 +80,7 @@ function loadPlugin({ portMap, apiKey = KEY }) {
   let now = 1_000_000;
   const settings = { apiKey };
   let open = 0, maxOpen = 0;
-  const varWrites = {}, sources = {}, puts = [], logs = [];
+  const varWrites = {}, sources = {}, puts = [], logs = [], invalidated = [];
   let imageHandler = null;
   const vars = {}, statuses = [], reports = [], actions = {}, every = [], connectPorts = [], clientSockets = [];
   const host = {
@@ -93,7 +93,7 @@ function loadPlugin({ portMap, apiKey = KEY }) {
     after() {},
     options: { source: (id, fn) => { sources[id] = fn; } },
     log: (m) => logs.push(m),
-    images: { onRequest: (fn) => { imageHandler = fn; }, put: (id, url) => { puts.push({ id, url }); return true; } },
+    images: { onRequest: (fn) => { imageHandler = fn; }, put: (id, url, version) => { puts.push({ id, url, version }); return true; }, invalidate: (id) => { invalidated.push(id); } },
     ws: {
       connect(url, handlers) {
         const port = Number(new URL(url).port);
@@ -117,7 +117,7 @@ function loadPlugin({ portMap, apiKey = KEY }) {
   };
   vm.runInNewContext(script, { host, Date: { now: () => now }, JSON, Number, String, Array, Math });
   return {
-    varWrites, sources, puts, logs, requestImages: (ids) => imageHandler(ids), pump: () => every[1](), maxOpen: () => maxOpen, open: () => open,
+    varWrites, sources, puts, logs, invalidated, requestImages: (ids) => imageHandler(ids), pump: () => every[1](), maxOpen: () => maxOpen, open: () => open,
     vars, statuses, reports, actions, settings, connectPorts,
     tick: () => every[0](),
     advance: (ms) => { now += ms; },
@@ -501,15 +501,14 @@ function png(width, height, extra = 40) {
 const PNG = png(64, 64);
 const bitmaps = (fake) => fake.received.filter((m) => m.action === 'getBitmap');
 
-test('pictures: options carry plugin-image references; an id outside the allowed characters has none', async () => {
+test('pictures: options carry stable plugin-image references (the item, not the picture)', async () => {
   const { fake, plugin } = await withLists();
   try {
     const voices = plugin.sources.voices({ text: '' }).options;
     assert.equal(voices.find((o) => o.value === 'baby').icon, 'plugin-image:voicechanger/voice:baby');
     const sounds = plugin.sources.sounds({ text: '' }).options;
-    assert.equal(sounds.find((o) => o.value === 's-laugh').icon, 'plugin-image:voicechanger/sound:CS-LAUGH-1');
-    assert.equal(sounds.find((o) => o.value === 's-airhorn').icon, undefined, 'no checksum, no picture');
-    assert.equal(sounds.find((o) => o.value === 's-nuke').icon, 'plugin-image:voicechanger/sound:has_0020space', 'a character outside the allowed ones is encoded');
+    assert.equal(sounds.find((o) => o.value === 's-laugh').icon, 'plugin-image:voicechanger/sound:s-laugh');
+    assert.equal(sounds.find((o) => o.value === 's-airhorn').icon, 'plugin-image:voicechanger/sound:s-airhorn', 'the id does not depend on the checksum');
   } finally { plugin.stop(); fake.close(); }
 });
 
@@ -517,7 +516,7 @@ test('pictures: one getBitmap at a time, only for ids the plugin knows, a valid 
   const { fake, plugin } = await withLists();
   try {
     plugin.sources.voices({ text: '' }); plugin.sources.sounds({ text: '' });
-    plugin.requestImages(['voice:baby', 'sound:CS-LAUGH-1', 'voice:unknown', 'nope:x', 7]);
+    plugin.requestImages(['voice:baby', 'sound:s-laugh', 'voice:unknown', 'nope:x', 7]);
     plugin.advance(1100);
     plugin.pump();
     await wait(() => bitmaps(fake).length === 1, 'first getBitmap');
@@ -528,6 +527,7 @@ test('pictures: one getBitmap at a time, only for ids the plugin knows, a valid 
     fake.push({ actionType: 'getBitmap', actionObject: { default: PNG, selected: PNG, transparent: false } });
     await wait(() => plugin.puts.length === 1, 'put');
     assert.equal(plugin.puts[0].id, 'voice:baby');
+    assert.equal(plugin.puts[0].version, undefined, 'no checksum in the list, no version');
     assert.match(plugin.puts[0].url, /^data:image\/png;base64,iVBOR/);
     plugin.pump();
     await wait(() => bitmaps(fake).length === 2, 'second getBitmap');
@@ -602,7 +602,7 @@ test('pictures: transparent first, then default, never selected; bare base64 and
       { 1: { result: { image: d } } }, // meme layout of the docs
     ];
     const expected = [t, d, null, t, d];
-    const ids = ['voice:baby', 'voice:deep', 'voice:robot', 'voice:alien', 'sound:CS-LAUGH-1'];
+    const ids = ['voice:baby', 'voice:deep', 'voice:robot', 'voice:alien', 'sound:s-laugh'];
     plugin.requestImages(ids);
     for (let i = 0; i < replies.length; i++) {
       plugin.advance(1100); plugin.pump();
@@ -625,7 +625,7 @@ test('pictures: a png over 1024 pixels on a side is not put; other types are sni
     const webp = Buffer.concat([Buffer.from('RIFF'), Buffer.alloc(4), Buffer.from('WEBP'), Buffer.alloc(30, 1)]).toString('base64');
     const gif = Buffer.concat([Buffer.from('GIF89a'), Buffer.alloc(30, 1)]).toString('base64');
     const cases = [[png(2000, 10), null], [png(1024, 1024), 'png'], [jpeg, 'jpeg'], [webp, 'webp'], [gif, 'gif']];
-    const ids = ['voice:baby', 'voice:deep', 'voice:robot', 'voice:alien', 'sound:CS-LAUGH-1'];
+    const ids = ['voice:baby', 'voice:deep', 'voice:robot', 'voice:alien', 'sound:s-laugh'];
     plugin.requestImages(ids);
     for (let i = 0; i < cases.length; i++) {
       plugin.advance(1100); plugin.pump();
@@ -639,7 +639,7 @@ test('pictures: a png over 1024 pixels on a side is not put; other types are sni
   } finally { plugin.stop(); fake.close(); }
 });
 
-test('pictures: image ids carry the voice checksum and encode every unusual character', async () => {
+test('pictures: image ids encode every unusual character and ignore the checksum', async () => {
   const { fake, plugin } = await connected();
   try {
     await wait(() => fake.received.some((m) => m.action === 'getVoices'), 'getVoices');
@@ -648,7 +648,7 @@ test('pictures: image ids carry the voice checksum and encode every unusual char
     fake.push({ actionType: 'getAllSoundboard', actionObject: { soundboards: [] } });
     await wait(() => plugin.sources.voices({ text: '' }).options.length > 0, 'lists');
     const icons = Object.fromEntries(plugin.sources.voices({ text: '' }).options.map((o) => [o.value, o.icon]));
-    assert.equal(icons['my voice/1_x'], 'plugin-image:voicechanger/voice:my_0020voice_002f1_005fx:ab-cd');
+    assert.equal(icons['my voice/1_x'], 'plugin-image:voicechanger/voice:my_0020voice_002f1_005fx');
     assert.equal(icons.plain, 'plugin-image:voicechanger/voice:plain');
     for (const icon of Object.values(icons)) assert.match(icon.split('/')[1], /^[A-Za-z0-9._:-]{1,128}$/);
   } finally { plugin.stop(); fake.close(); }
@@ -682,4 +682,29 @@ test('lists: read after a successful register and on Refresh lists; an empty lis
 test('lists: the measured sizes of a real Voicemod fit the limit of plugin.json', () => {
   assert.equal(manifest.limits.wsMessageKB, 512);
   assert.ok(328812 < CAP && 328812 * 1.4 < CAP, 'the biggest measured reply (getAllSoundboard, 860 sounds) fits with room');
+});
+
+test('pictures: a changed bitmapChecksum in a refreshed list drops the cached picture; an unchanged one does not', async () => {
+  const { fake, plugin } = await connected();
+  try {
+    const give = async (voices) => {
+      give.n = (give.n || 0) + 1;
+      await wait(() => fake.received.filter((m) => m.action === 'getVoices').length === give.n, 'getVoices ' + give.n);
+      fake.push({ actionType: 'getVoices', actionObject: { voices } });
+      await wait(() => fake.received.filter((m) => m.action === 'getAllSoundboard').length === give.n, 'sounds ' + give.n);
+      fake.push({ actionType: 'getAllSoundboard', actionObject: { soundboards: [{ id: 'b', name: 'B', sounds: [{ id: 's1', name: 'One', bitmapChecksum: 'c1' }] }] } });
+      await new Promise((r) => setTimeout(r, 40));
+    };
+    await give([{ id: 'a', friendlyName: 'A', bitmapChecksum: 'v1' }, { id: 'b', friendlyName: 'B', bitmapChecksum: 'v1' }]);
+    plugin.requestImages(['voice:a']);
+    plugin.advance(1100); plugin.pump();
+    await wait(() => bitmaps(fake).length === 1, 'getBitmap');
+    fake.push({ actionType: 'getBitmap', actionObject: { result: { transparent: PNG } } });
+    await wait(() => plugin.puts.length === 1, 'put');
+    assert.equal(plugin.puts[0].version, 'v1', 'the checksum is the version');
+    plugin.advance(1100);
+    assert.equal(plugin.actions['voicechanger.refreshvoices'].run({}, {}).ok, true);
+    await give([{ id: 'a', friendlyName: 'A', bitmapChecksum: 'v2' }, { id: 'b', friendlyName: 'B', bitmapChecksum: 'v1' }]);
+    assert.deepEqual([...plugin.invalidated], ['voice:a'], 'only the voice with a new checksum');
+  } finally { plugin.stop(); fake.close(); }
 });
