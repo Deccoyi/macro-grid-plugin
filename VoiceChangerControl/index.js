@@ -253,22 +253,28 @@ function readVoices(obj) {
 // Every soundboard the app returns is listed: custom and disabled ones too (a disabled sound is marked in its label). The docs spell the keys
 // both ways (id / Id, name / Name), so both are read. Only exact duplicates (same id) are dropped.
 const pick = (o, ...keys) => { for (const k of keys) if (o && o[k] !== undefined && o[k] !== null) return o[k]; return undefined; };
+// An id is a text or a number (a custom item may carry a numeric one); anything else has no id.
+const idOf = (v) => (typeof v === 'string' && v ? v : typeof v === 'number' && Number.isFinite(v) ? String(v) : '');
 
 function readSounds(obj) {
   beginRead('sound:');
   const out = [];
   const seen = new Set();
-  for (const board of Array.isArray(obj.soundboards) ? obj.soundboards : []) {
+  for (const board of Array.isArray(obj.soundboards) ? obj.soundboards : (Array.isArray(obj.Soundboards) ? obj.Soundboards : [])) {
     const boardName = clip(pick(board, 'name', 'Name') || 'Sounds', 60);
     const boardOff = pick(board, 'enabled', 'Enabled') === false;
-    for (const sd of board && Array.isArray(board.sounds) ? board.sounds : []) {
+    const source = pick(board, 'isCustom', 'IsCustom') === true ? 'mine' : 'library';
+    const inBoard = pick(board, 'sounds', 'Sounds', 'memes', 'Memes', 'items', 'Items');
+    for (const sd of Array.isArray(inBoard) ? inBoard : []) {
       if (out.length >= MAX_ITEMS) return out;
-      const id = pick(sd, 'id', 'Id', 'ID');
-      if (typeof id !== 'string' || !id || seen.has(id)) continue;
-      seen.add(id);
+      const id = idOf(pick(sd, 'id', 'Id', 'ID'));
+      // The same id twice in one source is one sound; the same NAME is not a duplicate (two sounds may share a name).
+      if (!id || seen.has(source + '|' + id)) continue;
+      seen.add(source + '|' + id);
       const off = boardOff || pick(sd, 'enabled', 'Enabled') === false;
-      const name = clip(pick(sd, 'name', 'Name') || id, 100);
-      out.push({ id, name: off ? name + ' (disabled)' : name, board: boardName, source: pick(board, 'isCustom', 'IsCustom') === true ? 'mine' : 'library', favorite: sd.favorited === true || sd.isFavorite === true, image: imageRef('sound:' + enc(id), 'sound', id, typeof sd.bitmapChecksum === 'string' ? sd.bitmapChecksum : '') });
+      const rawName = pick(sd, 'name', 'Name');
+      const name = clip(typeof rawName === 'string' && rawName.trim() ? rawName : id, 100);
+      out.push({ id, name: off ? name + ' (disabled)' : name, board: boardName, source, favorite: sd.favorited === true || sd.isFavorite === true, image: imageRef('sound:' + enc(id), 'sound', id, typeof sd.bitmapChecksum === 'string' ? sd.bitmapChecksum : '') });
     }
   }
   return out;
@@ -278,12 +284,12 @@ function readSounds(obj) {
 function readMemes(obj) {
   const out = [];
   const seen = new Set();
-  for (const m of Array.isArray(obj.listOfMemes) ? obj.listOfMemes : []) {
+  for (const m of Array.isArray(obj.listOfMemes) ? obj.listOfMemes : (Array.isArray(obj.ListOfMemes) ? obj.ListOfMemes : [])) {
     if (out.length >= MAX_ITEMS) break;
-    const file = pick(m, 'FileName', 'Filename', 'fileName', 'filename');
-    if (typeof file !== 'string' || !file || seen.has(file)) continue;
+    const file = idOf(pick(m, 'FileName', 'Filename', 'fileName', 'filename'));
+    if (!file || seen.has(file)) continue;
     seen.add(file);
-    out.push({ id: 'meme:' + file, file, name: clip(pick(m, 'Name', 'name') || file, 100), board: 'Community', source: 'community', favorite: false, image: null });
+    out.push({ id: 'meme:' + file, file, name: clip(typeof pick(m, 'Name', 'name') === 'string' && pick(m, 'Name', 'name').trim() ? pick(m, 'Name', 'name') : file, 100), board: 'Community', source: 'community', favorite: false, image: null });
   }
   return out;
 }
@@ -386,8 +392,7 @@ function searchOptions(kind, query, values) {
   let page = items.slice(offset, offset + limit);
   let more = offset + limit < items.length;
   if (found && offset === 0 && !text && !page.some((i) => i.id === found.id)) {
-    page = [found].concat(page.slice(0, limit - 1));
-    more = limit - 1 < items.length;
+    page = [found].concat(page); // one more than the limit: the paging offsets of the next pages stay exact
   }
   return { options: page.map((i) => (i.image ? { value: i.id, label: i.name, group: section(i), icon: 'plugin-image:voicechanger/' + i.image } : { value: i.id, label: i.name, group: section(i) })), more, selectedMissing: selected ? !found : false };
 }
