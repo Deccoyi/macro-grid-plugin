@@ -29,7 +29,19 @@ host.variables.describe([
   { name: 'voicechanger.enabled', description: 'Whether the voice changer is on', example: 'true', type: 'boolean', category: 'Voice Changer' },
   { name: 'voicechanger.micmuted', description: 'Whether the microphone is muted in the app', example: 'false', type: 'boolean', category: 'Voice Changer' },
   { name: 'voicechanger.voice', description: 'The id of the current voice', example: 'nofx', category: 'Voice Changer' },
+  { name: 'voicechanger.voicename', description: 'The name of the current voice', example: 'Baby', category: 'Voice Changer' },
+  { name: 'voicechanger.hearmyself', description: 'Whether you hear your own voice (hear myself)', example: 'true', type: 'boolean', category: 'Voice Changer' },
+  { name: 'voicechanger.background', description: 'Whether the background effect is on', example: 'false', type: 'boolean', category: 'Voice Changer' },
+  { name: 'voicechanger.memesmuted', description: 'Whether the sounds are muted for you (mute for me)', example: 'false', type: 'boolean', category: 'Voice Changer' },
+  { name: 'voicechanger.license', description: 'The Voicemod license: free or pro', example: 'pro', category: 'Voice Changer' },
+  { name: 'voicechanger.state', description: 'The state of the connection to the Voicemod app, as a short text', example: 'connected', category: 'Voice Changer' },
+  { name: 'voicechanger.voicecount', description: 'How many voices the Voicemod app has', example: '257', type: 'number', category: 'Voice Changer' },
+  { name: 'voicechanger.soundcount', description: 'How many sounds the Voicemod app has', example: '860', type: 'number', category: 'Voice Changer' },
+  { name: 'voicechanger.lastsound', description: 'The name of the sound played last by this plugin', example: 'Air horn', category: 'Voice Changer' },
+  { name: 'voicechanger.lasterror', description: 'The last problem as a short text (empty when there is none)', example: '', category: 'Voice Changer' },
 ]);
+
+// A boolean variable shows Açık/Kapalı by default; the text of a widget can pick its own words, for example {voicechanger.enabled|ON/OFF}.
 
 host.settings.page([
   { key: 'notice', label: 'Unofficial', kind: 'Notice', description: 'This plugin works with the Voicemod app on this PC. It is an independent plugin and is not made, endorsed or affiliated with Voicemod. Voicemod is a trademark of its owner. It needs your own Voicemod Control API key.' },
@@ -84,6 +96,9 @@ function setStatus(text, level) {
   if (full + level === state.lastStatus) return;
   state.lastStatus = full + level;
   host.status('voicechanger', full, level);
+  setVar('voicechanger.state', String(text).slice(0, 80));
+  if (level === 'Error' || level === 'Warning') setVar('voicechanger.lasterror', String(text).slice(0, 80));
+  else if (level === 'Ok') setVar('voicechanger.lasterror', '');
 }
 
 function setVar(name, value) {
@@ -246,6 +261,12 @@ function readSounds(obj) {
     }
   }
   return out;
+}
+
+function updateVoiceName() {
+  const id = state.vars['voicechanger.voice'];
+  const v = state.lists.voices && state.lists.voices.find((x) => x.id === id);
+  setVar('voicechanger.voicename', v ? v.name : '');
 }
 
 function pushRecent(id) {
@@ -416,20 +437,32 @@ function onMessage(text, port) {
   const key = name.toLowerCase();
   if (key === 'voicechangedevent' || key === 'getcurrentvoice') {
     const id = obj.voiceID !== undefined ? obj.voiceID : obj.voiceId !== undefined ? obj.voiceId : obj.currentVoice;
-    if (typeof id === 'string') { setVar('voicechanger.voice', id); pushRecent(id); }
+    if (typeof id === 'string') { setVar('voicechanger.voice', id); pushRecent(id); updateVoiceName(); }
   } else if (key === 'getvoices') {
     if (typeof msg.currentVoice === 'string') setVar('voicechanger.voice', msg.currentVoice);
     state.lists.voices = readVoices(obj);
+    setVar('voicechanger.voicecount', state.lists.voices.length);
+    updateVoiceName();
     listDone('voices');
   } else if (key === 'getbitmap') {
     onBitmap(obj);
   } else if (key === 'getallsoundboard') {
     state.lists.sounds = readSounds(obj);
+    setVar('voicechanger.soundcount', state.lists.sounds.length);
     listDone('sounds');
+  } else if (key === 'voicechangerenabledevent') {
+    setVar('voicechanger.enabled', true);
+  } else if (key === 'voicechangerdisabledevent') {
+    setVar('voicechanger.enabled', false);
+  } else if (key === 'licensetypechanged') {
+    if (typeof obj.licenseType === 'string') setVar('voicechanger.license', clip(obj.licenseType, 20).toLowerCase());
   } else if (typeof obj.value === 'boolean') {
-    // toggle... events and get...Status answers; the meme sound "mute for me" switch is not the microphone.
+    // toggle... events and get...Status answers; the sounds' "mute for me" switch is not the microphone.
     if (key.includes('voicechanger')) setVar('voicechanger.enabled', obj.value);
     else if (key.includes('mutemic')) setVar('voicechanger.micmuted', obj.value);
+    else if (key.includes('hearmy')) setVar('voicechanger.hearmyself', obj.value);
+    else if (key.includes('background')) setVar('voicechanger.background', obj.value);
+    else if (key.includes('mutememe')) setVar('voicechanger.memesmuted', obj.value);
   }
 }
 
@@ -447,6 +480,9 @@ function onRegister(msg, port) {
     send('getCurrentVoice');
     send('getVoiceChangerStatus');
     send('getMuteMicStatus');
+    send('getHearMyselfStatus');
+    send('getBackgroundEffectStatus');
+    send('getMuteMemeForMeStatus');
     queueLists();
     return;
   }
@@ -491,17 +527,28 @@ function run(action, payload, after) {
   return { ok: true };
 }
 
+// An action that fails leaves its message in voicechanger.lasterror.
+function registerAction(action) {
+  const original = action.run;
+  action.run = (context, settings) => {
+    const result = original(context, settings);
+    if (result && result.ok === false) setVar('voicechanger.lasterror', String(result.message || '').slice(0, 200));
+    return result;
+  };
+  host.registerAction(action);
+}
+
 function toggle(type, name, description, action, after) {
-  host.registerAction({ type: 'voicechanger.' + type, name, category: 'Voice Changer', description, fields: [], run: () => run(action, {}, after) });
+  registerAction({ type: 'voicechanger.' + type, name, category: 'Voice Changer', description, fields: [], run: () => run(action, {}, after) });
 }
 
 toggle('togglevoicechanger', 'Toggle voice changer', 'Switches the voice changer on or off.', 'toggleVoiceChanger', 'getVoiceChangerStatus');
 toggle('togglemute', 'Toggle microphone mute', 'Mutes or unmutes the microphone in the Voicemod app.', 'toggleMuteMic', 'getMuteMicStatus');
-toggle('togglehearmyself', 'Toggle hear myself', 'Switches hearing your own voice on or off.', 'toggleHearMyVoice');
-toggle('togglebackground', 'Toggle background effect', 'Switches the background effect on or off.', 'toggleBackground');
+toggle('togglehearmyself', 'Toggle hear myself', 'Switches hearing your own voice on or off.', 'toggleHearMyVoice', 'getHearMyselfStatus');
+toggle('togglebackground', 'Toggle background effect', 'Switches the background effect on or off.', 'toggleBackground', 'getBackgroundEffectStatus');
 toggle('stopsounds', 'Stop all sounds', 'Stops every sound that is playing.', 'stopAllMemeSounds');
 
-host.registerAction({
+registerAction({
   type: 'voicechanger.loadvoice', name: 'Load voice', category: 'Voice Changer',
   description: 'Loads a voice. Search the voices of the app by name.',
   fields: [{ key: 'voiceID', label: 'Voice', kind: 'Select', searchable: true, optionsSource: 'voices', default: '' }],
@@ -515,7 +562,7 @@ host.registerAction({
   },
 });
 
-host.registerAction({
+registerAction({
   type: 'voicechanger.refreshvoices', name: 'Refresh lists', category: 'Voice Changer',
   description: 'Reads the voices and sounds of the Voicemod app again (they are read when the plugin connects).',
   fields: [],
@@ -527,7 +574,7 @@ host.registerAction({
   },
 });
 
-host.registerAction({
+registerAction({
   type: 'voicechanger.randomvoice', name: 'Random voice', category: 'Voice Changer',
   description: 'Loads a random voice.',
   fields: [{
@@ -540,7 +587,7 @@ host.registerAction({
   run(context, settings) { return run('selectRandomVoice', { mode: settings.mode || 'AllVoices' }, 'getCurrentVoice'); },
 });
 
-host.registerAction({
+registerAction({
   type: 'voicechanger.playsound', name: 'Play sound', category: 'Voice Changer',
   description: 'Plays a sound of the Voicemod app. Search the sounds by name.',
   fields: [{ key: 'fileName', label: 'Sound', kind: 'Select', searchable: true, optionsSource: 'sounds', default: '' }],
@@ -548,11 +595,20 @@ host.registerAction({
     const FileName = String(settings.fileName || '').trim();
     if (!FileName) return { ok: false, code: 'NotConfigured', message: 'Choose a sound.' };
     if (state.lists.sounds && !state.lists.sounds.some((v) => v.id === FileName)) return { ok: false, code: 'NotFound', message: 'This sound is not in the Voicemod app any more. Choose another.' };
-    return run('playMeme', { FileName, IsKeyDown: true });
+    const result = run('playMeme', { FileName, IsKeyDown: true });
+    const played = state.lists.sounds && state.lists.sounds.find((x) => x.id === FileName);
+    if (result.ok && played) setVar('voicechanger.lastsound', played.name);
+    return result;
   },
 });
 
 // The script's start-up has only 2 seconds; the first connection waits a moment.
+setVar('voicechanger.voicecount', 0);
+setVar('voicechanger.soundcount', 0);
+setVar('voicechanger.voicename', '');
+setVar('voicechanger.lastsound', '');
+setVar('voicechanger.lasterror', '');
+setVar('voicechanger.license', '');
 host.after(200, tick);
 host.every(TICK_MS, tick);
 host.every(PICTURE_PUMP_MS, () => guard(pump));

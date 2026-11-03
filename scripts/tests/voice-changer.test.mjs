@@ -80,11 +80,11 @@ function loadPlugin({ portMap, apiKey = KEY }) {
   let now = 1_000_000;
   const settings = { apiKey };
   let open = 0, maxOpen = 0;
-  const varWrites = {}, sources = {}, puts = [], logs = [], invalidated = [];
+  const varWrites = {}, sources = {}, puts = [], logs = [], invalidated = [], described = [];
   let imageHandler = null;
   const vars = {}, statuses = [], reports = [], actions = {}, every = [], connectPorts = [], clientSockets = [];
   const host = {
-    variables: { describe() {}, set: (n, v) => { vars[n] = v; varWrites[n] = (varWrites[n] || 0) + 1; } },
+    variables: { describe: (list) => { described.push(...list); }, set: (n, v) => { vars[n] = v; varWrites[n] = (varWrites[n] || 0) + 1; } },
     settings: { page() {}, get: () => settings },
     status: (id, text, level) => statuses.push({ text, level }),
     diagnostics: { report: (level, message, key) => reports.push({ level, message, key }), resolve() {} },
@@ -117,7 +117,7 @@ function loadPlugin({ portMap, apiKey = KEY }) {
   };
   vm.runInNewContext(script, { host, Date: { now: () => now }, JSON, Number, String, Array, Math });
   return {
-    varWrites, sources, puts, logs, invalidated, requestImages: (ids) => imageHandler(ids), pump: () => every[1](), maxOpen: () => maxOpen, open: () => open,
+    varWrites, sources, puts, logs, invalidated, described, requestImages: (ids) => imageHandler(ids), pump: () => every[1](), maxOpen: () => maxOpen, open: () => open,
     vars, statuses, reports, actions, settings, connectPorts,
     tick: () => every[0](),
     advance: (ms) => { now += ms; },
@@ -706,5 +706,72 @@ test('pictures: a changed bitmapChecksum in a refreshed list drops the cached pi
     assert.equal(plugin.actions['voicechanger.refreshvoices'].run({}, {}).ok, true);
     await give([{ id: 'a', friendlyName: 'A', bitmapChecksum: 'v2' }, { id: 'b', friendlyName: 'B', bitmapChecksum: 'v1' }]);
     assert.deepEqual([...plugin.invalidated], ['voice:a@v2'], 'only the voice with a new checksum, with the new version');
+  } finally { plugin.stop(); fake.close(); }
+});
+
+// ---- variables ----
+test('variables: the old names stay, every name is described and under the plugin id, types are right', () => {
+  const plugin = loadPlugin({ portMap: {} });
+  const names = plugin.described.map((d) => d.name);
+  for (const old of ['voicechanger.enabled', 'voicechanger.micmuted', 'voicechanger.voice']) assert.ok(names.includes(old), old);
+  for (const n of ['voicename', 'hearmyself', 'background', 'memesmuted', 'license', 'state', 'voicecount', 'soundcount', 'lastsound', 'lasterror']) assert.ok(names.includes('voicechanger.' + n), n);
+  for (const d of plugin.described) { assert.match(d.name, /^voicechanger\.[a-z]+$/); assert.ok(d.description.length > 0); }
+  const type = (n) => plugin.described.find((d) => d.name === n).type;
+  for (const n of ['enabled', 'micmuted', 'hearmyself', 'background', 'memesmuted']) assert.equal(type('voicechanger.' + n), 'boolean');
+  for (const n of ['voicecount', 'soundcount']) assert.equal(type('voicechanger.' + n), 'number');
+  for (const n of Object.keys(plugin.vars)) assert.ok(names.includes(n), 'described: ' + n);
+});
+
+test('variables: the switches, the license and the counts follow the events and the lists', async () => {
+  const { fake, plugin } = await withLists();
+  try {
+    fake.push({ actionType: 'getHearMyselfStatus', actionObject: { value: true } });
+    fake.push({ actionType: 'toggleBackground', actionObject: { value: true } });
+    fake.push({ actionID: 'x', actionType: 'toggleMuteMemeForMe', actionObject: { value: true } });
+    fake.push({ actionType: 'licenseTypeChanged', actionObject: { licenseType: 'PRO' } });
+    await wait(() => plugin.vars['voicechanger.license'] === 'pro', 'license');
+    assert.equal(plugin.vars['voicechanger.hearmyself'], true);
+    assert.equal(plugin.vars['voicechanger.background'], true);
+    assert.equal(plugin.vars['voicechanger.memesmuted'], true);
+    assert.equal(plugin.vars['voicechanger.micmuted'], undefined, 'the sounds mute is not the microphone');
+    assert.equal(plugin.vars['voicechanger.voicecount'], 4);
+    assert.equal(plugin.vars['voicechanger.soundcount'], 3);
+    fake.push({ actionType: 'voiceChangerDisabledEvent', actionObject: {} });
+    await wait(() => plugin.vars['voicechanger.enabled'] === false, 'disabled event');
+    fake.push({ actionType: 'voiceChangerEnabledEvent', actionObject: {} });
+    await wait(() => plugin.vars['voicechanger.enabled'] === true, 'enabled event');
+  } finally { plugin.stop(); fake.close(); }
+});
+
+test('variables: the voice name follows the voice id and the list; the last sound is the name of the sound played', async () => {
+  const { fake, plugin } = await withLists();
+  try {
+    fake.push({ actionType: 'voiceChangedEvent', actionObject: { voiceID: 'robot' } });
+    await wait(() => plugin.vars['voicechanger.voicename'] === 'Robot', 'name from the list');
+    fake.push({ actionType: 'voiceChangedEvent', actionObject: { voiceID: 'unknown' } });
+    await wait(() => plugin.vars['voicechanger.voice'] === 'unknown', 'id');
+    assert.equal(plugin.vars['voicechanger.voicename'], '');
+    plugin.advance(1100);
+    assert.equal(plugin.actions['voicechanger.playsound'].run({}, { fileName: 's-airhorn' }).ok, true);
+    assert.equal(plugin.vars['voicechanger.lastsound'], 'Air horn');
+  } finally { plugin.stop(); fake.close(); }
+});
+
+test('variables: state is the status text; lasterror holds a failure and is cleared when connected', async () => {
+  const plugin0 = loadPlugin({ portMap: {}, apiKey: '' });
+  plugin0.tick();
+  assert.match(plugin0.vars['voicechanger.state'], /API key/);
+  assert.match(plugin0.vars['voicechanger.lasterror'], /API key/);
+  const { fake, plugin } = await connected();
+  try {
+    assert.equal(plugin.actions['voicechanger.togglemute'].run({}, {}).ok, false);
+    assert.match(plugin.vars['voicechanger.lasterror'], /Not connected/);
+    await wait(() => plugin.last()?.level === 'Ok', 'connected');
+    assert.equal(plugin.vars['voicechanger.state'], 'connected');
+    assert.equal(plugin.vars['voicechanger.lasterror'], '');
+    assert.equal(plugin.actions['voicechanger.loadvoice'].run({}, { voiceID: '' }).ok, false);
+    assert.match(plugin.vars['voicechanger.lasterror'], /Choose a voice/);
+    const queries = fake.received.map((m) => m.action);
+    for (const q of ['getHearMyselfStatus', 'getBackgroundEffectStatus', 'getMuteMemeForMeStatus']) assert.ok(queries.includes(q), q);
   } finally { plugin.stop(); fake.close(); }
 });
