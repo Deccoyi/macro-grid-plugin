@@ -63,9 +63,9 @@ const state = {
   connects: [], // timestamps of the connects of the last minute
   // The voice and sound lists live in memory only. A big reply is read because plugin.json asks the host for a larger message limit; when the host
   // still closes the socket on a reply (the limit is reached), that list is switched off until "Refresh lists".
-  lists: { voices: null, sounds: null, memes: null },
-  wanted: { sounds: false, memes: false },
-  tooBig: { voices: false, sounds: false, memes: false },
+  lists: { voices: null, sounds: null },
+  wanted: { sounds: false },
+  tooBig: { voices: false, sounds: false },
   pending: null, // the list whose reply is awaited
   queue: [],
   recent: [], // the last voices used, newest first
@@ -256,6 +256,10 @@ const pick = (o, ...keys) => { for (const k of keys) if (o && o[k] !== undefined
 // An id is a text or a number (a custom item may carry a numeric one); anything else has no id.
 const idOf = (v) => (typeof v === 'string' && v ? v : typeof v === 'number' && Number.isFinite(v) ? String(v) : '');
 
+// Each sound is classified on its own (its isCustom flag, not only the board's): a sound the person added from the community has isCustom = true,
+// also inside a mixed board or a board of the app. Community = such sounds; My soundboards = all sounds of the person's own boards;
+// Voicemod library = the other sounds of the app's boards. A sound can be in two sources, but only once in each.
+// getMemes is the flattened list of the same sounds (every board sound's id is a meme FileName), so it is not read.
 function readSounds(obj) {
   beginRead('sound:');
   const out = [];
@@ -263,44 +267,34 @@ function readSounds(obj) {
   for (const board of Array.isArray(obj.soundboards) ? obj.soundboards : (Array.isArray(obj.Soundboards) ? obj.Soundboards : [])) {
     const boardName = clip(pick(board, 'name', 'Name') || 'Sounds', 60);
     const boardOff = pick(board, 'enabled', 'Enabled') === false;
-    const source = pick(board, 'isCustom', 'IsCustom') === true ? 'mine' : 'library';
+    const boardCustom = pick(board, 'isCustom', 'IsCustom') === true;
     const inBoard = pick(board, 'sounds', 'Sounds', 'memes', 'Memes', 'items', 'Items');
     for (const sd of Array.isArray(inBoard) ? inBoard : []) {
-      if (out.length >= MAX_ITEMS) return out;
-      // A community sound inside a board may carry a FileName / memeId instead of an Id; that is then its identifier and what playMeme takes.
+      // A sound may carry a FileName / memeId instead of an Id; that is then its identifier and what playMeme takes.
       const fileKey = idOf(pick(sd, 'FileName', 'Filename', 'fileName', 'filename', 'memeId', 'MemeId'));
       const id = idOf(pick(sd, 'id', 'Id', 'ID')) || fileKey;
-      // The same id twice in one source is one sound; the same NAME is not a duplicate (two sounds may share a name).
-      if (!id || seen.has(source + '|' + id)) continue;
-      seen.add(source + '|' + id);
+      if (!id) continue;
+      const soundCustom = pick(sd, 'isCustom', 'IsCustom') === true;
+      const sources = [];
+      if (soundCustom) sources.push('community');
+      if (boardCustom) sources.push('mine');
+      if (!soundCustom && !boardCustom) sources.push('library');
       const off = boardOff || pick(sd, 'enabled', 'Enabled') === false;
       const rawName = pick(sd, 'name', 'Name');
       const name = clip(typeof rawName === 'string' && rawName.trim() ? rawName : id, 100);
-      out.push({ id, name: off ? name + ' (disabled)' : name, board: boardName, source, file: fileKey || '', favorite: sd.favorited === true || sd.isFavorite === true, image: imageRef('sound:' + enc(id), 'sound', id, typeof sd.bitmapChecksum === 'string' ? sd.bitmapChecksum : '') });
+      // The same name is not a duplicate (two sounds may share a name); the same id twice in one source is.
+      for (const source of sources) {
+        if (out.length >= MAX_ITEMS) return out;
+        if (seen.has(source + '|' + id)) continue;
+        seen.add(source + '|' + id);
+        out.push({ id, name: off ? name + ' (disabled)' : name, board: boardName, source, file: fileKey || '', favorite: sd.favorited === true || sd.isFavorite === true, image: imageRef('sound:' + enc(id), 'sound', id, typeof sd.bitmapChecksum === 'string' ? sd.bitmapChecksum : '') });
+      }
     }
   }
   return out;
 }
 
-// The memes (community and own sounds) from getMemes; their value is "meme:<FileName>", the part playMeme takes.
-function readMemes(obj) {
-  const out = [];
-  const seen = new Set();
-  for (const m of Array.isArray(obj.listOfMemes) ? obj.listOfMemes : (Array.isArray(obj.ListOfMemes) ? obj.ListOfMemes : [])) {
-    if (out.length >= MAX_ITEMS) break;
-    const file = idOf(pick(m, 'FileName', 'Filename', 'fileName', 'filename'));
-    if (!file || seen.has(file)) continue;
-    seen.add(file);
-    out.push({ id: 'meme:' + file, file, name: clip(typeof pick(m, 'Name', 'name') === 'string' && pick(m, 'Name', 'name').trim() ? pick(m, 'Name', 'name') : file, 100), board: 'Community', source: 'community', favorite: false, image: null });
-  }
-  return out;
-}
-
-// The sounds picker lists the soundboard sounds and the memes together.
-function allSounds() {
-  if (!state.lists.sounds && !state.lists.memes) return null;
-  return (state.lists.sounds || []).concat(state.lists.memes || []);
-}
+const allSounds = () => state.lists.sounds;
 
 function updateVoiceName() {
   const id = state.vars['voicechanger.voice'];
@@ -316,7 +310,7 @@ function pushRecent(id) {
 // The sound lists are read lazily: only the voices at first, a sound list the first time a picker opens it (state.wanted).
 // A reconnect or Refresh lists reads again what is wanted; the old list stays until the new one replaces it.
 function queueLists() {
-  state.queue = ['voices'].concat(['sounds', 'memes'].filter((k) => state.wanted[k])).filter((k) => !state.tooBig[k]);
+  state.queue = ['voices'].concat(['sounds'].filter((k) => state.wanted[k])).filter((k) => !state.tooBig[k]);
   loadNext();
 }
 
@@ -326,21 +320,20 @@ function ensureList(kind) {
   if (state.registered && !state.tooBig[kind] && !state.queue.includes(kind) && state.pending !== kind) { state.queue.push(kind); loadNext(); }
 }
 
-// The sources of the sound pickers: the app's own soundboards, the community sounds (the meme list) and the person's own soundboards.
-const SOUND_SOURCES = { library: ['sounds'], mine: ['sounds'], community: ['memes'] };
+// The sources of the sound pickers: library (the app's sounds), community (sounds the person added from the community) and mine (own soundboards).
 
 function soundList(source) {
-  const need = SOUND_SOURCES[source] || ['sounds', 'memes'];
+  const need = ['sounds'];
   need.forEach(ensureList);
-  const loaded = need.filter((k) => state.lists[k]);
-  if (!loaded.length) return { list: null, need };
-  let list = [];
-  for (const k of loaded) list = list.concat(state.lists[k]);
-  if (source === 'library' || source === 'mine') list = list.filter((i) => i.source === source);
-  return { list, need };
+  const all = state.lists.sounds;
+  if (!all) return { list: null, need };
+  if (source === 'library' || source === 'mine' || source === 'community') return { list: all.filter((i) => i.source === source), need };
+  // No source (a button of version 0.2.0): all sources, each sound once.
+  const ids = new Set();
+  return { list: all.filter((i) => !ids.has(i.id) && ids.add(i.id)), need };
 }
 
-const LIST_ACTIONS = { voices: 'getVoices', sounds: 'getAllSoundboard', memes: 'getMemes' };
+const LIST_ACTIONS = { voices: 'getVoices', sounds: 'getAllSoundboard' };
 
 function loadNext() {
   if (state.pending || !state.registered) return;
@@ -513,12 +506,8 @@ function onMessage(text, port) {
     onBitmap(obj);
   } else if (key === 'getallsoundboard') {
     state.lists.sounds = readSounds(obj);
-    setVar('voicechanger.soundcount', allSounds().length);
+    setVar('voicechanger.soundcount', new Set(allSounds().map((x) => x.id)).size);
     listDone('sounds');
-  } else if (key === 'getmemes') {
-    state.lists.memes = readMemes(obj);
-    setVar('voicechanger.soundcount', allSounds().length);
-    listDone('memes');
   } else if (key === 'voicechangerenabledevent') {
     setVar('voicechanger.enabled', true);
   } else if (key === 'voicechangerdisabledevent') {
@@ -637,7 +626,7 @@ registerAction({
   fields: [],
   run() {
     if (!state.registered) return run('getVoices', {});
-    state.tooBig = { voices: false, sounds: false, memes: false };
+    state.tooBig = { voices: false, sounds: false };
     queueLists();
     return { ok: true };
   },
@@ -672,8 +661,8 @@ registerAction({
     // The lists are lazy: a list that is not loaded yet cannot say the sound is gone, so the value is played as it is.
     const all = allSounds();
     const played = all && all.find((x) => x.id === value);
-    const listed = value.startsWith('meme:') ? state.lists.memes : state.lists.sounds;
-    if (listed && !played) return { ok: false, code: 'NotFound', message: 'This sound is not in the Voicemod app any more. Choose another.' };
+    // A value saved by a development build as meme:<FileName> is played as that FileName.
+    if (all && !played && !value.startsWith('meme:')) return { ok: false, code: 'NotFound', message: 'This sound is not in the Voicemod app any more. Choose another.' };
     // playMeme takes the FileName of a meme; a soundboard sound is sent by its id (the docs name no other play action).
     const FileName = played && played.file ? played.file : value.startsWith('meme:') ? value.slice(5) : value;
     const result = run('playMeme', { FileName, IsKeyDown: true });
