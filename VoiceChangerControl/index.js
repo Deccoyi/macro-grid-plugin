@@ -64,7 +64,7 @@ const state = {
   // The voice and sound lists live in memory only. A big reply is read because plugin.json asks the host for a larger message limit; when the host
   // still closes the socket on a reply (the limit is reached), that list is switched off until "Refresh lists".
   lists: { voices: null, sounds: null },
-  wanted: { sounds: false },
+  wanted: { sounds: true }, // all three sound sources come from the one soundboard list, read right after connecting
   tooBig: { voices: false, sounds: false },
   pending: null, // the list whose reply is awaited
   queue: [],
@@ -307,8 +307,7 @@ function pushRecent(id) {
 }
 
 // One list at a time, so two big replies never arrive together.
-// The sound lists are read lazily: only the voices at first, a sound list the first time a picker opens it (state.wanted).
-// A reconnect or Refresh lists reads again what is wanted; the old list stays until the new one replaces it.
+// Voices and sounds are read after every register and on Refresh lists; the old list stays until the new one replaces it.
 function queueLists() {
   state.queue = ['voices'].concat(['sounds'].filter((k) => state.wanted[k])).filter((k) => !state.tooBig[k]);
   loadNext();
@@ -383,12 +382,12 @@ function searchOptions(kind, query, values) {
     if (kind === 'sounds' && !text && rank(a) === 2) { const g = boards.indexOf(a.board) - boards.indexOf(b.board); if (g) return g; }
     return byName(a, b);
   });
-  const found = selected ? list.find((i) => i.id === selected) : null;
-  let page = items.slice(offset, offset + limit);
-  let more = offset + limit < items.length;
-  if (found && offset === 0 && !text && !page.some((i) => i.id === found.id)) {
-    page = [found].concat(page); // one more than the limit: the paging offsets of the next pages stay exact
-  }
+  // The stored sound comes first on an unsearched list, as the host does for a source that cannot search itself; the editor asks the
+  // next page with offset = the number of options it already holds, so the offset counts that sound too.
+  const found = selected ? (kind === 'sounds' ? state.lists.sounds : list).find((i) => i.id === selected) : null;
+  const view = found && !text ? [found].concat(items.filter((i) => i.id !== found.id)) : items;
+  const page = view.slice(offset, offset + limit);
+  const more = offset + limit < view.length;
   return { options: page.map((i) => (i.image ? { value: i.id, label: i.name, group: section(i), icon: 'plugin-image:voicechanger/' + i.image } : { value: i.id, label: i.name, group: section(i) })), more, selectedMissing: selected ? !found : false };
 }
 
