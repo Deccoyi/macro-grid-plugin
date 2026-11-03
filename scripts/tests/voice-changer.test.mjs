@@ -858,3 +858,36 @@ test('sound sources: library, community and my soundboards; each list is read th
     assert.deepEqual([...field.dependsOn], ['source']);
   } finally { plugin.stop(); fake.close(); }
 });
+
+test('a board of 3 sounds (same name twice, a missing name, odd key casing, a numeric id) shows all of them; a selected sound outside the page does not shift the paging', async () => {
+  const { fake, plugin } = await connected({ lazy: true });
+  try {
+    await wait(() => fake.received.some((m) => m.action === 'getVoices'), 'getVoices');
+    fake.push({ actionType: 'getVoices', actionObject: { voices: VOICES } });
+    plugin.sources.sounds({ text: '' }, { source: 'mine' });
+    await wait(() => fake.received.some((m) => m.action === 'getAllSoundboard'), 'sounds asked');
+    const many = Array.from({ length: 120 }, (_, i) => ({ id: 'z' + String(i).padStart(3, '0'), name: 'Z ' + String(i).padStart(3, '0') }));
+    fake.push({ actionType: 'getAllSoundboard', actionObject: { soundboards: [
+      { id: 'anime', name: 'anime', isCustom: true, sounds: [{ id: 'a1', name: 'Same' }, { id: 'a2', name: 'Same' }, { id: 'a3' }, { Id: 'a4', Name: 'Cased' }, { id: 7, name: 'Numeric' }] },
+      { Id: 'odd', Name: 'Odd', IsCustom: true, Sounds: [{ id: 'o1', name: 'Odd one' }] },
+      { id: 'big', name: 'Big', isCustom: true, sounds: many },
+    ] } });
+    await wait(() => plugin.sources.sounds({ text: 'a' }, { source: 'mine' }).options.length > 0, 'items');
+    const anime = plugin.sources.sounds({ text: '', limit: 50 }, { source: 'mine' }).options;
+    const text = (q) => plugin.sources.sounds({ text: q, limit: 50 }, { source: 'mine' }).options;
+    assert.deepEqual([...text('Same').map((o) => o.value)].sort(), ['a1', 'a2']);
+    assert.deepEqual([...text('a3').map((o) => o.label)], ['a3'], 'the id is the label when the name is missing');
+    assert.deepEqual([...text('Cased').map((o) => o.value)], ['a4']);
+    assert.deepEqual([...text('Numeric').map((o) => o.value)], ['7']);
+    assert.deepEqual([...text('Odd one').map((o) => o.value)], ['o1']);
+    assert.equal(anime.length, 50);
+    // walk all pages with a selected sound that is not on the first page: every sound appears once
+    const seen = [];
+    for (let offset = 0; offset < 400; offset += 50) {
+      const r = plugin.sources.sounds({ text: '', offset, limit: 50, selected: 'z119' }, { source: 'mine' });
+      seen.push(...r.options.map((o) => o.value));
+      if (!r.more) break;
+    }
+    assert.equal(new Set(seen).size, 126, 'all 126 sounds were reachable');
+  } finally { plugin.stop(); fake.close(); }
+});
