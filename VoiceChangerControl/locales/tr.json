@@ -31,5 +31,10 @@
   "Custom voices": "Özel sesler",
   "Play sound": "Ses çal",
   "Plays a sound of the Voicemod app. Search the sounds by name.": "Voicemod uygulamasındaki bir sesi çalar. Sesleri adıyla arayın.",
-  "Sound": "Ses efekti"
+  "Sound": "Ses efekti",
+  "Source": "Kaynak",
+  "Voicemod library": "Voicemod kütüphanesi",
+  "Community": "Topluluk",
+  "My soundboards": "Ses panellerim",
+  "There are no sounds in this source.": "Bu kaynakta ses yok."
 }

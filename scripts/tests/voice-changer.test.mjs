@@ -137,10 +137,11 @@ const wait = (check, what) => new Promise((res, rej) => {
   }, 10);
 });
 
-async function connected({ validKey } = {}) {
+async function connected({ validKey, lazy = false } = {}) {
   const fake = fakeVoicemod({ validKey });
   const port = await fake.listen();
   const plugin = loadPlugin({ portMap: { 59129: port } });
+  if (!lazy) plugin.sources.sounds({ text: '' }, {}); // a picker has asked for the sounds (they are read lazily)
   plugin.tick();
   return { fake, plugin };
 }
@@ -393,7 +394,7 @@ test('lists: voices, then sounds, then memes, one at a time; no bitmap is ever a
   } finally { plugin.stop(); fake.close(); }
 });
 
-test('sounds source: custom and disabled boards, boards with other key spelling, memes as a group, search over both, play for both kinds', async () => {
+test('sounds source: custom and disabled boards, boards with other key spelling, memes as the Community group, search over both, play for both kinds', async () => {
   const { fake, plugin } = await connected();
   try {
     fake.memes = [
@@ -414,7 +415,7 @@ test('sounds source: custom and disabled boards, boards with other key spelling,
     await wait(() => plugin.sources.sounds({ text: '' }).options.length >= 5, 'all lists');
     const all = plugin.sources.sounds({ text: '', limit: 50 }).options;
     assert.deepEqual([...all.map((o) => o.label)].sort(), ['Community horn', 'Custom beep', 'Hidden (disabled)', 'Off sound (disabled)', 'Toc toc'].sort());
-    assert.equal(all.find((o) => o.value === 'meme:78').group, 'Memes');
+    assert.equal(all.find((o) => o.value === 'meme:78').group, 'Community');
     assert.equal(all.find((o) => o.value === 'g-2').group, 'Off board');
     assert.equal(plugin.vars['voicechanger.soundcount'], 5);
     assert.deepEqual([...plugin.sources.sounds({ text: 'horn' }).options.map((o) => o.value)], ['meme:80']);
@@ -816,5 +817,44 @@ test('variables: state is the status text; lasterror holds a failure and is clea
     assert.match(plugin.vars['voicechanger.lasterror'], /Choose a voice/);
     const queries = fake.received.map((m) => m.action);
     for (const q of ['getHearMyselfStatus', 'getBackgroundEffectStatus', 'getMuteMemeForMeStatus']) assert.ok(queries.includes(q), q);
+  } finally { plugin.stop(); fake.close(); }
+});
+
+test('sound sources: library, community and my soundboards; each list is read the first time its source is opened and again after Refresh lists', async () => {
+  const { fake, plugin } = await connected({ lazy: true });
+  try {
+    fake.memes = [{ Name: 'Horn', FileName: '80', Type: 'PlayStop' }];
+    await wait(() => fake.received.some((m) => m.action === 'getVoices'), 'getVoices');
+    fake.push({ actionType: 'getVoices', actionObject: { voices: VOICES } });
+    await new Promise((r) => setTimeout(r, 150));
+    const asked = () => fake.received.map((m) => m.action);
+    assert.ok(!asked().includes('getAllSoundboard') && !asked().includes('getMemes'), 'nothing is read before a picker opens a source');
+    assert.match(plugin.sources.sounds({ text: '' }, { source: 'community' }).error, /loading/);
+    await wait(() => asked().includes('getMemes'), 'community opens getMemes');
+    assert.ok(!asked().includes('getAllSoundboard'), 'only the community list');
+    await wait(() => plugin.sources.sounds({ text: '' }, { source: 'community' }).options.length === 1, 'community items');
+    assert.deepEqual([...plugin.sources.sounds({ text: '' }, { source: 'community' }).options.map((o) => o.value)], ['meme:80']);
+    plugin.sources.sounds({ text: '' }, { source: 'library' });
+    await wait(() => asked().includes('getAllSoundboard'), 'library opens getAllSoundboard');
+    fake.push({ actionType: 'getAllSoundboard', actionObject: { soundboards: [
+      { id: 'b1', name: 'Stock', isCustom: false, sounds: [{ id: 'g-1', name: 'Stock one' }] },
+      { id: 'b2', name: 'Mine', isCustom: true, sounds: [{ id: 'g-2', name: 'My one' }] },
+    ] } });
+    await wait(() => plugin.sources.sounds({ text: '' }, { source: 'library' }).options.length === 1, 'library items');
+    assert.deepEqual([...plugin.sources.sounds({ text: '' }, { source: 'library' }).options.map((o) => [o.value, o.group])], [['g-1', 'Stock']]);
+    assert.deepEqual([...plugin.sources.sounds({ text: '' }, { source: 'mine' }).options.map((o) => [o.value, o.group])], [['g-2', 'Mine']]);
+    assert.equal(plugin.sources.sounds({ text: '' }, {}).options.length, 3, 'no source (a 0.2.0 button) searches all sources');
+    assert.equal(plugin.sources.sounds({ text: '' }, { source: 'mine' }).error, undefined);
+    // a played value needs no loaded list
+    plugin.advance(1100);
+    assert.equal(plugin.actions['voicechanger.playsound'].run({}, { fileName: 'meme:80' }).ok, true);
+    // Refresh lists reads what was opened again
+    plugin.advance(1100);
+    assert.equal(plugin.actions['voicechanger.refreshvoices'].run({}, {}).ok, true);
+    await wait(() => asked().filter((a) => a === 'getVoices').length === 2, 'voices again');
+    fake.push({ actionType: 'getVoices', actionObject: { voices: VOICES } });
+    await wait(() => asked().filter((a) => a === 'getAllSoundboard').length === 2, 'sounds again');
+    const field = plugin.actions['voicechanger.playsound'].fields.find((f) => f.key === 'fileName');
+    assert.deepEqual([...field.dependsOn], ['source']);
   } finally { plugin.stop(); fake.close(); }
 });
