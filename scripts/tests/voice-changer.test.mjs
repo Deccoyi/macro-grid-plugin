@@ -811,16 +811,14 @@ test('variables: state is the status text; lasterror holds a failure and is clea
   } finally { plugin.stop(); fake.close(); }
 });
 
-test('sound sources: classified per sound (isCustom), a mixed board, read when a source is first opened and again after Refresh lists', async () => {
+test('sound sources: classified per sound (isCustom), a mixed board, read right after connecting and again after Refresh lists', async () => {
   const { fake, plugin } = await connected({ lazy: true });
   try {
     await wait(() => fake.received.some((m) => m.action === 'getVoices'), 'getVoices');
     fake.push({ actionType: 'getVoices', actionObject: { voices: VOICES } });
-    await new Promise((r) => setTimeout(r, 150));
     const asked = () => fake.received.map((m) => m.action);
-    assert.ok(!asked().includes('getAllSoundboard'), 'nothing is read before a picker opens a source');
-    assert.match(plugin.sources.sounds({ text: '' }, { source: 'community' }).error, /loading/);
-    await wait(() => asked().includes('getAllSoundboard'), 'sounds asked');
+    await wait(() => asked().includes('getAllSoundboard'), 'sounds are read right after the voices, without a picker');
+    assert.match(plugin.sources.sounds({ text: '' }, { source: 'community' }).error, /loading/, 'only until the reply is in');
     fake.push({ actionType: 'getAllSoundboard', actionObject: { soundboards: [
       { id: 'b1', name: 'My first soundboard', isCustom: true, sounds: [
         { id: 'g-honk', name: 'Honk', isCustom: false }, { id: 'g-fart', name: 'Fart', isCustom: false }, { id: 'g-fah', name: 'FAH', isCustom: true }] },
@@ -903,5 +901,40 @@ test('a community sound inside a board that has a FileName and no Id is listed a
     assert.equal(plugin.actions['voicechanger.playsound'].run({}, { fileName: 'c3' }).ok, true);
     await wait(() => fake.received.filter((m) => m.action === 'playMeme').length === 2, 'plays');
     assert.deepEqual([...fake.received.filter((m) => m.action === 'playMeme').map((m) => m.payload.FileName)], ['412', '99']);
+  } finally { plugin.stop(); fake.close(); }
+});
+
+test('community search the way the editor asks: the source value the field declares, q as text, a stored selected sound, paging by the number of options already received', async () => {
+  const { fake, plugin } = await connected();
+  try {
+    await wait(() => fake.received.some((m) => m.action === 'getVoices'), 'getVoices');
+    fake.push({ actionType: 'getVoices', actionObject: { voices: VOICES } });
+    await wait(() => fake.received.some((m) => m.action === 'getAllSoundboard'), 'sounds asked');
+    const names = ['Naruto', 'Sasuke', 'FAH', 'Honk'];
+    const sounds = Array.from({ length: 120 }, (_, i) => ({ id: 'c' + String(i).padStart(3, '0'), name: names[i % 4] + ' ' + i, isCustom: true }));
+    fake.push({ actionType: 'getAllSoundboard', actionObject: { soundboards: [{ id: 'b', name: 'My first soundboard', isCustom: true, sounds }, { id: 'l', name: 'Stock', isCustom: false, sounds: [{ id: 'lib1', name: 'Fah stock', isCustom: false }] }] } });
+    const field = plugin.actions['voicechanger.playsound'].fields.find((f) => f.key === 'source');
+    const community = field.options.find((o) => o.label === 'Community').value;
+    await wait(() => plugin.sources.sounds({ text: '' }, { source: community }).options.length > 0, 'list');
+    // exactly what the host passes: query { text, offset, limit, selected } and the form values (the label keys are removed by the host)
+    const ask = (q, offset, selected) => plugin.sources.sounds({ text: q, offset, limit: 50, selected }, { source: community, fileName: selected || '' });
+    const hit = ask('fah', 0, 'c002');
+    assert.equal(hit.error, undefined);
+    assert.equal(hit.options.length, 30, 'every FAH of the 120 community sounds, not the stock one');
+    assert.ok(hit.options.every((o) => /FAH/.test(o.label)));
+    assert.equal(ask('naruto', 0, '').options.length, 30);
+    assert.equal(ask('zzz', 0, '').options.length, 0);
+    // the editor asks the next page with offset = the number of options it already holds (the stored sound is one of them)
+    const seen = [];
+    let offset = 0;
+    for (let i = 0; i < 10; i++) {
+      const r = ask('', offset, 'c009');
+      seen.push(...r.options.map((o) => o.value));
+      offset += r.options.length;
+      if (!r.more) break;
+    }
+    assert.equal(seen.filter((v) => v === 'c009').length, 1, 'the stored sound appears once');
+    assert.equal(seen[0], 'c009', 'the stored sound is first');
+    assert.equal(new Set(seen).size, 120, 'all 120 community sounds reachable');
   } finally { plugin.stop(); fake.close(); }
 });
