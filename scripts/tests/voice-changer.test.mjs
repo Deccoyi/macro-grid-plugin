@@ -811,29 +811,30 @@ test('variables: state is the status text; lasterror holds a failure and is clea
   } finally { plugin.stop(); fake.close(); }
 });
 
-test('sound sources: classified per sound (isCustom), a mixed board, read right after connecting and again after Refresh lists', async () => {
+test('sound sources: classified by board (Voicemod, Soundboards), the removed Community value means all, read right after connecting and again after Refresh lists', async () => {
   const { fake, plugin } = await connected({ lazy: true });
   try {
     await wait(() => fake.received.some((m) => m.action === 'getVoices'), 'getVoices');
     fake.push({ actionType: 'getVoices', actionObject: { voices: VOICES } });
     const asked = () => fake.received.map((m) => m.action);
     await wait(() => asked().includes('getAllSoundboard'), 'sounds are read right after the voices, without a picker');
-    assert.match(plugin.sources.sounds({ text: '' }, { source: 'community' }).error, /loading/, 'only until the reply is in');
+    assert.match(plugin.sources.sounds({ text: '' }, { source: 'mine' }).error, /loading/, 'only until the reply is in');
     fake.push({ actionType: 'getAllSoundboard', actionObject: { soundboards: [
       { id: 'b1', name: 'My first soundboard', isCustom: true, sounds: [
         { id: 'g-honk', name: 'Honk', isCustom: false }, { id: 'g-fart', name: 'Fart', isCustom: false }, { id: 'g-fah', name: 'FAH', isCustom: true }] },
-      { id: 'b2', name: 'Stock', isCustom: false, sounds: [{ id: 'g-stock', name: 'Stock one', isCustom: false }, { id: 'g-fah', name: 'FAH', isCustom: true }, { id: 'g-comm', name: 'Added', isCustom: true }] },
+      { id: 'b2', name: 'Stock', isCustom: false, sounds: [{ id: 'g-stock', name: 'Stock one', isCustom: false }, { id: 'g-honk', name: 'Honk', isCustom: false }, { id: 'g-added', name: 'Added', isCustom: true }] },
       { id: 'b3', name: 'Naruto', isCustom: true, sounds: [{ id: 'g-n1', name: 'Naruto one', isCustom: true }, { id: 'g-n2', name: 'Naruto two', isCustom: true }, { id: 'g-n3', name: 'Naruto three', isCustom: true }] },
     ] } });
     const vals = (source, q = '') => plugin.sources.sounds({ text: q, limit: 50 }, { source }).options.map((o) => o.value);
     await wait(() => vals('library').length > 0, 'items');
-    assert.deepEqual([...vals('library')].sort(), ['g-stock']);
-    assert.deepEqual([...vals('mine')].sort(), ['g-fah', 'g-fart', 'g-honk', 'g-n1', 'g-n2', 'g-n3']);
-    assert.deepEqual([...vals('community')].sort(), ['g-comm', 'g-fah', 'g-n1', 'g-n2', 'g-n3'], 'FAH once even though two boards hold it');
-    assert.equal(plugin.sources.sounds({ text: 'fah' }, { source: 'mine' }).options[0].group, 'My first soundboard');
-    assert.equal(plugin.sources.sounds({ text: 'fah' }, { source: 'community' }).options.length, 1);
-    assert.equal(new Set(vals('')).size, vals('').length, 'no source: each sound once');
+    assert.deepEqual([...vals('library')].sort(), ['g-added', 'g-honk', 'g-stock'], 'the boards of the app, whatever the isCustom flag of a sound says');
+    assert.deepEqual([...vals('mine')].sort(), ['g-fah', 'g-fart', 'g-honk', 'g-n1', 'g-n2', 'g-n3'], 'all sounds of the own boards, library and added ones mixed');
+    assert.deepEqual([...vals('community')].sort(), [...vals('')].sort(), 'a saved Community value searches all sources');
     assert.equal(vals('').length, 8);
+    assert.equal(new Set(vals('')).size, 8, 'each sound once');
+    assert.equal(plugin.sources.sounds({ text: 'fah' }, { source: 'mine' }).options[0].group, 'My first soundboard');
+    const sourceField = plugin.actions['voicechanger.playsound'].fields.find((f) => f.key === 'source');
+    assert.deepEqual([...sourceField.options.map((o) => o.label)], ['Voicemod', 'Soundboards']);
     plugin.advance(1100);
     assert.equal(plugin.actions['voicechanger.playsound'].run({}, { fileName: 'g-fah' }).ok, true);
     await wait(() => fake.received.some((m) => m.action === 'playMeme' && m.payload.FileName === 'g-fah'), 'play');
@@ -904,27 +905,25 @@ test('a community sound inside a board that has a FileName and no Id is listed a
   } finally { plugin.stop(); fake.close(); }
 });
 
-test('community search the way the editor asks: the source value the field declares, q as text, a stored selected sound, paging by the number of options already received', async () => {
+test('search the way the editor asks: the source value the field declares, q as text, a stored selected sound, paging by the number of options already received', async () => {
   const { fake, plugin } = await connected();
   try {
     await wait(() => fake.received.some((m) => m.action === 'getVoices'), 'getVoices');
     fake.push({ actionType: 'getVoices', actionObject: { voices: VOICES } });
     await wait(() => fake.received.some((m) => m.action === 'getAllSoundboard'), 'sounds asked');
     const names = ['Naruto', 'Sasuke', 'FAH', 'Honk'];
-    const sounds = Array.from({ length: 120 }, (_, i) => ({ id: 'c' + String(i).padStart(3, '0'), name: names[i % 4] + ' ' + i, isCustom: true }));
-    fake.push({ actionType: 'getAllSoundboard', actionObject: { soundboards: [{ id: 'b', name: 'My first soundboard', isCustom: true, sounds }, { id: 'l', name: 'Stock', isCustom: false, sounds: [{ id: 'lib1', name: 'Fah stock', isCustom: false }] }] } });
+    const sounds = Array.from({ length: 120 }, (_, i) => ({ id: 'c' + String(i).padStart(3, '0'), name: names[i % 4] + ' ' + i }));
+    fake.push({ actionType: 'getAllSoundboard', actionObject: { soundboards: [{ id: 'b', name: 'My first soundboard', isCustom: true, sounds }, { id: 'l', name: 'Stock', isCustom: false, sounds: [{ id: 'lib1', name: 'Fah stock' }] }] } });
     const field = plugin.actions['voicechanger.playsound'].fields.find((f) => f.key === 'source');
-    const community = field.options.find((o) => o.label === 'Community').value;
-    await wait(() => plugin.sources.sounds({ text: '' }, { source: community }).options.length > 0, 'list');
-    // exactly what the host passes: query { text, offset, limit, selected } and the form values (the label keys are removed by the host)
-    const ask = (q, offset, selected) => plugin.sources.sounds({ text: q, offset, limit: 50, selected }, { source: community, fileName: selected || '' });
+    const mine = field.options.find((o) => o.label === 'Soundboards').value;
+    await wait(() => plugin.sources.sounds({ text: '' }, { source: mine }).options.length > 0, 'list');
+    const ask = (q, offset, selected) => plugin.sources.sounds({ text: q, offset, limit: 50, selected }, { source: mine, fileName: selected || '' });
     const hit = ask('fah', 0, 'c002');
     assert.equal(hit.error, undefined);
-    assert.equal(hit.options.length, 30, 'every FAH of the 120 community sounds, not the stock one');
+    assert.equal(hit.options.length, 30, 'every FAH of the 120 sounds, not the stock one');
     assert.ok(hit.options.every((o) => /FAH/.test(o.label)));
     assert.equal(ask('naruto', 0, '').options.length, 30);
     assert.equal(ask('zzz', 0, '').options.length, 0);
-    // the editor asks the next page with offset = the number of options it already holds (the stored sound is one of them)
     const seen = [];
     let offset = 0;
     for (let i = 0; i < 10; i++) {
@@ -935,11 +934,11 @@ test('community search the way the editor asks: the source value the field decla
     }
     assert.equal(seen.filter((v) => v === 'c009').length, 1, 'the stored sound appears once');
     assert.equal(seen[0], 'c009', 'the stored sound is first');
-    assert.equal(new Set(seen).size, 120, 'all 120 community sounds reachable');
+    assert.equal(new Set(seen).size, 120, 'all 120 sounds reachable');
   } finally { plugin.stop(); fake.close(); }
 });
 
-test('panels: the second dropdown lists the panels of the chosen source with their own counts; a panel narrows the sounds; a stale panel is ignored', async () => {
+test('panels: the second dropdown lists the boards of the chosen source with their counts; a panel narrows the sounds; a stale panel is ignored; search folds Turkish letters', async () => {
   const { fake, plugin } = await connected();
   try {
     await wait(() => fake.received.some((m) => m.action === 'getVoices'), 'getVoices');
@@ -947,40 +946,68 @@ test('panels: the second dropdown lists the panels of the chosen source with the
     await wait(() => fake.received.some((m) => m.action === 'getAllSoundboard'), 'sounds asked');
     fake.push({ actionType: 'getAllSoundboard', actionObject: { soundboards: [
       { id: 'b1', name: 'Anime', isCustom: true, sounds: [{ id: 'a1', name: 'Naruto', isCustom: true }, { id: 'a2', name: 'Sasuke', isCustom: true }, { id: 'a3', name: 'Honk', isCustom: false }] },
-      { id: 'b2', name: 'Stock', isCustom: false, sounds: [{ id: 's1', name: 'Air horn', isCustom: false }, { id: 's2', name: 'Çığlık', isCustom: false }, { id: 's3', name: 'Added', isCustom: true }] },
+      { id: 'b2', name: 'Stock', isCustom: false, sounds: [{ id: 's1', name: 'Air horn' }, { id: 's2', name: 'Çığlık' }, { id: 's3', name: 'Added', isCustom: true }] },
       { id: 'b3', name: 'Boş', isCustom: false, sounds: [] },
     ] } });
     const field = (key) => plugin.actions['voicechanger.playsound'].fields.find((f) => f.key === key);
-    assert.deepEqual([...field('source').options.map((o) => o.label)], ['Voicemod library', 'Community', 'My soundboards']);
     assert.equal(field('panel').optionsSource, 'panels');
     assert.equal(field('panel').searchable, true);
     await wait(() => plugin.sources.panels({ text: '' }, { source: 'mine' }).options.length > 0, 'panels');
     const panels = (source, q = '', extra = {}) => plugin.sources.panels({ text: q, limit: 50, ...extra }, { source });
     const labels = (r) => [...r.options.map((o) => o.label)];
-    assert.deepEqual(labels(panels('mine')), ['All panels', 'Anime (3)'], 'my soundboards: my panels with all their sounds');
-    assert.deepEqual(labels(panels('community')), ['All panels', 'Anime (2)', 'Stock (1)'], 'community: only the community sounds are counted');
-    assert.deepEqual(labels(panels('library')), ['All panels', 'Stock (2)'], 'library: the app panels; an empty panel is not listed');
+    assert.deepEqual(labels(panels('mine')), ['All panels', 'Anime (3)']);
+    assert.deepEqual(labels(panels('library')), ['All panels', 'Stock (3)'], 'an empty board is not listed');
     assert.equal(panels('mine').options[0].value, '*all');
-    assert.deepEqual(labels(panels('community', 'anime')), ['Anime (2)']);
-    assert.ok(panels('community').options.every((o) => o.value !== ''), 'no option has an empty value (the host drops it)');
-    // the sound list for one panel: only its sounds of that source, no group headers, A-Z
+    assert.ok(panels('library').options.every((o) => o.value !== ''), 'no option has an empty value (the host drops it)');
+    assert.deepEqual(labels(panels('mine', 'anime')), ['Anime (3)']);
     const sounds = (values, q = '') => plugin.sources.sounds({ text: q, limit: 50 }, values).options;
-    const anime = sounds({ source: 'community', panel: 'b1' });
-    assert.deepEqual([...anime.map((o) => o.label)], ['Naruto', 'Sasuke']);
+    const anime = sounds({ source: 'mine', panel: 'b1' });
+    assert.deepEqual([...anime.map((o) => o.label)], ['Honk', 'Naruto', 'Sasuke']);
     assert.ok(anime.every((o) => o.group === undefined));
-    assert.deepEqual([...sounds({ source: 'community', panel: '*all' }).map((o) => o.group)].sort(), ['Anime', 'Anime', 'Stock']);
-    assert.equal(sounds({ source: 'community', panel: '' }).length, 3, 'a missing panel means all');
-    // a button saved before (source only, or nothing) keeps working
-    assert.equal(sounds({ source: 'community' }).length, 3);
+    assert.equal(sounds({ source: 'mine', panel: '*all' }).length, 3);
+    assert.equal(sounds({ source: 'library', panel: '' }).length, 3, 'a missing panel means all');
+    assert.equal(sounds({ source: 'library' }).length, 3);
     assert.equal(sounds({}).length, 6);
-    // the editor kept the panel of the old source: it is not in the new one, so it is ignored
-    assert.equal(sounds({ source: 'library', panel: 'b1' }).length, 2, 'stale panel ignored');
-    // search matches the panel name and every typed word, with Turkish letters folded
+    assert.equal(sounds({ source: 'library', panel: 'b1' }).length, 3, 'a panel of another source is ignored');
     assert.deepEqual([...sounds({ source: 'mine' }, 'anime').map((o) => o.value)].sort(), ['a1', 'a2', 'a3']);
     assert.deepEqual([...sounds({ source: 'library' }, 'CIGLIK').map((o) => o.value)], ['s2']);
     assert.deepEqual([...sounds({ source: 'library' }, 'çığlık').map((o) => o.value)], ['s2']);
     assert.deepEqual([...sounds({ source: 'library' }, 'stock air').map((o) => o.value)], ['s1'], 'each word, in the name or the panel name');
     assert.deepEqual([...sounds({ source: 'mine' }, 'ANİME nar').map((o) => o.value)], ['a1']);
-    assert.deepEqual([...panels('library', 'BOS').options.map((o) => o.label)], [], 'an empty panel is still not listed');
   } finally { plugin.stop(); fake.close(); }
+});
+
+test('refresh contract: query.refresh reads the list again, answers at once with refreshing, then the new sound is found; old servers (no flag) and no connection work', async () => {
+  const { fake, plugin } = await connected();
+  try {
+    await wait(() => fake.received.some((m) => m.action === 'getVoices'), 'getVoices');
+    fake.push({ actionType: 'getVoices', actionObject: { voices: VOICES } });
+    await wait(() => fake.received.some((m) => m.action === 'getAllSoundboard'), 'sounds asked');
+    const board = (sounds) => ({ actionType: 'getAllSoundboard', actionObject: { soundboards: [{ id: 'b', name: 'Mine', isCustom: true, sounds }] } });
+    fake.push(board([{ id: 'one', name: 'One' }]));
+    await wait(() => plugin.sources.sounds({ text: '' }, { source: 'mine' }).options.length === 1, 'first list');
+    const ask = (extra = {}) => plugin.sources.sounds({ text: '', limit: 50, ...extra }, { source: 'mine' });
+    assert.equal(ask().refreshing, undefined, 'an old server sends no flag: a plain answer');
+    const first = ask({ refresh: true });
+    assert.equal(first.refreshing, true);
+    assert.deepEqual([...first.options.map((o) => o.value)], ['one'], 'the current options come at once');
+    await wait(() => fake.received.filter((m) => m.action === 'getAllSoundboard').length === 2, 'the list is asked again');
+    assert.equal(ask({ refresh: true }).refreshing, true, 'the editor polls the same query: no second request');
+    assert.equal(fake.received.filter((m) => m.action === 'getAllSoundboard').length, 2);
+    assert.equal(plugin.sources.panels({ text: '', refresh: true }, { source: 'mine' }).refreshing, true, 'the panels source answers the same way');
+    fake.push(board([{ id: 'one', name: 'One' }, { id: 'two', name: 'Two' }]));
+    await wait(() => ask().options.length === 2, 'the new sound');
+    const done = ask({ refresh: true });
+    assert.equal(done.refreshing, undefined, 'the last poll after the new list is a plain answer, not a new refresh');
+    assert.equal(fake.received.filter((m) => m.action === 'getAllSoundboard').length, 2);
+    assert.deepEqual([...done.options.map((o) => o.value)].sort(), ['one', 'two']);
+    plugin.advance(6000);
+    assert.equal(ask({ refresh: true }).refreshing, true, 'after the quiet time a new refresh starts');
+    await wait(() => fake.received.filter((m) => m.action === 'getAllSoundboard').length === 3, 'third read');
+    // the Refresh lists action reports refreshing too
+    fake.push(board([{ id: 'one', name: 'One' }]));
+    await wait(() => ask().options.length === 1, 'list replaced');
+  } finally { plugin.stop(); fake.close(); }
+  const plugin0 = loadPlugin({ portMap: {} });
+  assert.equal(plugin0.sources.sounds({ text: '', refresh: true }, { source: 'mine' }).error, 'Start Voicemod to see the list.');
 });

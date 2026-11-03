@@ -77,6 +77,9 @@ const state = {
   pictureFailures: 0,
   picturesOff: false,
   lastEmptyRefresh: 0,
+  refreshing: false, // a refresh of the soundboard list asked by an options source (or Refresh lists) is on its way
+  refreshStart: 0,
+  refreshDone: 0,
   sends: [], // timestamps of the messages sent in the last second
   lastStatus: '',
   lastLog: 0,
@@ -256,10 +259,8 @@ const pick = (o, ...keys) => { for (const k of keys) if (o && o[k] !== undefined
 // An id is a text or a number (an item may carry a numeric one); anything else has no id.
 const idOf = (v) => (typeof v === 'string' && v ? v : typeof v === 'number' && Number.isFinite(v) ? String(v) : '');
 
-// Each sound is classified on its own (its isCustom flag, not only the board's): a sound the person added from the community has isCustom = true,
-// also inside a mixed board or a board of the app. Community = such sounds; My soundboards = all sounds of the person's own boards;
-// Voicemod library = the other sounds of the app's boards. A sound can be in two sources, but only once in each.
-// getMemes is the flattened list of the same sounds (every board sound's id is a meme FileName), so it is not read.
+// Two sources, classified by BOARD: Voicemod = the boards of the app (isCustom false), Soundboards = the boards the person made (isCustom true),
+// with all their sounds. A sound is listed once per source. getMemes is the flattened list of the same sounds, so it is not read.
 function readSounds(obj) {
   beginRead('sound:');
   const out = [];
@@ -275,11 +276,7 @@ function readSounds(obj) {
       const fileKey = idOf(pick(sd, 'FileName', 'Filename', 'fileName', 'filename', 'memeId', 'MemeId'));
       const id = idOf(pick(sd, 'id', 'Id', 'ID')) || fileKey;
       if (!id) continue;
-      const soundCustom = pick(sd, 'isCustom', 'IsCustom') === true;
-      const sources = [];
-      if (soundCustom) sources.push('community');
-      if (boardCustom) sources.push('mine');
-      if (!soundCustom && !boardCustom) sources.push('library');
+      const sources = [boardCustom ? 'mine' : 'library'];
       const off = boardOff || pick(sd, 'enabled', 'Enabled') === false;
       const rawName = pick(sd, 'name', 'Name');
       const name = clip(typeof rawName === 'string' && rawName.trim() ? rawName : id, 100);
@@ -320,14 +317,15 @@ function ensureList(kind) {
   if (state.registered && !state.tooBig[kind] && !state.queue.includes(kind) && state.pending !== kind) { state.queue.push(kind); loadNext(); }
 }
 
-// The sources of the sound pickers: library (the app's sounds), community (sounds the person added from the community) and mine (own soundboards).
+// The sources of the sound pickers: library (the boards of the app) and mine (the person's own boards). Any other value, such as 'community' of an
+// older button, means all sources.
 
 function soundList(source) {
   const need = ['sounds'];
   need.forEach(ensureList);
   const all = state.lists.sounds;
   if (!all) return { list: null, need };
-  if (source === 'library' || source === 'mine' || source === 'community') return { list: all.filter((i) => i.source === source), need };
+  if (source === 'library' || source === 'mine') return { list: all.filter((i) => i.source === source), need };
   // No source (a button of version 0.2.0): all sources, each sound once.
   const ids = new Set();
   return { list: all.filter((i) => !ids.has(i.id) && ids.add(i.id)), need };
@@ -396,8 +394,8 @@ function readQuery(query) {
 
 const sourceOf = (values) => (values && typeof values.source === 'string' ? values.source : '');
 
-// The panels of one source, each with the number of ITS sounds (library: the stock panels; community: the panels holding community sounds,
-// counting only those; my soundboards: the person's own panels with all their sounds). One place per source, so a source can get its own rule.
+// The panels of one source, each with the number of its sounds (library: the app's boards; mine: the person's own boards). One place per
+// source, so a source can get its own rule later.
 function panelsOf(source) {
   const r = soundList(source);
   if (!r.list) return r;
@@ -410,8 +408,44 @@ function panelsOf(source) {
   return { panels: [...map.values()].sort((a, b) => (a.name.toLowerCase() < b.name.toLowerCase() ? -1 : a.name.toLowerCase() > b.name.toLowerCase() ? 1 : 0)), need: r.need };
 }
 
+// query.refresh === true: read the soundboard list again now. The answer comes at once with the current options and refreshing: true until
+// the new list is in; the editor asks the same query again. A request right after a finished refresh is not a new one (the editor's last
+// poll carries the flag too).
+const REFRESH_TIMEOUT_MS = 15000;
+const REFRESH_QUIET_MS = 5000;
+
+function isRefreshing() {
+  if (state.refreshing && (!state.registered || Date.now() - state.refreshStart > REFRESH_TIMEOUT_MS)) state.refreshing = false;
+  return state.refreshing;
+}
+
+function beginRefresh() {
+  if (!state.registered) return { options: [], error: 'Start Voicemod to see the list.' };
+  if (isRefreshing() || Date.now() - state.refreshDone < REFRESH_QUIET_MS) return null;
+  state.refreshing = true;
+  state.refreshStart = Date.now();
+  state.tooBig.sounds = false;
+  if (state.pending !== 'sounds' && !state.queue.includes('sounds')) state.queue.push('sounds');
+  loadNext();
+  return null;
+}
+
+function withRefresh(query, build) {
+  if (query && query.refresh === true) {
+    const failed = beginRefresh();
+    if (failed) return failed;
+  }
+  const answer = build();
+  if (isRefreshing()) answer.refreshing = true;
+  return answer;
+}
+
 // The second dropdown: the panels of the chosen source. A stored panel that is not in this source (the source was changed) is not found.
 function searchPanels(query, values) {
+  return withRefresh(query, () => panelAnswer(query, values));
+}
+
+function panelAnswer(query, values) {
   const r = panelsOf(sourceOf(values));
   if (!r.panels) return notReady('sounds', r.need);
   const { limit, offset, selected } = readQuery(query);
@@ -427,6 +461,11 @@ function searchPanels(query, values) {
 // The options of the editor's search box: favorites first, then (voices) the last ones used, then the rest A-Z; sounds are grouped by soundboard
 // (one panel chosen: only its sounds, A-Z, no groups).
 function searchOptions(kind, query, values) {
+  if (kind !== 'sounds') return optionAnswer(kind, query, values);
+  return withRefresh(query, () => optionAnswer(kind, query, values));
+}
+
+function optionAnswer(kind, query, values) {
   const source = kind === 'sounds' ? sourceOf(values) : '';
   const found0 = kind === 'sounds' ? soundList(source) : null;
   let list = kind === 'sounds' ? found0.list : state.lists[kind];
@@ -586,6 +625,7 @@ function onMessage(text, port) {
     onBitmap(obj);
   } else if (key === 'getallsoundboard') {
     state.lists.sounds = readSounds(obj);
+    if (state.refreshing) { state.refreshing = false; state.refreshDone = Date.now(); }
     setVar('voicechanger.soundcount', new Set(allSounds().map((x) => x.id)).size);
     listDone('sounds');
   } else if (key === 'voicechangerenabledevent') {
@@ -707,6 +747,8 @@ registerAction({
   run() {
     if (!state.registered) return run('getVoices', {});
     state.tooBig = { voices: false, sounds: false };
+    state.refreshing = true;
+    state.refreshStart = Date.now();
     queueLists();
     return { ok: true };
   },
@@ -731,7 +773,7 @@ registerAction({
   fields: [
     {
       key: 'source', label: 'Source', kind: 'Select', default: 'library',
-      options: [{ value: 'library', label: 'Voicemod library' }, { value: 'community', label: 'Community' }, { value: 'mine', label: 'My soundboards' }],
+      options: [{ value: 'library', label: 'Voicemod' }, { value: 'mine', label: 'Soundboards' }],
     },
     { key: 'panel', label: 'Panel', kind: 'Select', searchable: true, optionsSource: 'panels', dependsOn: ['source'], default: '' },
     { key: 'fileName', label: 'Sound', kind: 'Select', searchable: true, optionsSource: 'sounds', dependsOn: ['source', 'panel'], default: '' },
