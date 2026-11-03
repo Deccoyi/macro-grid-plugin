@@ -30,6 +30,6 @@
     "ws:localhost:30546"
   ],
   "limits": {
-    "wsMessageKB": 256
+    "wsMessageKB": 512
   }
 }

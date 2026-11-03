@@ -20,7 +20,9 @@ const LOG_EVERY_MS = 10000;
 const MAX_PICTURE_QUEUE = 50;
 const PICTURES_PER_SECOND = 4;
 const PICTURE_TIMEOUT_MS = 5000;
-const MAX_PICTURE_BYTES = 64 * 1024; // the host accepts at most 64 KB decoded
+const MAX_PICTURE_BYTES = 256 * 1024; // the host accepts at most 256 KB decoded and 1024 x 1024 pixels
+const MAX_PICTURE_SIDE = 1024;
+const EMPTY_REFRESH_MS = 5 * 60 * 1000; // a search that finds an empty list reads the lists again, at most this often
 const PICTURE_PUMP_MS = 250;
 
 host.variables.describe([
@@ -61,6 +63,7 @@ const state = {
   pictureSends: [], // timestamps of the getBitmap requests of the last second
   pictureFailures: 0,
   picturesOff: false,
+  lastEmptyRefresh: 0,
   sends: [], // timestamps of the messages sent in the last second
   lastStatus: '',
   lastLog: 0,
@@ -194,6 +197,11 @@ const MAX_ITEMS = 5000;
 const clip = (v, n) => String(v === undefined || v === null ? '' : v).slice(0, n);
 
 // The id of a button picture is 1 to 128 characters of letters, digits and . _ : - ; an id outside that has no picture.
+// Every character outside the allowed ones becomes _ and four hex digits, so two different names never give the same id.
+function enc(text) {
+  return String(text).replace(/[^A-Za-z0-9.:-]/g, (c) => '_' + ('0000' + c.charCodeAt(0).toString(16)).slice(-4));
+}
+
 function imageRef(imageId, kind, id) {
   if (!/^[A-Za-z0-9._:-]{1,128}$/.test(imageId)) return null;
   if (!state.imageSources.has(imageId)) state.imageSources.set(imageId, { kind, id });
@@ -206,7 +214,7 @@ function readVoices(obj) {
   for (const v of Array.isArray(obj.voices) ? obj.voices : []) {
     if (out.length >= MAX_ITEMS) break;
     const id = v && (v.id || v.voiceID || v.voiceId);
-    if (typeof id === 'string' && id) out.push({ id, name: clip(v.friendlyName || v.name || id, 100), favorite: v.favorited === true, image: imageRef('voice:' + id, 'voice', id) });
+    if (typeof id === 'string' && id) out.push({ id, name: clip(v.friendlyName || v.name || id, 100), favorite: v.favorited === true, image: imageRef('voice:' + enc(id) + (typeof v.bitmapChecksum === 'string' && v.bitmapChecksum ? ':' + enc(v.bitmapChecksum) : ''), 'voice', id) });
   }
   return out;
 }
@@ -219,7 +227,7 @@ function readSounds(obj) {
       if (out.length >= MAX_ITEMS) return out;
       if (sd && typeof sd.id === 'string' && sd.id) {
         const sum = typeof sd.bitmapChecksum === 'string' ? sd.bitmapChecksum : '';
-        out.push({ id: sd.id, name: clip(sd.name || sd.id, 100), board: clip(board.name || 'Sounds', 60), favorite: sd.favorited === true || sd.isFavorite === true, image: sum ? imageRef('sound:' + sum, 'sound', sd.id) : null });
+        out.push({ id: sd.id, name: clip(sd.name || sd.id, 100), board: clip(board.name || 'Sounds', 60), favorite: sd.favorited === true || sd.isFavorite === true, image: sum ? imageRef('sound:' + enc(sum), 'sound', sd.id) : null });
       }
     }
   }
@@ -260,6 +268,10 @@ function searchOptions(kind, query) {
     if (!state.registered) return { options: [], error: 'Voicemod is not running or not connected. Start the app and try again.' };
     return { options: [], error: 'The list is loading, try again in a moment.' };
   }
+  if (list.length === 0) {
+    if (state.registered && !state.pending && Date.now() - state.lastEmptyRefresh > EMPTY_REFRESH_MS) { state.lastEmptyRefresh = Date.now(); queueLists(); }
+    return { options: [], error: 'Voicemod has no entries in this list yet. If you just added some, try again in a moment.' };
+  }
   const text = String((query && query.text) || '').toLowerCase();
   const limit = Math.max(1, Math.min(50, Number(query && query.limit) || 50));
   const offset = Math.max(0, Number(query && query.offset) || 0);
@@ -289,20 +301,58 @@ function searchOptions(kind, query) {
 
 // ---- button pictures ----
 
-function dataUrlOf(base64) {
-  if (typeof base64 !== 'string' || base64.length < 16) return null;
-  const type = base64.startsWith('iVBOR') ? 'png' : base64.startsWith('/9j/') ? 'jpeg' : base64.startsWith('R0lGOD') ? 'gif' : base64.startsWith('UklGR') ? 'webp' : null;
-  if (!type) return null; // anything else (svg included) is not a picture the host takes
+// The first bytes of a base64 text, decoded (enough to read the type and the size of a picture).
+function headBytes(base64, count) {
+  const table = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+  const out = [];
+  let bits = 0;
+  let acc = 0;
+  for (let i = 0; i < base64.length && out.length < count; i++) {
+    const v = table.indexOf(base64[i]);
+    if (v < 0) break;
+    acc = (acc << 6) | v;
+    bits += 6;
+    if (bits >= 8) { bits -= 8; out.push((acc >> bits) & 255); acc &= (1 << bits) - 1; }
+  }
+  return out;
+}
+
+// One base64 text (with or without a data: prefix) becomes a data URL the host takes: png, jpeg, gif or webp, at most 256 KB decoded and
+// (png) 1024 x 1024 pixels; anything else is null.
+function dataUrlOf(text) {
+  if (typeof text !== 'string') return null;
+  const base64 = text.startsWith('data:') ? text.slice(text.indexOf(',') + 1) : text;
+  if (base64.length < 16) return null;
+  const type = base64.startsWith('iVBOR') ? 'png' : base64.startsWith('/9j/') ? 'jpeg' : base64.startsWith('R0lG') ? 'gif' : base64.startsWith('UklGR') ? 'webp' : null;
+  if (!type) return null; // svg and everything else is not a picture the host takes
   const padding = base64.endsWith('==') ? 2 : base64.endsWith('=') ? 1 : 0;
   if (Math.floor(base64.length * 3 / 4) - padding > MAX_PICTURE_BYTES) return null;
+  if (type === 'png') {
+    const h = headBytes(base64, 24);
+    if (h.length === 24 && (h[16] * 16777216 + h[17] * 65536 + h[18] * 256 + h[19] > MAX_PICTURE_SIDE || h[20] * 16777216 + h[21] * 65536 + h[22] * 256 + h[23] > MAX_PICTURE_SIDE)) return null;
+  }
   return 'data:image/' + type + ';base64,' + base64;
+}
+
+// The picture of a getBitmap reply: `transparent`, else `default` (never `selected`). The reply is read at actionObject.result, at
+// actionObject itself and at actionObject["1"].result, because the docs show more than one layout. This is the one place to change.
+function pictureFromReply(obj) {
+  const o = obj || {};
+  for (const where of [o.result, o, o['1'] && o['1'].result]) {
+    if (!where || typeof where !== 'object') continue;
+    for (const field of ['transparent', 'default', 'image']) {
+      const url = dataUrlOf(where[field]);
+      if (url) return url;
+    }
+  }
+  return null;
 }
 
 function onBitmap(obj) {
   const flight = state.pictureInFlight;
   state.pictureInFlight = null;
   if (!flight) return;
-  const url = dataUrlOf(obj && (obj.default || obj.selected));
+  const url = pictureFromReply(obj);
   if (url) host.images.put(flight.imageId, url);
 }
 
