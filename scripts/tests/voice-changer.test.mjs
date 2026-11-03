@@ -93,7 +93,7 @@ function loadPlugin({ portMap, apiKey = KEY }) {
     after() {},
     options: { source: (id, fn) => { sources[id] = fn; } },
     log: (m) => logs.push(m),
-    images: { onRequest: (fn) => { imageHandler = fn; }, put: (id, url, version) => { puts.push({ id, url, version }); return true; }, invalidate: (id) => { invalidated.push(id); } },
+    images: { onRequest: (fn) => { imageHandler = fn; }, put: (id, url, version) => { puts.push({ id, url, version }); return true; }, invalidate: (id, version) => { invalidated.push(id + '@' + version); } },
     ws: {
       connect(url, handlers) {
         const port = Number(new URL(url).port);
@@ -705,6 +705,6 @@ test('pictures: a changed bitmapChecksum in a refreshed list drops the cached pi
     plugin.advance(1100);
     assert.equal(plugin.actions['voicechanger.refreshvoices'].run({}, {}).ok, true);
     await give([{ id: 'a', friendlyName: 'A', bitmapChecksum: 'v2' }, { id: 'b', friendlyName: 'B', bitmapChecksum: 'v1' }]);
-    assert.deepEqual([...plugin.invalidated], ['voice:a'], 'only the voice with a new checksum');
+    assert.deepEqual([...plugin.invalidated], ['voice:a@v2'], 'only the voice with a new checksum, with the new version');
   } finally { plugin.stop(); fake.close(); }
 });
