@@ -267,14 +267,16 @@ function readSounds(obj) {
     const inBoard = pick(board, 'sounds', 'Sounds', 'memes', 'Memes', 'items', 'Items');
     for (const sd of Array.isArray(inBoard) ? inBoard : []) {
       if (out.length >= MAX_ITEMS) return out;
-      const id = idOf(pick(sd, 'id', 'Id', 'ID'));
+      // A community sound inside a board may carry a FileName / memeId instead of an Id; that is then its identifier and what playMeme takes.
+      const fileKey = idOf(pick(sd, 'FileName', 'Filename', 'fileName', 'filename', 'memeId', 'MemeId'));
+      const id = idOf(pick(sd, 'id', 'Id', 'ID')) || fileKey;
       // The same id twice in one source is one sound; the same NAME is not a duplicate (two sounds may share a name).
       if (!id || seen.has(source + '|' + id)) continue;
       seen.add(source + '|' + id);
       const off = boardOff || pick(sd, 'enabled', 'Enabled') === false;
       const rawName = pick(sd, 'name', 'Name');
       const name = clip(typeof rawName === 'string' && rawName.trim() ? rawName : id, 100);
-      out.push({ id, name: off ? name + ' (disabled)' : name, board: boardName, source, favorite: sd.favorited === true || sd.isFavorite === true, image: imageRef('sound:' + enc(id), 'sound', id, typeof sd.bitmapChecksum === 'string' ? sd.bitmapChecksum : '') });
+      out.push({ id, name: off ? name + ' (disabled)' : name, board: boardName, source, file: fileKey || '', favorite: sd.favorited === true || sd.isFavorite === true, image: imageRef('sound:' + enc(id), 'sound', id, typeof sd.bitmapChecksum === 'string' ? sd.bitmapChecksum : '') });
     }
   }
   return out;
@@ -673,7 +675,7 @@ registerAction({
     const listed = value.startsWith('meme:') ? state.lists.memes : state.lists.sounds;
     if (listed && !played) return { ok: false, code: 'NotFound', message: 'This sound is not in the Voicemod app any more. Choose another.' };
     // playMeme takes the FileName of a meme; a soundboard sound is sent by its id (the docs name no other play action).
-    const FileName = value.startsWith('meme:') ? value.slice(5) : value;
+    const FileName = played && played.file ? played.file : value.startsWith('meme:') ? value.slice(5) : value;
     const result = run('playMeme', { FileName, IsKeyDown: true });
     if (result.ok && played) setVar('voicechanger.lastsound', played.name);
     return result;
