@@ -523,7 +523,7 @@ test('a realistic soundboard list of 500 sounds (about 134 KB) fits the limit an
     await wait(() => plugin.sources.sounds({ text: '' }).options.length > 0, 'sound list');
     const first = plugin.sources.sounds({ text: '', limit: 50 });
     assert.equal(first.options.length, 50); assert.equal(first.more, true);
-    assert.equal(plugin.sources.sounds({ text: 'Sound 49', limit: 50 }).options.length, 11);
+    assert.equal(plugin.sources.sounds({ text: 'Sound 49', limit: 50 }).options.length, 15);
   } finally { plugin.stop(); fake.close(); }
 });
 
@@ -843,7 +843,7 @@ test('sound sources: classified per sound (isCustom), a mixed board, read right 
     fake.push({ actionType: 'getVoices', actionObject: { voices: VOICES } });
     await wait(() => asked().filter((a) => a === 'getAllSoundboard').length === 2, 'sounds again');
     const field = plugin.actions['voicechanger.playsound'].fields.find((f) => f.key === 'fileName');
-    assert.deepEqual([...field.dependsOn], ['source']);
+    assert.deepEqual([...field.dependsOn], ['source', 'panel']);
   } finally { plugin.stop(); fake.close(); }
 });
 
@@ -936,5 +936,51 @@ test('community search the way the editor asks: the source value the field decla
     assert.equal(seen.filter((v) => v === 'c009').length, 1, 'the stored sound appears once');
     assert.equal(seen[0], 'c009', 'the stored sound is first');
     assert.equal(new Set(seen).size, 120, 'all 120 community sounds reachable');
+  } finally { plugin.stop(); fake.close(); }
+});
+
+test('panels: the second dropdown lists the panels of the chosen source with their own counts; a panel narrows the sounds; a stale panel is ignored', async () => {
+  const { fake, plugin } = await connected();
+  try {
+    await wait(() => fake.received.some((m) => m.action === 'getVoices'), 'getVoices');
+    fake.push({ actionType: 'getVoices', actionObject: { voices: VOICES } });
+    await wait(() => fake.received.some((m) => m.action === 'getAllSoundboard'), 'sounds asked');
+    fake.push({ actionType: 'getAllSoundboard', actionObject: { soundboards: [
+      { id: 'b1', name: 'Anime', isCustom: true, sounds: [{ id: 'a1', name: 'Naruto', isCustom: true }, { id: 'a2', name: 'Sasuke', isCustom: true }, { id: 'a3', name: 'Honk', isCustom: false }] },
+      { id: 'b2', name: 'Stock', isCustom: false, sounds: [{ id: 's1', name: 'Air horn', isCustom: false }, { id: 's2', name: 'Çığlık', isCustom: false }, { id: 's3', name: 'Added', isCustom: true }] },
+      { id: 'b3', name: 'Boş', isCustom: false, sounds: [] },
+    ] } });
+    const field = (key) => plugin.actions['voicechanger.playsound'].fields.find((f) => f.key === key);
+    assert.deepEqual([...field('source').options.map((o) => o.label)], ['Voicemod library', 'Community', 'My soundboards']);
+    assert.equal(field('panel').optionsSource, 'panels');
+    assert.equal(field('panel').searchable, true);
+    await wait(() => plugin.sources.panels({ text: '' }, { source: 'mine' }).options.length > 0, 'panels');
+    const panels = (source, q = '', extra = {}) => plugin.sources.panels({ text: q, limit: 50, ...extra }, { source });
+    const labels = (r) => [...r.options.map((o) => o.label)];
+    assert.deepEqual(labels(panels('mine')), ['All panels', 'Anime (3)'], 'my soundboards: my panels with all their sounds');
+    assert.deepEqual(labels(panels('community')), ['All panels', 'Anime (2)', 'Stock (1)'], 'community: only the community sounds are counted');
+    assert.deepEqual(labels(panels('library')), ['All panels', 'Stock (2)'], 'library: the app panels; an empty panel is not listed');
+    assert.equal(panels('mine').options[0].value, '*all');
+    assert.deepEqual(labels(panels('community', 'anime')), ['Anime (2)']);
+    assert.ok(panels('community').options.every((o) => o.value !== ''), 'no option has an empty value (the host drops it)');
+    // the sound list for one panel: only its sounds of that source, no group headers, A-Z
+    const sounds = (values, q = '') => plugin.sources.sounds({ text: q, limit: 50 }, values).options;
+    const anime = sounds({ source: 'community', panel: 'b1' });
+    assert.deepEqual([...anime.map((o) => o.label)], ['Naruto', 'Sasuke']);
+    assert.ok(anime.every((o) => o.group === undefined));
+    assert.deepEqual([...sounds({ source: 'community', panel: '*all' }).map((o) => o.group)].sort(), ['Anime', 'Anime', 'Stock']);
+    assert.equal(sounds({ source: 'community', panel: '' }).length, 3, 'a missing panel means all');
+    // a button saved before (source only, or nothing) keeps working
+    assert.equal(sounds({ source: 'community' }).length, 3);
+    assert.equal(sounds({}).length, 6);
+    // the editor kept the panel of the old source: it is not in the new one, so it is ignored
+    assert.equal(sounds({ source: 'library', panel: 'b1' }).length, 2, 'stale panel ignored');
+    // search matches the panel name and every typed word, with Turkish letters folded
+    assert.deepEqual([...sounds({ source: 'mine' }, 'anime').map((o) => o.value)].sort(), ['a1', 'a2', 'a3']);
+    assert.deepEqual([...sounds({ source: 'library' }, 'CIGLIK').map((o) => o.value)], ['s2']);
+    assert.deepEqual([...sounds({ source: 'library' }, 'çığlık').map((o) => o.value)], ['s2']);
+    assert.deepEqual([...sounds({ source: 'library' }, 'stock air').map((o) => o.value)], ['s1'], 'each word, in the name or the panel name');
+    assert.deepEqual([...sounds({ source: 'mine' }, 'ANİME nar').map((o) => o.value)], ['a1']);
+    assert.deepEqual([...panels('library', 'BOS').options.map((o) => o.label)], [], 'an empty panel is still not listed');
   } finally { plugin.stop(); fake.close(); }
 });
