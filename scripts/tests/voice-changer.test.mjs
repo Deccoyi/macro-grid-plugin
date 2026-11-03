@@ -80,7 +80,8 @@ function loadPlugin({ portMap, apiKey = KEY }) {
   let now = 1_000_000;
   const settings = { apiKey };
   let open = 0, maxOpen = 0;
-  const varWrites = {}, sources = {};
+  const varWrites = {}, sources = {}, puts = [], logs = [];
+  let imageHandler = null;
   const vars = {}, statuses = [], reports = [], actions = {}, every = [], connectPorts = [], clientSockets = [];
   const host = {
     variables: { describe() {}, set: (n, v) => { vars[n] = v; varWrites[n] = (varWrites[n] || 0) + 1; } },
@@ -91,7 +92,8 @@ function loadPlugin({ portMap, apiKey = KEY }) {
     every: (ms, fn) => every.push(fn),
     after() {},
     options: { source: (id, fn) => { sources[id] = fn; } },
-    log() {},
+    log: (m) => logs.push(m),
+    images: { onRequest: (fn) => { imageHandler = fn; }, put: (id, url) => { puts.push({ id, url }); return true; } },
     ws: {
       connect(url, handlers) {
         const port = Number(new URL(url).port);
@@ -115,7 +117,7 @@ function loadPlugin({ portMap, apiKey = KEY }) {
   };
   vm.runInNewContext(script, { host, Date: { now: () => now }, JSON, Number, String, Array, Math });
   return {
-    varWrites, sources, maxOpen: () => maxOpen, open: () => open,
+    varWrites, sources, puts, logs, requestImages: (ids) => imageHandler(ids), pump: () => every[1](), maxOpen: () => maxOpen, open: () => open,
     vars, statuses, reports, actions, settings, connectPorts,
     tick: () => every[0](),
     advance: (ms) => { now += ms; },
@@ -357,8 +359,8 @@ const VOICES = [
   { id: 'alien', friendlyName: 'Alien', favorited: false },
 ];
 const SOUNDBOARDS = [
-  { id: 'b1', name: 'Funny', sounds: [{ id: 's-laugh', name: 'Laugh' }, { id: 's-airhorn', name: 'Air horn' }] },
-  { id: 'b2', name: 'Alerts', sounds: [{ id: 's-nuke', name: 'Nuke alert' }] },
+  { id: 'b1', name: 'Funny', sounds: [{ id: 's-laugh', name: 'Laugh', bitmapChecksum: 'CS-LAUGH-1' }, { id: 's-airhorn', name: 'Air horn' }] },
+  { id: 'b2', name: 'Alerts', sounds: [{ id: 's-nuke', name: 'Nuke alert', bitmapChecksum: 'has space' }] },
 ];
 
 async function withLists() {
@@ -487,5 +489,98 @@ test('a realistic soundboard list of 500 sounds (about 134 KB) fits the limit an
     const first = plugin.sources.sounds({ text: '', limit: 50 });
     assert.equal(first.options.length, 50); assert.equal(first.more, true);
     assert.equal(plugin.sources.sounds({ text: 'Sound 49', limit: 50 }).options.length, 11);
+  } finally { plugin.stop(); fake.close(); }
+});
+
+// ---- button pictures ----
+const PNG = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.alloc(40, 1)]).toString('base64');
+const bitmaps = (fake) => fake.received.filter((m) => m.action === 'getBitmap');
+
+test('pictures: options carry plugin-image references; an id outside the allowed characters has none', async () => {
+  const { fake, plugin } = await withLists();
+  try {
+    const voices = plugin.sources.voices({ text: '' }).options;
+    assert.equal(voices.find((o) => o.value === 'baby').icon, 'plugin-image:voicechanger/voice:baby');
+    const sounds = plugin.sources.sounds({ text: '' }).options;
+    assert.equal(sounds.find((o) => o.value === 's-laugh').icon, 'plugin-image:voicechanger/sound:CS-LAUGH-1');
+    assert.equal(sounds.find((o) => o.value === 's-airhorn').icon, undefined, 'no checksum, no picture');
+    assert.equal(sounds.find((o) => o.value === 's-nuke').icon, undefined, 'a checksum with a space is not an image id');
+  } finally { plugin.stop(); fake.close(); }
+});
+
+test('pictures: one getBitmap at a time, only for ids the plugin knows, a valid picture is put', async () => {
+  const { fake, plugin } = await withLists();
+  try {
+    plugin.sources.voices({ text: '' }); plugin.sources.sounds({ text: '' });
+    plugin.requestImages(['voice:baby', 'sound:CS-LAUGH-1', 'voice:unknown', 'nope:x', 7]);
+    plugin.advance(1100);
+    plugin.pump();
+    await wait(() => bitmaps(fake).length === 1, 'first getBitmap');
+    assert.deepEqual(bitmaps(fake)[0].payload, { voiceID: 'baby' });
+    plugin.pump(); plugin.pump();
+    await new Promise((r) => setTimeout(r, 50));
+    assert.equal(bitmaps(fake).length, 1, 'the next one waits for the reply');
+    fake.push({ actionType: 'getBitmap', actionObject: { default: PNG, selected: PNG, transparent: false } });
+    await wait(() => plugin.puts.length === 1, 'put');
+    assert.equal(plugin.puts[0].id, 'voice:baby');
+    assert.match(plugin.puts[0].url, /^data:image\/png;base64,iVBOR/);
+    plugin.pump();
+    await wait(() => bitmaps(fake).length === 2, 'second getBitmap');
+    assert.deepEqual(bitmaps(fake)[1].payload, { memeId: 's-laugh' });
+    assert.equal(bitmaps(fake).length, 2, 'unknown ids are never asked for');
+    assert.deepEqual([...plugin.logs], [], 'nothing about ids or pictures is logged');
+  } finally { plugin.stop(); fake.close(); }
+});
+
+test('pictures: svg, a non-picture and a picture over 64 KB are not put', async () => {
+  const { fake, plugin } = await withLists();
+  try {
+    plugin.sources.voices({ text: '' });
+    const big = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.alloc(70 * 1024, 1)]).toString('base64');
+    const bad = [Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"></svg>').toString('base64'), 'bm90IGEgcGljdHVyZSBhdCBhbGw=', big];
+    const ids = ['voice:baby', 'voice:deep', 'voice:robot'];
+    plugin.requestImages(ids);
+    for (let i = 0; i < 3; i++) {
+      plugin.advance(1100);
+      plugin.pump();
+      await wait(() => bitmaps(fake).length === i + 1, 'getBitmap ' + i);
+      fake.push({ actionType: 'getBitmap', actionObject: { default: bad[i] } });
+      await new Promise((r) => setTimeout(r, 40));
+    }
+    assert.equal(plugin.puts.length, 0);
+  } finally { plugin.stop(); fake.close(); }
+});
+
+test('pictures: at most 4 requests a second and a queue of 50 that drops the oldest', async () => {
+  const { fake, plugin } = await connected();
+  try {
+    await wait(() => fake.received.some((m) => m.action === 'getVoices'), 'getVoices');
+    const voices = Array.from({ length: 80 }, (_, i) => ({ id: 'v' + i, friendlyName: 'Voice ' + String(i).padStart(2, '0') }));
+    fake.push({ actionType: 'getVoices', actionObject: { voices } });
+    await wait(() => fake.received.some((m) => m.action === 'getAllSoundboard'), 'second list');
+    fake.push({ actionType: 'getAllSoundboard', actionObject: { soundboards: [] } });
+    await wait(() => plugin.sources.voices({ text: '' }).options.length > 0, 'lists');
+    plugin.requestImages(voices.slice(0, 20).map((v) => 'voice:' + v.id));
+    plugin.requestImages(voices.slice(20, 40).map((v) => 'voice:' + v.id));
+    plugin.requestImages(voices.slice(40, 60).map((v) => 'voice:' + v.id));
+    plugin.requestImages(voices.slice(60, 80).map((v) => 'voice:' + v.id));
+    plugin.advance(1100);
+    let answered = 0;
+    for (let i = 0; i < 12; i++) { // inside one fake second
+      plugin.pump();
+      await new Promise((r) => setTimeout(r, 20));
+      if (bitmaps(fake).length > answered) { answered = bitmaps(fake).length; fake.push({ actionType: 'getBitmap', actionObject: { default: PNG } }); await new Promise((r) => setTimeout(r, 20)); }
+    }
+    assert.ok(bitmaps(fake).length <= 4, 'sent ' + bitmaps(fake).length);
+    // let time pass until the queue is empty
+    for (let i = 0; i < 80; i++) {
+      plugin.advance(300);
+      plugin.pump();
+      await new Promise((r) => setTimeout(r, 15));
+      if (bitmaps(fake).length > answered) { answered = bitmaps(fake).length; fake.push({ actionType: 'getBitmap', actionObject: { default: PNG } }); await new Promise((r) => setTimeout(r, 15)); }
+    }
+    const asked = bitmaps(fake).map((m) => m.payload.voiceID);
+    assert.equal(asked.length, 50, 'the queue holds 50');
+    assert.ok(!asked.includes('v0') && asked.includes('v79'), 'the oldest were dropped');
   } finally { plugin.stop(); fake.close(); }
 });
