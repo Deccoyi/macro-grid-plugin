@@ -17,6 +17,11 @@ const MAX_SENDS_PER_SECOND = 10;
 const MAX_STATUS_CHARS = 80;
 const MAX_VARIABLE_CHARS = 8000;
 const LOG_EVERY_MS = 10000;
+const MAX_PICTURE_QUEUE = 50;
+const PICTURES_PER_SECOND = 4;
+const PICTURE_TIMEOUT_MS = 5000;
+const MAX_PICTURE_BYTES = 64 * 1024; // the host accepts at most 64 KB decoded
+const PICTURE_PUMP_MS = 250;
 
 host.variables.describe([
   { name: 'voicechanger.enabled', description: 'Whether the voice changer is on', example: 'true', type: 'boolean', category: 'Voice Changer' },
@@ -49,6 +54,13 @@ const state = {
   pending: null, // the list whose reply is awaited
   queue: [],
   recent: [], // the last voices used, newest first
+  // Button pictures: the host asks for image ids (voice:<id>, sound:<checksum>); each is one getBitmap, one at a time.
+  imageSources: new Map(), // image id -> { kind: 'voice' | 'sound', id }
+  pictureQueue: [],
+  pictureInFlight: null, // { imageId, at }
+  pictureSends: [], // timestamps of the getBitmap requests of the last second
+  pictureFailures: 0,
+  picturesOff: false,
   sends: [], // timestamps of the messages sent in the last second
   lastStatus: '',
   lastLog: 0,
@@ -145,6 +157,14 @@ function onClose(socket) {
   if (state.rejectedKey !== null && state.rejectedKey === state.keyUsed) return; // the 401 message is already shown
   state.attempts = wasRegistered ? 0 : state.attempts + 1;
   state.nextAt = Date.now() + (state.attempts > SLOW_AFTER ? RETRY_SLOW_MS : RETRY_MS);
+  if (state.pictureInFlight) {
+    state.pictureInFlight = null;
+    if (++state.pictureFailures >= 2) {
+      state.picturesOff = true;
+      host.diagnostics.report('warning', 'The Voicemod app closed the connection twice while a button picture was asked for, so button pictures are switched off until the plugin is reloaded.', 'voicechanger-pictures');
+    }
+  }
+  state.pictureQueue = [];
   if (state.pending) {
     state.tooBig[state.pending] = true;
     state.pending = null;
@@ -173,22 +193,34 @@ function pickObject(msg) {
 const MAX_ITEMS = 5000;
 const clip = (v, n) => String(v === undefined || v === null ? '' : v).slice(0, n);
 
+// The id of a button picture is 1 to 128 characters of letters, digits and . _ : - ; an id outside that has no picture.
+function imageRef(imageId, kind, id) {
+  if (!/^[A-Za-z0-9._:-]{1,128}$/.test(imageId)) return null;
+  if (!state.imageSources.has(imageId)) state.imageSources.set(imageId, { kind, id });
+  return imageId;
+}
+
 function readVoices(obj) {
+  for (const k of [...state.imageSources.keys()]) if (k.startsWith('voice:')) state.imageSources.delete(k);
   const out = [];
   for (const v of Array.isArray(obj.voices) ? obj.voices : []) {
     if (out.length >= MAX_ITEMS) break;
     const id = v && (v.id || v.voiceID || v.voiceId);
-    if (typeof id === 'string' && id) out.push({ id, name: clip(v.friendlyName || v.name || id, 100), favorite: v.favorited === true });
+    if (typeof id === 'string' && id) out.push({ id, name: clip(v.friendlyName || v.name || id, 100), favorite: v.favorited === true, image: imageRef('voice:' + id, 'voice', id) });
   }
   return out;
 }
 
 function readSounds(obj) {
+  for (const k of [...state.imageSources.keys()]) if (k.startsWith('sound:')) state.imageSources.delete(k);
   const out = [];
   for (const board of Array.isArray(obj.soundboards) ? obj.soundboards : []) {
     for (const sd of board && Array.isArray(board.sounds) ? board.sounds : []) {
       if (out.length >= MAX_ITEMS) return out;
-      if (sd && typeof sd.id === 'string' && sd.id) out.push({ id: sd.id, name: clip(sd.name || sd.id, 100), board: clip(board.name || 'Sounds', 60), favorite: sd.favorited === true || sd.isFavorite === true });
+      if (sd && typeof sd.id === 'string' && sd.id) {
+        const sum = typeof sd.bitmapChecksum === 'string' ? sd.bitmapChecksum : '';
+        out.push({ id: sd.id, name: clip(sd.name || sd.id, 100), board: clip(board.name || 'Sounds', 60), favorite: sd.favorited === true || sd.isFavorite === true, image: sum ? imageRef('sound:' + sum, 'sound', sd.id) : null });
+      }
     }
   }
   return out;
@@ -252,7 +284,52 @@ function searchOptions(kind, query) {
     page = [found].concat(page.slice(0, limit - 1));
     more = limit - 1 < items.length;
   }
-  return { options: page.map((i) => ({ value: i.id, label: i.name, group: section(i) })), more, selectedMissing: selected ? !found : false };
+  return { options: page.map((i) => (i.image ? { value: i.id, label: i.name, group: section(i), icon: 'plugin-image:voicechanger/' + i.image } : { value: i.id, label: i.name, group: section(i) })), more, selectedMissing: selected ? !found : false };
+}
+
+// ---- button pictures ----
+
+function dataUrlOf(base64) {
+  if (typeof base64 !== 'string' || base64.length < 16) return null;
+  const type = base64.startsWith('iVBOR') ? 'png' : base64.startsWith('/9j/') ? 'jpeg' : base64.startsWith('R0lGOD') ? 'gif' : base64.startsWith('UklGR') ? 'webp' : null;
+  if (!type) return null; // anything else (svg included) is not a picture the host takes
+  const padding = base64.endsWith('==') ? 2 : base64.endsWith('=') ? 1 : 0;
+  if (Math.floor(base64.length * 3 / 4) - padding > MAX_PICTURE_BYTES) return null;
+  return 'data:image/' + type + ';base64,' + base64;
+}
+
+function onBitmap(obj) {
+  const flight = state.pictureInFlight;
+  state.pictureInFlight = null;
+  if (!flight) return;
+  const url = dataUrlOf(obj && (obj.default || obj.selected));
+  if (url) host.images.put(flight.imageId, url);
+}
+
+host.images.onRequest((ids) => {
+  guard(() => {
+    for (const imageId of Array.isArray(ids) ? ids : []) {
+      if (!state.imageSources.has(imageId) || state.pictureQueue.includes(imageId)) continue;
+      state.pictureQueue.push(imageId);
+      if (state.pictureQueue.length > MAX_PICTURE_QUEUE) state.pictureQueue.shift();
+    }
+  });
+});
+
+// One getBitmap at a time, at most four a second.
+function pump() {
+  const now = Date.now();
+  if (state.pictureInFlight && now - state.pictureInFlight.at > PICTURE_TIMEOUT_MS) state.pictureInFlight = null;
+  if (state.picturesOff || !state.registered || state.pending || state.pictureInFlight || !state.pictureQueue.length) return;
+  state.pictureSends = state.pictureSends.filter((t) => now - t < 1000);
+  if (state.pictureSends.length >= PICTURES_PER_SECOND) return;
+  const imageId = state.pictureQueue[0];
+  const source = state.imageSources.get(imageId);
+  if (!source) { state.pictureQueue.shift(); return; }
+  if (!send('getBitmap', source.kind === 'voice' ? { voiceID: source.id } : { memeId: source.id })) return; // too many messages just now: next time
+  state.pictureQueue.shift();
+  state.pictureSends.push(now);
+  state.pictureInFlight = { imageId, at: now };
 }
 
 host.options.source('voices', (query) => searchOptions('voices', query));
@@ -278,6 +355,8 @@ function onMessage(text, port) {
     if (typeof msg.currentVoice === 'string') setVar('voicechanger.voice', msg.currentVoice);
     state.lists.voices = readVoices(obj);
     listDone('voices');
+  } else if (key === 'getbitmap') {
+    onBitmap(obj);
   } else if (key === 'getallsoundboard') {
     state.lists.sounds = readSounds(obj);
     listDone('sounds');
@@ -410,3 +489,4 @@ host.registerAction({
 // The script's start-up has only 2 seconds; the first connection waits a moment.
 host.after(200, tick);
 host.every(TICK_MS, tick);
+host.every(PICTURE_PUMP_MS, () => guard(pump));
