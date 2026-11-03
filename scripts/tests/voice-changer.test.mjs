@@ -891,3 +891,27 @@ test('a board of 3 sounds (same name twice, a missing name, odd key casing, a nu
     assert.equal(new Set(seen).size, 126, 'all 126 sounds were reachable');
   } finally { plugin.stop(); fake.close(); }
 });
+
+test('a community sound inside a board that has a FileName and no Id is listed and played by its FileName', async () => {
+  const { fake, plugin } = await connected({ lazy: true });
+  try {
+    await wait(() => fake.received.some((m) => m.action === 'getVoices'), 'getVoices');
+    fake.push({ actionType: 'getVoices', actionObject: { voices: VOICES } });
+    plugin.sources.sounds({ text: '' }, { source: 'library' });
+    await wait(() => fake.received.some((m) => m.action === 'getAllSoundboard'), 'sounds asked');
+    fake.push({ actionType: 'getAllSoundboard', actionObject: { soundboards: [{ id: 'b', name: 'My first soundboard', sounds: [
+      { id: 'ad6efa6b-4872-4217-9465-5415178dfc1f', name: 'Honk' },
+      { name: 'FAH', FileName: '412' },
+      { id: 'c3', name: 'Naruto', FileName: '99' },
+    ] }] } });
+    await wait(() => plugin.sources.sounds({ text: '' }, { source: 'library' }).options.length === 3, 'three sounds');
+    const opts = plugin.sources.sounds({ text: 'fah' }, { source: 'library' }).options;
+    assert.deepEqual([...opts.map((o) => o.value)], ['412']);
+    plugin.advance(1100);
+    assert.equal(plugin.actions['voicechanger.playsound'].run({}, { fileName: '412' }).ok, true);
+    plugin.advance(1100);
+    assert.equal(plugin.actions['voicechanger.playsound'].run({}, { fileName: 'c3' }).ok, true);
+    await wait(() => fake.received.filter((m) => m.action === 'playMeme').length === 2, 'plays');
+    assert.deepEqual([...fake.received.filter((m) => m.action === 'playMeme').map((m) => m.payload.FileName)], ['412', '99']);
+  } finally { plugin.stop(); fake.close(); }
+});
