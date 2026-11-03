@@ -207,12 +207,17 @@ function enc(text) {
 function imageRef(imageId, kind, id, version) {
   if (!/^[A-Za-z0-9._:-]{1,128}$/.test(imageId)) return null;
   const old = state.prevSources && state.prevSources.get(imageId);
-  if (old && version && old.version && old.version !== version && typeof host.images.invalidate === 'function') host.images.invalidate(imageId);
+  if (old && version && old.version && old.version !== version && typeof host.images.invalidate === 'function') host.images.invalidate(imageId, versionOf(version));
   state.imageSources.set(imageId, { kind, id, version: version || '' });
   return imageId;
 }
 
 // Before a list is read again: its old entries are kept aside (to compare the versions) and the table starts empty.
+// The host takes a version of at most 64 printable characters.
+function versionOf(text) {
+  return typeof text === 'string' && /^[ -~]{1,64}$/.test(text) ? text : undefined;
+}
+
 function beginRead(prefix) {
   state.prevSources = new Map();
   for (const [k, v] of [...state.imageSources]) if (k.startsWith(prefix)) { state.prevSources.set(k, v); state.imageSources.delete(k); }
@@ -364,7 +369,7 @@ function onBitmap(obj) {
   const url = pictureFromReply(obj);
   // The version is the item's bitmapChecksum when Voicemod gave one; a host without versions ignores the third argument.
   const source = state.imageSources.get(flight.imageId);
-  if (url) host.images.put(flight.imageId, url, source && source.version ? source.version : undefined);
+  if (url) host.images.put(flight.imageId, url, source ? versionOf(source.version) : undefined);
 }
 
 host.images.onRequest((ids) => {
