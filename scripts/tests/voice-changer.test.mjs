@@ -493,7 +493,12 @@ test('a realistic soundboard list of 500 sounds (about 134 KB) fits the limit an
 });
 
 // ---- button pictures ----
-const PNG = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.alloc(40, 1)]).toString('base64');
+function png(width, height, extra = 40) {
+  const ihdr = Buffer.alloc(25);
+  ihdr.writeUInt32BE(13, 0); ihdr.write('IHDR', 4); ihdr.writeUInt32BE(width, 8); ihdr.writeUInt32BE(height, 12);
+  return Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), ihdr, Buffer.alloc(extra, 1)]).toString('base64');
+}
+const PNG = png(64, 64);
 const bitmaps = (fake) => fake.received.filter((m) => m.action === 'getBitmap');
 
 test('pictures: options carry plugin-image references; an id outside the allowed characters has none', async () => {
@@ -504,7 +509,7 @@ test('pictures: options carry plugin-image references; an id outside the allowed
     const sounds = plugin.sources.sounds({ text: '' }).options;
     assert.equal(sounds.find((o) => o.value === 's-laugh').icon, 'plugin-image:voicechanger/sound:CS-LAUGH-1');
     assert.equal(sounds.find((o) => o.value === 's-airhorn').icon, undefined, 'no checksum, no picture');
-    assert.equal(sounds.find((o) => o.value === 's-nuke').icon, undefined, 'a checksum with a space is not an image id');
+    assert.equal(sounds.find((o) => o.value === 's-nuke').icon, 'plugin-image:voicechanger/sound:has_0020space', 'a character outside the allowed ones is encoded');
   } finally { plugin.stop(); fake.close(); }
 });
 
@@ -532,11 +537,11 @@ test('pictures: one getBitmap at a time, only for ids the plugin knows, a valid 
   } finally { plugin.stop(); fake.close(); }
 });
 
-test('pictures: svg, a non-picture and a picture over 64 KB are not put', async () => {
+test('pictures: svg, a non-picture and a picture over 256 KB are not put', async () => {
   const { fake, plugin } = await withLists();
   try {
     plugin.sources.voices({ text: '' });
-    const big = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.alloc(70 * 1024, 1)]).toString('base64');
+    const big = png(64, 64, 300 * 1024);
     const bad = [Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"></svg>').toString('base64'), 'bm90IGEgcGljdHVyZSBhdCBhbGw=', big];
     const ids = ['voice:baby', 'voice:deep', 'voice:robot'];
     plugin.requestImages(ids);
@@ -583,4 +588,98 @@ test('pictures: at most 4 requests a second and a queue of 50 that drops the old
     assert.equal(asked.length, 50, 'the queue holds 50');
     assert.ok(!asked.includes('v0') && asked.includes('v79'), 'the oldest were dropped');
   } finally { plugin.stop(); fake.close(); }
+});
+
+test('pictures: transparent first, then default, never selected; bare base64 and a data: prefix both work; the reply layouts', async () => {
+  const { fake, plugin } = await withLists();
+  try {
+    const t = png(10, 10, 5), d = png(20, 20, 5), sel = png(30, 30, 5);
+    const replies = [
+      { result: { default: d, selected: sel, transparent: t } }, // expect t
+      { result: { default: d, selected: sel } }, // expect d
+      { result: { selected: sel } }, // nothing
+      { default: d, transparent: 'data:image/png;base64,' + t }, // actionObject itself, data: prefix
+      { 1: { result: { image: d } } }, // meme layout of the docs
+    ];
+    const expected = [t, d, null, t, d];
+    const ids = ['voice:baby', 'voice:deep', 'voice:robot', 'voice:alien', 'sound:CS-LAUGH-1'];
+    plugin.requestImages(ids);
+    for (let i = 0; i < replies.length; i++) {
+      plugin.advance(1100); plugin.pump();
+      await wait(() => bitmaps(fake).length === i + 1, 'getBitmap ' + i);
+      fake.push({ actionType: 'getBitmap', actionObject: replies[i] });
+      await new Promise((r) => setTimeout(r, 40));
+    }
+    const got = new Map(plugin.puts.map((p) => [p.id, p.url]));
+    ids.forEach((id, i) => {
+      if (expected[i] === null) assert.equal(got.has(id), false, id);
+      else assert.equal(got.get(id), 'data:image/png;base64,' + expected[i], id);
+    });
+  } finally { plugin.stop(); fake.close(); }
+});
+
+test('pictures: a png over 1024 pixels on a side is not put; other types are sniffed', async () => {
+  const { fake, plugin } = await withLists();
+  try {
+    const jpeg = Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xe0]), Buffer.alloc(30, 1)]).toString('base64');
+    const webp = Buffer.concat([Buffer.from('RIFF'), Buffer.alloc(4), Buffer.from('WEBP'), Buffer.alloc(30, 1)]).toString('base64');
+    const gif = Buffer.concat([Buffer.from('GIF89a'), Buffer.alloc(30, 1)]).toString('base64');
+    const cases = [[png(2000, 10), null], [png(1024, 1024), 'png'], [jpeg, 'jpeg'], [webp, 'webp'], [gif, 'gif']];
+    const ids = ['voice:baby', 'voice:deep', 'voice:robot', 'voice:alien', 'sound:CS-LAUGH-1'];
+    plugin.requestImages(ids);
+    for (let i = 0; i < cases.length; i++) {
+      plugin.advance(1100); plugin.pump();
+      await wait(() => bitmaps(fake).length === i + 1, 'getBitmap ' + i);
+      fake.push({ actionType: 'getBitmap', actionObject: { result: { transparent: cases[i][0] } } });
+      await new Promise((r) => setTimeout(r, 40));
+    }
+    const got = new Map(plugin.puts.map((p) => [p.id, p.url]));
+    assert.equal(got.has('voice:baby'), false);
+    cases.slice(1).forEach(([, type], i) => assert.match(got.get(ids[i + 1]), new RegExp('^data:image/' + type + ';base64,')));
+  } finally { plugin.stop(); fake.close(); }
+});
+
+test('pictures: image ids carry the voice checksum and encode every unusual character', async () => {
+  const { fake, plugin } = await connected();
+  try {
+    await wait(() => fake.received.some((m) => m.action === 'getVoices'), 'getVoices');
+    fake.push({ actionType: 'getVoices', actionObject: { voices: [{ id: 'my voice/1_x', friendlyName: 'Mine', bitmapChecksum: 'ab-cd' }, { id: 'plain', friendlyName: 'Plain' }] } });
+    await wait(() => fake.received.some((m) => m.action === 'getAllSoundboard'), 'second list');
+    fake.push({ actionType: 'getAllSoundboard', actionObject: { soundboards: [] } });
+    await wait(() => plugin.sources.voices({ text: '' }).options.length > 0, 'lists');
+    const icons = Object.fromEntries(plugin.sources.voices({ text: '' }).options.map((o) => [o.value, o.icon]));
+    assert.equal(icons['my voice/1_x'], 'plugin-image:voicechanger/voice:my_0020voice_002f1_005fx:ab-cd');
+    assert.equal(icons.plain, 'plugin-image:voicechanger/voice:plain');
+    for (const icon of Object.values(icons)) assert.match(icon.split('/')[1], /^[A-Za-z0-9._:-]{1,128}$/);
+  } finally { plugin.stop(); fake.close(); }
+});
+
+test('lists: read after a successful register and on Refresh lists; an empty list is read again at most every 5 minutes', async () => {
+  const { fake, plugin } = await connected();
+  try {
+    await wait(() => fake.received.some((m) => m.action === 'getVoices'), 'getVoices');
+    fake.push({ actionType: 'getVoices', actionObject: { voices: [] } });
+    await wait(() => fake.received.some((m) => m.action === 'getAllSoundboard'), 'second list');
+    fake.push({ actionType: 'getAllSoundboard', actionObject: { soundboards: [] } });
+    await new Promise((r) => setTimeout(r, 50));
+    const voicesAsked = () => fake.received.filter((m) => m.action === 'getVoices').length;
+    assert.equal(voicesAsked(), 1);
+    plugin.advance(1100);
+    for (let i = 0; i < 5; i++) plugin.sources.voices({ text: 'x' }); // many searches, one new read
+    await wait(() => voicesAsked() === 2, 'one refresh');
+    fake.push({ actionType: 'getVoices', actionObject: { voices: [] } });
+    await wait(() => fake.received.filter((m) => m.action === 'getAllSoundboard').length === 2, 'sounds again');
+    fake.push({ actionType: 'getAllSoundboard', actionObject: { soundboards: [] } });
+    for (let i = 0; i < 5; i++) plugin.sources.sounds({ text: 'x' });
+    await new Promise((r) => setTimeout(r, 50));
+    assert.equal(voicesAsked(), 2, 'not again inside 5 minutes');
+    plugin.advance(5 * 60 * 1000 + 1000);
+    plugin.sources.voices({ text: 'x' });
+    await wait(() => voicesAsked() === 3, 'after 5 minutes');
+  } finally { plugin.stop(); fake.close(); }
+});
+
+test('lists: the measured sizes of a real Voicemod fit the limit of plugin.json', () => {
+  assert.equal(manifest.limits.wsMessageKB, 512);
+  assert.ok(328812 < CAP && 328812 * 1.4 < CAP, 'the biggest measured reply (getAllSoundboard, 860 sounds) fits with room');
 });

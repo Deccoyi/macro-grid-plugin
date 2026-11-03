@@ -20,9 +20,9 @@ Controls the Voicemod app on this PC: switch the voice changer on and off, mute 
 
 Toggle voice changer, Toggle microphone mute, Toggle hear myself, Toggle background effect, Load voice, Random voice, Play sound, Stop all sounds, Refresh lists.
 
-**Load voice** and **Play sound** show a search box over the voices and sounds of the Voicemod app. Favorites come first, then (voices) the last ones you used, then everything A-Z; sounds are grouped by soundboard. The lists are read once when the plugin connects (use **Refresh lists** to read them again) and are kept in memory only. If a voice or sound was removed from the app, the action says so.
+**Load voice** and **Play sound** show a search box over the voices and sounds of the Voicemod app. Favorites come first, then (voices) the last ones you used, then everything A-Z; sounds are grouped by soundboard. The lists are read once after the plugin has connected and registered (use **Refresh lists** to read them again; a search that finds an empty list also reads them, at most every 5 minutes) and are kept in memory only. If a voice or sound was removed from the app, the action says so.
 
-**Pictures:** each voice and sound in the search box shows its Voicemod picture, and the editor can use it as the button icon. The host asks the plugin for a picture only when it is needed; the plugin reads it from the Voicemod app one at a time (at most 4 a second, a queue of 50) and hands it to the host, which keeps it on disk. Pictures that are not PNG, JPEG, GIF or WebP, or are over 64 KB, are skipped.
+**Pictures:** each voice and sound in the search box shows its Voicemod picture, and the editor can use it as the button icon. The host asks the plugin for a picture only when it is needed; the plugin reads it from the Voicemod app one at a time (at most 4 a second, a queue of 50) and hands it to the host, which keeps it on disk. Pictures that are not PNG, JPEG, GIF or WebP, or are over 256 KB or 1024 x 1024 pixels, are skipped.
 
 ## Variables
 
@@ -44,9 +44,9 @@ A JavaScript plugin runs under fixed limits of the Macro Grid server (`JsPluginL
 | Timers | 20, shortest 100 ms | `every`/`after` throws | 2 timers, 1 s tick |
 | Open web sockets | 2 | `connect` throws, P103 line | 1, closed before the next is opened |
 | Web socket connects | 10 a minute | `connect` throws, P103 line | at most 8, at least 7 s apart |
-| Incoming message | 64 KB, or `limits.wsMessageKB` in `plugin.json` for a `localhost` socket after the person approved it | that socket is closed, P103 line | this plugin asks for **256 KB** (provisional, until the sizes of a real Voicemod are measured): the voice list is about 33 KB for 200 voices, 500 sounds are about 134 KB; the lists are read one at a time, never `getMemes` or `getBitmap`; a closed socket turns that list off with a message |
+| Incoming message | 64 KB, or `limits.wsMessageKB` in `plugin.json` for a `localhost` socket after the person approved it | that socket is closed, P103 line | this plugin asks for **512 KB**, measured on a real Voicemod: the voice list is 183 KB (257 voices), the sound list 329 KB (860 sounds in 37 soundboards), a voice picture reply 103 KB, a meme picture reply 163 KB; the lists are read one at a time, never `getMemes` or `getBitmap`; a closed socket turns that list off with a message |
 | Incoming messages | 50 a second | the read waits, nothing is lost | events are cheap; unchanged variable values are not written again |
-| Button pictures | the host asks for 20 ids per call, 500 ms apart; a picture is at most 64 KB decoded, raster only | refused with a P151 line | one `getBitmap` at a time, at most 4 a second, a queue of 50 (oldest dropped), invalid pictures skipped, switched off after two connection drops during a picture request |
+| Button pictures | the host asks for 20 ids per call, 500 ms apart; a picture is at most 256 KB decoded and 1024 x 1024 pixels, raster only | refused with a P151 line | one `getBitmap` at a time, at most 4 a second, a queue of 50 (oldest dropped), invalid pictures skipped, switched off after two connection drops during a picture request |
 | Outgoing messages | 20 a second, 32 waiting, 64 KB each | `send` throws, P103 line | at most 10 a second, a button pressed faster is refused with a message |
 | Variable name | own id as prefix, at most 120 characters | the call throws | `voicechanger.*` |
 | Variable value | no host limit | none | cut at 8000 characters |
