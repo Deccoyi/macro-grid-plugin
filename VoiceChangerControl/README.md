@@ -22,7 +22,7 @@ Toggle voice changer, Toggle microphone mute, Toggle hear myself, Toggle backgro
 
 **Load voice** and **Play sound** show a search box over the voices and sounds of the Voicemod app. Favorites come first, then (voices) the last ones you used, then everything A-Z; sounds are grouped by soundboard. The lists are read once after the plugin has connected and registered (use **Refresh lists** to read them again; a search that finds an empty list also reads them, at most every 5 minutes) and are kept in memory only. If a voice or sound was removed from the app, the action says so.
 
-**Pictures:** each voice and sound in the search box shows its Voicemod picture, and the editor can use it as the button icon. The host asks the plugin for a picture only when it is needed; the plugin reads it from the Voicemod app one at a time (at most 4 a second, a queue of 50) and hands it to the host, which keeps it on disk. Pictures that are not PNG, JPEG, GIF or WebP, or are over 256 KB or 1024 x 1024 pixels, are skipped.
+**Pictures:** each voice and sound in the search box shows its Voicemod picture, and the editor can use it as the button icon. The host asks the plugin for a picture only when it is used (a button or a saved button needs it); browsing the list asks for nothing; the plugin reads it from the Voicemod app one at a time (at most 4 a second, a queue of 50) and hands it to the host, which keeps it on disk. Pictures that are not PNG, JPEG, GIF or WebP, or are over 256 KB or 1024 x 1024 pixels, are skipped.
 
 ## Variables
 
