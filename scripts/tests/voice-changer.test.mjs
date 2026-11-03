@@ -30,6 +30,7 @@ function frame(text) {
 function fakeVoicemod({ validKey = KEY } = {}) {
   const received = [];
   const sockets = new Set();
+  let fake;
   const server = net.createServer((sock) => {
     sockets.add(sock);
     sock.on('close', () => sockets.delete(sock));
@@ -60,6 +61,7 @@ function fakeVoicemod({ validKey = KEY } = {}) {
         let msg;
         try { msg = JSON.parse(data.toString()); } catch { continue; } // close frames and pings are not JSON
         received.push(msg);
+        if (msg.action === 'getMemes') sock.write(frame(JSON.stringify({ actionType: 'getMemes', actionObject: { listOfMemes: fake.memes } })));
         if (msg.action === 'registerClient') {
           const ok = msg.payload.clientKey === validKey;
           sock.write(frame(JSON.stringify({ id: msg.id, action: 'registerClient', payload: { status: { code: ok ? 200 : 401, description: ok ? 'ok' : 'Invalid key' } } })));
@@ -67,12 +69,14 @@ function fakeVoicemod({ validKey = KEY } = {}) {
       }
     });
   });
-  return {
+  fake = {
     received,
+    memes: [], // what getMemes answers with
     push: (obj) => { for (const s of sockets) s.write(frame(JSON.stringify(obj))); },
     listen: () => new Promise((res) => server.listen(0, '127.0.0.1', () => res(server.address().port))),
     close: () => { for (const s of sockets) s.destroy(); server.close(); },
   };
+  return fake;
 }
 
 // ---- the plugin under a fake host ----
@@ -373,7 +377,7 @@ async function withLists() {
   return ctx;
 }
 
-test('lists: voices then sounds, one at a time; no meme list and no bitmap is ever asked for', async () => {
+test('lists: voices, then sounds, then memes, one at a time; no bitmap is ever asked for', async () => {
   const { fake, plugin } = await connected();
   try {
     await wait(() => fake.received.some((m) => m.action === 'getVoices'), 'getVoices');
@@ -382,7 +386,46 @@ test('lists: voices then sounds, one at a time; no meme list and no bitmap is ev
     fake.push({ actionType: 'getVoices', actionObject: { voices: VOICES } });
     await wait(() => fake.received.some((m) => m.action === 'getAllSoundboard'), 'second list');
     const asked = fake.received.map((m) => m.action);
-    for (const bad of ['getMemes', 'getBitmap']) assert.ok(!asked.includes(bad), bad);
+    assert.ok(!asked.includes('getBitmap'));
+    assert.ok(!asked.includes('getMemes'), 'the memes wait for the sounds');
+    fake.push({ actionType: 'getAllSoundboard', actionObject: { soundboards: [] } });
+    await wait(() => fake.received.some((m) => m.action === 'getMemes'), 'memes after the sounds');
+  } finally { plugin.stop(); fake.close(); }
+});
+
+test('sounds source: custom and disabled boards, boards with other key spelling, memes as a group, search over both, play for both kinds', async () => {
+  const { fake, plugin } = await connected();
+  try {
+    fake.memes = [
+      { Name: 'Toc toc', FileName: '78', Type: 'PlayRestart', Image: 'x' },
+      { Name: 'Toc toc again', FileName: '78', Type: 'PlayRestart' },
+      { Name: 'Community horn', Filename: '80', Type: 'PlayStop' },
+      { Name: 'No file', Type: 'PlayStop' },
+    ];
+    await wait(() => fake.received.some((m) => m.action === 'getVoices'), 'getVoices');
+    fake.push({ actionType: 'getVoices', actionObject: { voices: VOICES } });
+    await wait(() => fake.received.some((m) => m.action === 'getAllSoundboard'), 'sounds asked');
+    fake.push({ actionType: 'getAllSoundboard', actionObject: { soundboards: [
+      { id: 'b1', name: 'Mine', isCustom: true, enabled: true, sounds: [{ id: 'g-1', name: 'Custom beep', isCustom: true, enabled: true }, { id: 'g-1', name: 'duplicate' }] },
+      { Id: 'b2', Name: 'Off board', Enabled: false, sounds: [{ Id: 'g-2', Name: 'Hidden', Enabled: true }] },
+      { id: 'b3', name: 'Empty', sounds: [] },
+      { id: 'b4', name: 'Mixed', sounds: [{ id: 'g-3', name: 'Off sound', enabled: false }, { name: 'no id' }] },
+    ] } });
+    await wait(() => plugin.sources.sounds({ text: '' }).options.length >= 5, 'all lists');
+    const all = plugin.sources.sounds({ text: '', limit: 50 }).options;
+    assert.deepEqual([...all.map((o) => o.label)].sort(), ['Community horn', 'Custom beep', 'Hidden (disabled)', 'Off sound (disabled)', 'Toc toc'].sort());
+    assert.equal(all.find((o) => o.value === 'meme:78').group, 'Memes');
+    assert.equal(all.find((o) => o.value === 'g-2').group, 'Off board');
+    assert.equal(plugin.vars['voicechanger.soundcount'], 5);
+    assert.deepEqual([...plugin.sources.sounds({ text: 'horn' }).options.map((o) => o.value)], ['meme:80']);
+    plugin.advance(1100);
+    assert.equal(plugin.actions['voicechanger.playsound'].run({}, { fileName: 'meme:78' }).ok, true);
+    plugin.advance(1100);
+    assert.equal(plugin.actions['voicechanger.playsound'].run({}, { fileName: 'g-3' }).ok, true);
+    await wait(() => fake.received.filter((m) => m.action === 'playMeme').length === 2, 'two plays');
+    const plays = fake.received.filter((m) => m.action === 'playMeme').map((m) => m.payload.FileName);
+    assert.deepEqual([...plays], ['78', 'g-3']);
+    assert.equal(plugin.actions['voicechanger.playsound'].run({}, { fileName: 'meme:999' }).code, 'NotFound');
   } finally { plugin.stop(); fake.close(); }
 });
 
