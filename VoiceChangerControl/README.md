@@ -26,7 +26,23 @@ Toggle voice changer, Toggle microphone mute, Toggle hear myself, Toggle backgro
 
 ## Variables
 
-`voicechanger.enabled`, `voicechanger.micmuted`, `voicechanger.voice` (the current voice id).
+All variables are written only when their value changes. A true/false variable shows Açık/Kapalı by default; a text can choose its own words, for example `{voicechanger.enabled|ON/OFF}` (the host's own format, nothing to map).
+
+| Variable | Type | Meaning |
+|---|---|---|
+| `voicechanger.enabled` | true/false | the voice changer is on |
+| `voicechanger.micmuted` | true/false | the microphone is muted in the app |
+| `voicechanger.hearmyself` | true/false | you hear your own voice |
+| `voicechanger.background` | true/false | the background effect is on |
+| `voicechanger.memesmuted` | true/false | sounds are muted for you (mute for me) |
+| `voicechanger.voice` | text | id of the current voice |
+| `voicechanger.voicename` | text | name of the current voice (empty until the voice list is read) |
+| `voicechanger.license` | text | `free` or `pro`, when the app reports it |
+| `voicechanger.state` | text | the connection state, as in the plugin status |
+| `voicechanger.voicecount` | number | voices in the app |
+| `voicechanger.soundcount` | number | sounds in the app |
+| `voicechanger.lastsound` | text | name of the sound played last by this plugin |
+| `voicechanger.lasterror` | text | the last problem or failed action; empty when connected and fine |
 
 ## Privacy
 
