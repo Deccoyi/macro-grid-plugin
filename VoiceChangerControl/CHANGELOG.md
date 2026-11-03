@@ -4,8 +4,8 @@ New features and fixes in the Voice Changer Control plugin. For technical detail
 
 ## Unreleased
 ### New
-- **Panels and better search:** Play sound has a Panel dropdown after the source, and the search ignores accents and Turkish letters and finds panel names.
-- **Sound sources:** Play sound first asks for a source: Voicemod library, Community or My soundboards. Older buttons keep working.
+- **Better search:** the search ignores accents and Turkish letters and also finds panel names.
+- **Sound sources:** Play sound first asks for a source (Voicemod or Soundboards), then a panel. Older buttons keep working.
 - **All sounds in the search:** the sound picker now lists every sound of every soundboard, also your own and disabled ones.
 - **Control the Voicemod app:** switch the voice changer, microphone mute, hear myself and background effect on and off, load a voice, pick a random voice, play sounds and stop all sounds.
 - **Your own key:** the plugin needs your own Voicemod Control API key. It is not affiliated with Voicemod.
