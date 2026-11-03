@@ -268,6 +268,7 @@ function readSounds(obj) {
     const boardName = clip(pick(board, 'name', 'Name') || 'Sounds', 60);
     const boardOff = pick(board, 'enabled', 'Enabled') === false;
     const boardCustom = pick(board, 'isCustom', 'IsCustom') === true;
+    const boardKey = idOf(pick(board, 'id', 'Id', 'ID')) || boardName;
     const inBoard = pick(board, 'sounds', 'Sounds', 'memes', 'Memes', 'items', 'Items');
     for (const sd of Array.isArray(inBoard) ? inBoard : []) {
       // A sound may carry a FileName / memeId instead of an Id; that is then its identifier and what playMeme takes.
@@ -287,7 +288,7 @@ function readSounds(obj) {
         if (out.length >= MAX_ITEMS) return out;
         if (seen.has(source + '|' + id)) continue;
         seen.add(source + '|' + id);
-        out.push({ id, name: off ? name + ' (disabled)' : name, board: boardName, source, file: fileKey || '', favorite: sd.favorited === true || sd.isFavorite === true, image: imageRef('sound:' + enc(id), 'sound', id, typeof sd.bitmapChecksum === 'string' ? sd.bitmapChecksum : '') });
+        out.push({ id, name: off ? name + ' (disabled)' : name, board: boardName, boardKey, source, file: fileKey || '', favorite: sd.favorited === true || sd.isFavorite === true, image: imageRef('sound:' + enc(id), 'sound', id, typeof sd.bitmapChecksum === 'string' ? sd.bitmapChecksum : '') });
       }
     }
   }
@@ -349,46 +350,125 @@ function listDone(kind) {
 
 const byName = (a, b) => (a.name.toLowerCase() < b.name.toLowerCase() ? -1 : a.name.toLowerCase() > b.name.toLowerCase() ? 1 : 0);
 
-// The options of the editor's search box: favorites first, then (voices) the last ones used, then the rest A-Z; sounds are grouped by soundboard.
-function searchOptions(kind, query, values) {
-  const source = kind === 'sounds' && values && typeof values.source === 'string' ? values.source : '';
-  const found0 = kind === 'sounds' ? soundList(source) : null;
-  const list = kind === 'sounds' ? found0.list : state.lists[kind];
-  if (!list) {
-    if (kind === 'sounds' ? found0.need.every((k) => state.tooBig[k]) : state.tooBig[kind]) return { options: [], error: 'This list is too large for the message limit of the plugin. Raise limits.wsMessageKB in plugin.json.' };
-    if (!currentKey()) return { options: [], error: 'Enter your Voicemod Control API key in the plugin settings.' };
-    if (!state.registered) return { options: [], error: 'Voicemod is not running or not connected. Start the app and try again.' };
-    return { options: [], error: 'The list is loading, try again in a moment.' };
+// Search text: lower case, without accents, Turkish letters folded to their plain ones (ı/İ -> i, ç -> c, ğ -> g, ö -> o, ş -> s, ü -> u),
+// the way the host folds the labels of a source that cannot search itself.
+const TURKISH = { 'ı': 'i', 'İ': 'i', 'I': 'i', 'ç': 'c', 'Ç': 'c', 'ğ': 'g', 'Ğ': 'g', 'ö': 'o', 'Ö': 'o', 'ş': 's', 'Ş': 's', 'ü': 'u', 'Ü': 'u' };
+function fold(text) {
+  let t = String(text);
+  if (typeof t.normalize === 'function') t = t.normalize('NFD').replace(/[̀-ͯ]/g, '');
+  let out = '';
+  for (const c of t) out += TURKISH[c] || c;
+  return out.toLowerCase();
+}
+
+// Every typed word must be in the name or the panel name, folded or only lower-cased (so a plain match on the original always works).
+function textMatcher(raw) {
+  const lower = String(raw || '').toLowerCase().trim();
+  if (!lower) return null;
+  const words = lower.split(/\s+/);
+  const folded = fold(lower).split(/\s+/);
+  return (item) => {
+    const own = item.name + ' ' + (item.board || '');
+    if (item.id.toLowerCase().includes(lower)) return true;
+    const plain = own.toLowerCase();
+    if (!item.hay) item.hay = fold(own);
+    return words.every((w, k) => plain.includes(w) || item.hay.includes(folded[k]));
+  };
+}
+
+const ALL_PANELS = '*all'; // the host drops an option with an empty value, so "All panels" has its own value; an empty or missing panel means all too
+
+// Why a list cannot be shown yet.
+function notReady(kind, need) {
+  if (need.every((k) => state.tooBig[k])) return { options: [], error: 'This list is too large for the message limit of the plugin. Raise limits.wsMessageKB in plugin.json.' };
+  if (!currentKey()) return { options: [], error: 'Enter your Voicemod Control API key in the plugin settings.' };
+  if (!state.registered) return { options: [], error: 'Voicemod is not running or not connected. Start the app and try again.' };
+  return { options: [], error: 'The list is loading, try again in a moment.' };
+}
+
+function readQuery(query) {
+  return {
+    limit: Math.max(1, Math.min(50, Number(query && query.limit) || 50)),
+    offset: Math.max(0, Number(query && query.offset) || 0),
+    selected: query && typeof query.selected === 'string' && query.selected ? query.selected : null,
+  };
+}
+
+const sourceOf = (values) => (values && typeof values.source === 'string' ? values.source : '');
+
+// The panels of one source, each with the number of ITS sounds (library: the stock panels; community: the panels holding community sounds,
+// counting only those; my soundboards: the person's own panels with all their sounds). One place per source, so a source can get its own rule.
+function panelsOf(source) {
+  const r = soundList(source);
+  if (!r.list) return r;
+  const map = new Map();
+  for (const i of r.list) {
+    const g = map.get(i.boardKey) || { key: i.boardKey, name: i.board, count: 0 };
+    g.count++;
+    map.set(i.boardKey, g);
   }
+  return { panels: [...map.values()].sort((a, b) => (a.name.toLowerCase() < b.name.toLowerCase() ? -1 : a.name.toLowerCase() > b.name.toLowerCase() ? 1 : 0)), need: r.need };
+}
+
+// The second dropdown: the panels of the chosen source. A stored panel that is not in this source (the source was changed) is not found.
+function searchPanels(query, values) {
+  const r = panelsOf(sourceOf(values));
+  if (!r.panels) return notReady('sounds', r.need);
+  const { limit, offset, selected } = readQuery(query);
+  const match = textMatcher(query && query.text);
+  let opts = r.panels.map((g) => ({ item: { id: g.key, name: g.name }, value: g.key, label: g.name + ' (' + g.count + ')' }));
+  if (match) opts = opts.filter((o) => match(o.item));
+  else opts.unshift({ item: null, value: ALL_PANELS, label: 'All panels' });
+  const found = selected ? opts.find((o) => o.value === selected) : null;
+  const view = found && !match ? [found].concat(opts.filter((o) => o !== found)) : opts;
+  return { options: view.slice(offset, offset + limit).map((o) => ({ value: o.value, label: o.label })), more: offset + limit < view.length, selectedMissing: selected && selected !== ALL_PANELS ? !found : false };
+}
+
+// The options of the editor's search box: favorites first, then (voices) the last ones used, then the rest A-Z; sounds are grouped by soundboard
+// (one panel chosen: only its sounds, A-Z, no groups).
+function searchOptions(kind, query, values) {
+  const source = kind === 'sounds' ? sourceOf(values) : '';
+  const found0 = kind === 'sounds' ? soundList(source) : null;
+  let list = kind === 'sounds' ? found0.list : state.lists[kind];
+  if (!list) return notReady(kind, kind === 'sounds' ? found0.need : [kind]);
   if (list.length === 0) {
     if (kind === 'sounds' && source) return { options: [], error: 'There are no sounds in this source.' };
     if (state.registered && !state.pending && Date.now() - state.lastEmptyRefresh > EMPTY_REFRESH_MS) { state.lastEmptyRefresh = Date.now(); queueLists(); }
     return { options: [], error: 'Voicemod has no entries in this list yet. If you just added some, try again in a moment.' };
   }
-  const text = String((query && query.text) || '').toLowerCase();
-  const limit = Math.max(1, Math.min(50, Number(query && query.limit) || 50));
-  const offset = Math.max(0, Number(query && query.offset) || 0);
-  const selected = query && typeof query.selected === 'string' && query.selected ? query.selected : null;
-  const section = (item) => (item.favorite ? 'Favorites' : kind === 'voices' ? (state.recent.includes(item.id) ? 'Recent' : 'All voices') : item.board);
+  // A panel that does not belong to the source (the source was changed and the editor kept the old panel) is ignored.
+  const panel = kind === 'sounds' && values && typeof values.panel === 'string' ? values.panel : '';
+  const panelKey = panel && panel !== ALL_PANELS && list.some((i) => i.boardKey === panel) ? panel : '';
+  if (panelKey) list = list.filter((i) => i.boardKey === panelKey);
+  const match = textMatcher(query && query.text);
+  const { limit, offset, selected } = readQuery(query);
+  const section = (item) => (item.favorite ? 'Favorites' : kind === 'voices' ? (state.recent.includes(item.id) ? 'Recent' : 'All voices') : panelKey ? undefined : item.board);
   let items = list.slice();
-  if (text) items = items.filter((i) => i.name.toLowerCase().includes(text) || i.id.toLowerCase().includes(text));
-  const rank = (i) => (i.favorite ? 0 : kind === 'voices' && !text && state.recent.includes(i.id) ? 1 : 2);
+  if (match) items = items.filter(match);
+  const rank = (i) => (i.favorite && !panelKey ? 0 : kind === 'voices' && !match && state.recent.includes(i.id) ? 1 : 2);
   const boards = [];
   for (const i of items) if (i.board && !boards.includes(i.board)) boards.push(i.board);
   items.sort((a, b) => {
     const r = rank(a) - rank(b);
     if (r) return r;
     if (rank(a) === 1) return state.recent.indexOf(a.id) - state.recent.indexOf(b.id);
-    if (kind === 'sounds' && !text && rank(a) === 2) { const g = boards.indexOf(a.board) - boards.indexOf(b.board); if (g) return g; }
+    if (kind === 'sounds' && !match && rank(a) === 2) { const g = boards.indexOf(a.board) - boards.indexOf(b.board); if (g) return g; }
     return byName(a, b);
   });
   // The stored sound comes first on an unsearched list, as the host does for a source that cannot search itself; the editor asks the
   // next page with offset = the number of options it already holds, so the offset counts that sound too.
   const found = selected ? (kind === 'sounds' ? state.lists.sounds : list).find((i) => i.id === selected) : null;
-  const view = found && !text ? [found].concat(items.filter((i) => i.id !== found.id)) : items;
+  const view = found && !match ? [found].concat(items.filter((i) => i.id !== found.id)) : items;
   const page = view.slice(offset, offset + limit);
   const more = offset + limit < view.length;
-  return { options: page.map((i) => (i.image ? { value: i.id, label: i.name, group: section(i), icon: 'plugin-image:voicechanger/' + i.image } : { value: i.id, label: i.name, group: section(i) })), more, selectedMissing: selected ? !found : false };
+  const option = (i) => {
+    const o = { value: i.id, label: i.name };
+    const g = section(i);
+    if (g) o.group = g;
+    if (i.image) o.icon = 'plugin-image:voicechanger/' + i.image;
+    return o;
+  };
+  return { options: page.map(option), more, selectedMissing: selected ? !found : false };
 }
 
 // ---- button pictures ----
@@ -478,6 +558,7 @@ function pump() {
 
 host.options.source('voices', (query) => searchOptions('voices', query));
 host.options.source('sounds', (query, values) => searchOptions('sounds', query, values));
+host.options.source('panels', (query, values) => searchPanels(query, values));
 
 function onMessage(text, port) {
   let msg;
@@ -652,7 +733,8 @@ registerAction({
       key: 'source', label: 'Source', kind: 'Select', default: 'library',
       options: [{ value: 'library', label: 'Voicemod library' }, { value: 'community', label: 'Community' }, { value: 'mine', label: 'My soundboards' }],
     },
-    { key: 'fileName', label: 'Sound', kind: 'Select', searchable: true, optionsSource: 'sounds', dependsOn: ['source'], default: '' },
+    { key: 'panel', label: 'Panel', kind: 'Select', searchable: true, optionsSource: 'panels', dependsOn: ['source'], default: '' },
+    { key: 'fileName', label: 'Sound', kind: 'Select', searchable: true, optionsSource: 'sounds', dependsOn: ['source', 'panel'], default: '' },
   ],
   run(context, settings) {
     const value = String(settings.fileName || '').trim();
