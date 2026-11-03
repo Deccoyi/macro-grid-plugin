@@ -250,10 +250,10 @@ function readVoices(obj) {
   return out;
 }
 
-// Every soundboard the app returns is listed: custom and disabled ones too (a disabled sound is marked in its label). The docs spell the keys
+// Every soundboard the app returns is listed: your own and disabled ones too (a disabled sound is marked in its label). The docs spell the keys
 // both ways (id / Id, name / Name), so both are read. Only exact duplicates (same id) are dropped.
 const pick = (o, ...keys) => { for (const k of keys) if (o && o[k] !== undefined && o[k] !== null) return o[k]; return undefined; };
-// An id is a text or a number (a custom item may carry a numeric one); anything else has no id.
+// An id is a text or a number (an item may carry a numeric one); anything else has no id.
 const idOf = (v) => (typeof v === 'string' && v ? v : typeof v === 'number' && Number.isFinite(v) ? String(v) : '');
 
 // Each sound is classified on its own (its isCustom flag, not only the board's): a sound the person added from the community has isCustom = true,
