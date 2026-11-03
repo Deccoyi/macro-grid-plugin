@@ -8,7 +8,7 @@ Controls the Voicemod app on this PC: switch the voice changer on and off, mute 
 
 - Windows, with the Voicemod app installed and running.
 - Your own Voicemod Control API key. Voicemod gives it to each person who asks; Macro Grid cannot include one. How to get a key: <https://deccoyi.github.io/macro-grid/tutorials/voicemod>
-- Macro Grid 1.6.0 or newer (the key is a protected setting from that version on).
+- Macro Grid 1.6.0 or newer (the key is a protected setting and the voice and sound pickers come with that version).
 
 ## Setup
 
@@ -18,11 +18,13 @@ Controls the Voicemod app on this PC: switch the voice changer on and off, mute 
 
 ## Actions
 
-Toggle voice changer, Toggle microphone mute, Toggle hear myself, Toggle background effect, Refresh voice list, Load voice (by id), Random voice, Play sound (by file name), Stop all sounds.
+Toggle voice changer, Toggle microphone mute, Toggle hear myself, Toggle background effect, Load voice, Random voice, Play sound, Stop all sounds, Refresh lists.
+
+**Load voice** and **Play sound** show a search box over the voices and sounds of the Voicemod app. Favorites come first, then (voices) the last ones you used, then everything A-Z; sounds are grouped by soundboard. The lists are read once when the plugin connects (use **Refresh lists** to read them again) and are kept in memory only. If a voice or sound was removed from the app, the action says so.
 
 ## Variables
 
-`voicechanger.enabled`, `voicechanger.micmuted`, `voicechanger.voice` (the current voice id) and `voicechanger.voices` (all voices as `id=name` pairs, filled by **Refresh voice list**).
+`voicechanger.enabled`, `voicechanger.micmuted`, `voicechanger.voice` (the current voice id).
 
 ## Privacy
 
@@ -40,7 +42,7 @@ A JavaScript plugin runs under fixed limits of the Macro Grid server (`JsPluginL
 | Timers | 20, shortest 100 ms | `every`/`after` throws | 2 timers, 1 s tick |
 | Open web sockets | 2 | `connect` throws, P103 line | 1, closed before the next is opened |
 | Web socket connects | 10 a minute | `connect` throws, P103 line | at most 8, at least 7 s apart |
-| Incoming message | 64 KB | that socket is closed, P103 line | no large reply is requested on its own; the voice list (about 33 KB for 200 voices) only by **Refresh voice list**; a closed socket turns it off with a message |
+| Incoming message | 64 KB, or `limits.wsMessageKB` in `plugin.json` for a `localhost` socket after the person approved it | that socket is closed, P103 line | this plugin asks for **256 KB** (provisional, until the sizes of a real Voicemod are measured): the voice list is about 33 KB for 200 voices, 500 sounds are about 134 KB; the lists are read one at a time, never `getMemes` or `getBitmap`; a closed socket turns that list off with a message |
 | Incoming messages | 50 a second | the read waits, nothing is lost | events are cheap; unchanged variable values are not written again |
 | Outgoing messages | 20 a second, 32 waiting, 64 KB each | `send` throws, P103 line | at most 10 a second, a button pressed faster is refused with a message |
 | Variable name | own id as prefix, at most 120 characters | the call throws | `voicechanger.*` |

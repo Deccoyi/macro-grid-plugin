@@ -22,7 +22,6 @@ host.variables.describe([
   { name: 'voicechanger.enabled', description: 'Whether the voice changer is on', example: 'true', type: 'boolean', category: 'Voice Changer' },
   { name: 'voicechanger.micmuted', description: 'Whether the microphone is muted in the app', example: 'false', type: 'boolean', category: 'Voice Changer' },
   { name: 'voicechanger.voice', description: 'The id of the current voice', example: 'nofx', category: 'Voice Changer' },
-  { name: 'voicechanger.voices', description: 'The voices of the app as "id=name" pairs (use an id with "Load voice")', example: 'nofx=Clean, baby=Baby', category: 'Voice Changer' },
 ]);
 
 host.settings.page([
@@ -43,8 +42,13 @@ const state = {
   nextId: 1,
   registerId: null,
   connects: [], // timestamps of the connects of the last minute
-  bulkPending: false, // a getVoices reply is awaited: the host closes a socket when one message is over 64 KB
-  voicesTooBig: false,
+  // The voice and sound lists live in memory only. A big reply is read because plugin.json asks the host for a larger message limit; when the host
+  // still closes the socket on a reply (the limit is reached), that list is switched off until "Refresh lists".
+  lists: { voices: null, sounds: null },
+  tooBig: { voices: false, sounds: false },
+  pending: null, // the list whose reply is awaited
+  queue: [],
+  recent: [], // the last voices used, newest first
   sends: [], // timestamps of the messages sent in the last second
   lastStatus: '',
   lastLog: 0,
@@ -141,11 +145,12 @@ function onClose(socket) {
   if (state.rejectedKey !== null && state.rejectedKey === state.keyUsed) return; // the 401 message is already shown
   state.attempts = wasRegistered ? 0 : state.attempts + 1;
   state.nextAt = Date.now() + (state.attempts > SLOW_AFTER ? RETRY_SLOW_MS : RETRY_MS);
-  if (state.bulkPending) {
-    state.bulkPending = false;
-    state.voicesTooBig = true;
-    setStatus('a reply was over 64 KB, voice list off', 'Warning');
-    host.diagnostics.report('warning', 'A reply of the Voicemod app was over 64 KB, more than Macro Grid accepts from a web socket, so the voice list is switched off.', 'voicechanger-big');
+  if (state.pending) {
+    state.tooBig[state.pending] = true;
+    state.pending = null;
+    state.queue = [];
+    setStatus('a reply was too large, a list is off', 'Warning');
+    host.diagnostics.report('warning', 'A reply of the Voicemod app was larger than the web socket message limit of this plugin (limits.wsMessageKB in plugin.json), so that list is switched off. "Refresh lists" tries again.', 'voicechanger-big');
     return;
   }
   setStatus('Voicemod is not running (start the app)', 'Warning');
@@ -163,6 +168,96 @@ function pickObject(msg) {
   return msg.actionObject || msg.payload || {};
 }
 
+// ---- the voice and sound lists ----
+
+const MAX_ITEMS = 5000;
+const clip = (v, n) => String(v === undefined || v === null ? '' : v).slice(0, n);
+
+function readVoices(obj) {
+  const out = [];
+  for (const v of Array.isArray(obj.voices) ? obj.voices : []) {
+    if (out.length >= MAX_ITEMS) break;
+    const id = v && (v.id || v.voiceID || v.voiceId);
+    if (typeof id === 'string' && id) out.push({ id, name: clip(v.friendlyName || v.name || id, 100), favorite: v.favorited === true });
+  }
+  return out;
+}
+
+function readSounds(obj) {
+  const out = [];
+  for (const board of Array.isArray(obj.soundboards) ? obj.soundboards : []) {
+    for (const sd of board && Array.isArray(board.sounds) ? board.sounds : []) {
+      if (out.length >= MAX_ITEMS) return out;
+      if (sd && typeof sd.id === 'string' && sd.id) out.push({ id: sd.id, name: clip(sd.name || sd.id, 100), board: clip(board.name || 'Sounds', 60), favorite: sd.favorited === true || sd.isFavorite === true });
+    }
+  }
+  return out;
+}
+
+function pushRecent(id) {
+  state.recent = [id].concat(state.recent.filter((r) => r !== id)).slice(0, 10);
+}
+
+// One list at a time, so two big replies never arrive together.
+function queueLists() {
+  state.queue = ['voices', 'sounds'].filter((k) => !state.tooBig[k]);
+  loadNext();
+}
+
+function loadNext() {
+  if (state.pending || !state.registered) return;
+  const kind = state.queue.shift();
+  if (!kind) return;
+  state.pending = kind;
+  if (!send(kind === 'voices' ? 'getVoices' : 'getAllSoundboard', {})) { state.pending = null; state.queue = []; }
+}
+
+function listDone(kind) {
+  if (state.pending === kind) state.pending = null;
+  loadNext();
+}
+
+const byName = (a, b) => (a.name.toLowerCase() < b.name.toLowerCase() ? -1 : a.name.toLowerCase() > b.name.toLowerCase() ? 1 : 0);
+
+// The options of the editor's search box: favorites first, then (voices) the last ones used, then the rest A-Z; sounds are grouped by soundboard.
+function searchOptions(kind, query) {
+  const list = state.lists[kind];
+  if (!list) {
+    if (state.tooBig[kind]) return { options: [], error: 'This list is too large for the message limit of the plugin. Raise limits.wsMessageKB in plugin.json.' };
+    if (!currentKey()) return { options: [], error: 'Enter your Voicemod Control API key in the plugin settings.' };
+    if (!state.registered) return { options: [], error: 'Voicemod is not running or not connected. Start the app and try again.' };
+    return { options: [], error: 'The list is loading, try again in a moment.' };
+  }
+  const text = String((query && query.text) || '').toLowerCase();
+  const limit = Math.max(1, Math.min(50, Number(query && query.limit) || 50));
+  const offset = Math.max(0, Number(query && query.offset) || 0);
+  const selected = query && typeof query.selected === 'string' && query.selected ? query.selected : null;
+  const section = (item) => (item.favorite ? 'Favorites' : kind === 'voices' ? (state.recent.includes(item.id) ? 'Recent' : 'All voices') : item.board);
+  let items = list.slice();
+  if (text) items = items.filter((i) => i.name.toLowerCase().includes(text) || i.id.toLowerCase().includes(text));
+  const rank = (i) => (i.favorite ? 0 : kind === 'voices' && !text && state.recent.includes(i.id) ? 1 : 2);
+  const boards = [];
+  for (const i of items) if (i.board && !boards.includes(i.board)) boards.push(i.board);
+  items.sort((a, b) => {
+    const r = rank(a) - rank(b);
+    if (r) return r;
+    if (rank(a) === 1) return state.recent.indexOf(a.id) - state.recent.indexOf(b.id);
+    if (kind === 'sounds' && !text && rank(a) === 2) { const g = boards.indexOf(a.board) - boards.indexOf(b.board); if (g) return g; }
+    return byName(a, b);
+  });
+  const found = selected ? list.find((i) => i.id === selected) : null;
+  let page = items.slice(offset, offset + limit);
+  let more = offset + limit < items.length;
+  if (found && offset === 0 && !text && !page.some((i) => i.id === found.id)) {
+    page = [found].concat(page.slice(0, limit - 1));
+    more = limit - 1 < items.length;
+  }
+  return { options: page.map((i) => ({ value: i.id, label: i.name, group: section(i) })), more, selectedMissing: selected ? !found : false };
+}
+
+host.options.source('voices', (query) => searchOptions('voices', query));
+host.options.source('sounds', (query) => searchOptions('sounds', query));
+
 function onMessage(text, port) {
   let msg;
   try { msg = JSON.parse(text); } catch (e) { return; }
@@ -178,13 +273,14 @@ function onMessage(text, port) {
   const key = name.toLowerCase();
   if (key === 'voicechangedevent' || key === 'getcurrentvoice') {
     const id = obj.voiceID !== undefined ? obj.voiceID : obj.voiceId !== undefined ? obj.voiceId : obj.currentVoice;
-    if (typeof id === 'string') setVar('voicechanger.voice', id);
+    if (typeof id === 'string') { setVar('voicechanger.voice', id); pushRecent(id); }
   } else if (key === 'getvoices') {
-    state.bulkPending = false;
     if (typeof msg.currentVoice === 'string') setVar('voicechanger.voice', msg.currentVoice);
-    const list = Array.isArray(obj.voices) ? obj.voices : [];
-    const pairs = list.map((v) => (v.id || v.voiceID || v.voiceId) + '=' + (v.friendlyName || v.name || '')).filter((p) => p.length > 1);
-    if (pairs.length) setVar('voicechanger.voices', pairs.join(', '));
+    state.lists.voices = readVoices(obj);
+    listDone('voices');
+  } else if (key === 'getallsoundboard') {
+    state.lists.sounds = readSounds(obj);
+    listDone('sounds');
   } else if (typeof obj.value === 'boolean') {
     // toggle... events and get...Status answers; the meme sound "mute for me" switch is not the microphone.
     if (key.includes('voicechanger')) setVar('voicechanger.enabled', obj.value);
@@ -206,6 +302,7 @@ function onRegister(msg, port) {
     send('getCurrentVoice');
     send('getVoiceChangerStatus');
     send('getMuteMicStatus');
+    queueLists();
     return;
   }
   if (code === 401) {
@@ -242,43 +339,46 @@ function tick() {
 // ---- actions ----
 
 function run(action, payload, after) {
-  if (!currentKey()) return { ok: false, code: 'Unavailable', message: 'Enter your Voicemod Control API key in the plugin settings.' };
-  if (!state.registered) return { ok: false, code: 'Unavailable', message: 'Not connected to the Voicemod app. Start Voicemod and check the plugin status.' };
+  if (!currentKey()) return { ok: false, code: 'NotConfigured', message: 'Enter your Voicemod Control API key in the plugin settings.' };
+  if (!state.registered) return { ok: false, code: 'NotConnected', message: 'Not connected to the Voicemod app. Start Voicemod and check the plugin status.' };
   if (!send(action, payload)) return { ok: false, code: 'Unavailable', message: 'Too many commands at once. Try again in a moment.' };
   if (after) send(after);
   return { ok: true };
 }
 
-function toggle(type, name, action, after) {
-  host.registerAction({ type: 'voicechanger.' + type, name, category: 'Voice Changer', description: 'Sends ' + action + ' to the Voicemod app.', fields: [], run: () => run(action, {}, after) });
+function toggle(type, name, description, action, after) {
+  host.registerAction({ type: 'voicechanger.' + type, name, category: 'Voice Changer', description, fields: [], run: () => run(action, {}, after) });
 }
 
-toggle('togglevoicechanger', 'Toggle voice changer', 'toggleVoiceChanger', 'getVoiceChangerStatus');
-toggle('togglemute', 'Toggle microphone mute', 'toggleMuteMic', 'getMuteMicStatus');
-toggle('togglehearmyself', 'Toggle hear myself', 'toggleHearMyVoice');
-toggle('togglebackground', 'Toggle background effect', 'toggleBackground');
-toggle('stopsounds', 'Stop all sounds', 'stopAllMemeSounds');
+toggle('togglevoicechanger', 'Toggle voice changer', 'Switches the voice changer on or off.', 'toggleVoiceChanger', 'getVoiceChangerStatus');
+toggle('togglemute', 'Toggle microphone mute', 'Mutes or unmutes the microphone in the Voicemod app.', 'toggleMuteMic', 'getMuteMicStatus');
+toggle('togglehearmyself', 'Toggle hear myself', 'Switches hearing your own voice on or off.', 'toggleHearMyVoice');
+toggle('togglebackground', 'Toggle background effect', 'Switches the background effect on or off.', 'toggleBackground');
+toggle('stopsounds', 'Stop all sounds', 'Stops every sound that is playing.', 'stopAllMemeSounds');
 
 host.registerAction({
   type: 'voicechanger.loadvoice', name: 'Load voice', category: 'Voice Changer',
-  description: 'Loads a voice by its id. Run "Refresh voice list" once, then read the ids from the variable voicechanger.voices.',
-  fields: [{ key: 'voiceID', label: 'Voice id', kind: 'Text', default: '' }],
+  description: 'Loads a voice. Search the voices of the app by name.',
+  fields: [{ key: 'voiceID', label: 'Voice', kind: 'Select', searchable: true, optionsSource: 'voices', default: '' }],
   run(context, settings) {
     const voiceID = String(settings.voiceID || '').trim();
-    if (!voiceID) return { ok: false, code: 'ProviderError', message: 'Enter a voice id.' };
-    return run('loadVoice', { voiceID }, 'getCurrentVoice');
+    if (!voiceID) return { ok: false, code: 'NotConfigured', message: 'Choose a voice.' };
+    if (state.lists.voices && !state.lists.voices.some((v) => v.id === voiceID)) return { ok: false, code: 'NotFound', message: 'This voice is not in the Voicemod app any more. Choose another.' };
+    const result = run('loadVoice', { voiceID }, 'getCurrentVoice');
+    if (result.ok) pushRecent(voiceID);
+    return result;
   },
 });
 
 host.registerAction({
-  type: 'voicechanger.refreshvoices', name: 'Refresh voice list', category: 'Voice Changer',
-  description: 'Reads the voice ids into the variable voicechanger.voices. A reply over 64 KB is closed by Macro Grid, so this is not done on its own.',
+  type: 'voicechanger.refreshvoices', name: 'Refresh lists', category: 'Voice Changer',
+  description: 'Reads the voices and sounds of the Voicemod app again (they are read when the plugin connects).',
   fields: [],
   run() {
-    if (state.voicesTooBig) return { ok: false, code: 'Unavailable', message: 'The voice list of this Voicemod app is too large for Macro Grid (over 64 KB).' };
-    const result = run('getVoices', {});
-    if (result.ok) state.bulkPending = true;
-    return result;
+    if (!state.registered) return run('getVoices', {});
+    state.tooBig = { voices: false, sounds: false };
+    queueLists();
+    return { ok: true };
   },
 });
 
@@ -297,11 +397,12 @@ host.registerAction({
 
 host.registerAction({
   type: 'voicechanger.playsound', name: 'Play sound', category: 'Voice Changer',
-  description: 'Plays a Voicemod meme sound by its file name.',
-  fields: [{ key: 'fileName', label: 'Sound file name', kind: 'Text', default: '' }],
+  description: 'Plays a sound of the Voicemod app. Search the sounds by name.',
+  fields: [{ key: 'fileName', label: 'Sound', kind: 'Select', searchable: true, optionsSource: 'sounds', default: '' }],
   run(context, settings) {
     const FileName = String(settings.fileName || '').trim();
-    if (!FileName) return { ok: false, code: 'ProviderError', message: 'Enter the sound file name.' };
+    if (!FileName) return { ok: false, code: 'NotConfigured', message: 'Choose a sound.' };
+    if (state.lists.sounds && !state.lists.sounds.some((v) => v.id === FileName)) return { ok: false, code: 'NotFound', message: 'This sound is not in the Voicemod app any more. Choose another.' };
     return run('playMeme', { FileName, IsKeyDown: true });
   },
 });

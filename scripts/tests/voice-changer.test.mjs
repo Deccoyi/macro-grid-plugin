@@ -12,13 +12,18 @@ import { fileURLToPath } from 'node:url';
 
 const pluginDir = path.join(path.dirname(fileURLToPath(import.meta.url)), '../../VoiceChangerControl');
 const script = fs.readFileSync(path.join(pluginDir, 'index.js'), 'utf8');
+const manifest = JSON.parse(fs.readFileSync(path.join(pluginDir, 'plugin.json'), 'utf8'));
+const CAP = manifest.limits.wsMessageKB * 1024; // the host closes a socket on a message over this
 const GUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
 const KEY = 'secret-test-key';
 
 // ---- fake Voicemod ----
 function frame(text) {
   const body = Buffer.from(text);
-  const head = body.length < 126 ? Buffer.from([0x81, body.length]) : Buffer.from([0x81, 126, body.length >> 8, body.length & 255]);
+  let head;
+  if (body.length < 126) head = Buffer.from([0x81, body.length]);
+  else if (body.length < 65536) head = Buffer.from([0x81, 126, body.length >> 8, body.length & 255]);
+  else { head = Buffer.alloc(10); head[0] = 0x81; head[1] = 127; head.writeBigUInt64BE(BigInt(body.length), 2); }
   return Buffer.concat([head, body]);
 }
 
@@ -75,7 +80,7 @@ function loadPlugin({ portMap, apiKey = KEY }) {
   let now = 1_000_000;
   const settings = { apiKey };
   let open = 0, maxOpen = 0;
-  const varWrites = {};
+  const varWrites = {}, sources = {};
   const vars = {}, statuses = [], reports = [], actions = {}, every = [], connectPorts = [], clientSockets = [];
   const host = {
     variables: { describe() {}, set: (n, v) => { vars[n] = v; varWrites[n] = (varWrites[n] || 0) + 1; } },
@@ -85,6 +90,7 @@ function loadPlugin({ portMap, apiKey = KEY }) {
     registerAction: (a) => { actions[a.type] = a; },
     every: (ms, fn) => every.push(fn),
     after() {},
+    options: { source: (id, fn) => { sources[id] = fn; } },
     log() {},
     ws: {
       connect(url, handlers) {
@@ -99,8 +105,8 @@ function loadPlugin({ portMap, apiKey = KEY }) {
         clientSockets.push(ws);
         open++; maxOpen = Math.max(maxOpen, open); // the host counts a socket from connect to close
         ws.onopen = () => handlers.onOpen();
-        // the host closes a socket that receives a message of more than 64 KB
-        ws.onmessage = (e) => { if (String(e.data).length > 64 * 1024) ws.close(1009); else handlers.onMessage(String(e.data)); };
+        // the host closes a socket that receives a message over the limit of plugin.json
+        ws.onmessage = (e) => { if (String(e.data).length > CAP) ws.close(1000); else handlers.onMessage(String(e.data)); };
         ws.onclose = () => { open--; handlers.onClose({ code: 1000, reason: '', error: null }); };
         ws.onerror = () => {};
         return { send: (t) => { if (ws.readyState !== 1) throw new Error('The web socket is closed.'); ws.send(t); }, close: () => ws.close() };
@@ -109,7 +115,7 @@ function loadPlugin({ portMap, apiKey = KEY }) {
   };
   vm.runInNewContext(script, { host, Date: { now: () => now }, JSON, Number, String, Array, Math });
   return {
-    varWrites, maxOpen: () => maxOpen, open: () => open,
+    varWrites, sources, maxOpen: () => maxOpen, open: () => open,
     vars, statuses, reports, actions, settings, connectPorts,
     tick: () => every[0](),
     advance: (ms) => { now += ms; },
@@ -266,44 +272,7 @@ test('connects stay under the host limit of 10 a minute, also after a dropped se
   assert.ok(perMinute <= 8.5, 'connects a minute: ' + perMinute);
 });
 
-test('no big reply is asked for on its own; refresh asks for the voices only when told to', async () => {
-  const { fake, plugin } = await connected();
-  try {
-    await wait(() => plugin.last()?.level === 'Ok', 'connected');
-    await wait(() => fake.received.some((m) => m.action === 'getMuteMicStatus'), 'queries');
-    const asked = fake.received.map((m) => m.action);
-    for (const bad of ['getVoices', 'getMemes', 'getBitmap', 'getAllSoundboard']) assert.ok(!asked.includes(bad), bad);
-    plugin.actions['voicechanger.refreshvoices'].run({}, {});
-    await wait(() => fake.received.some((m) => m.action === 'getVoices'), 'getVoices on request');
-    // about 200 voices as the docs show them: well under the 64 KB cap
-    const voices = Array.from({ length: 200 }, (_, i) => ({ id: 'voice' + i, friendlyName: 'Voice number ' + i, enabled: true, isCustom: false, favorited: false, isNew: false, bitmapChecksum: '9af56b7cb7a87db7b9d4e93852599981' }));
-    const reply = JSON.stringify({ actionType: 'getVoices', actionObject: { voices }, currentVoice: 'nofx' });
-    assert.ok(reply.length < 64 * 1024, 'size ' + reply.length);
-    fake.push(JSON.parse(reply));
-    await wait(() => plugin.vars['voicechanger.voices']?.startsWith('voice0=Voice number 0'), 'voice list');
-    assert.equal(plugin.vars['voicechanger.voice'], 'nofx');
-  } finally { plugin.stop(); fake.close(); }
-});
 
-test('an oversized reply: the host closes the socket, the plugin says why and stops asking', async () => {
-  const { fake, plugin } = await connected();
-  try {
-    await wait(() => plugin.last()?.level === 'Ok', 'connected');
-    plugin.actions['voicechanger.refreshvoices'].run({}, {});
-    await wait(() => fake.received.some((m) => m.action === 'getVoices'), 'getVoices sent');
-    const sounds = Array.from({ length: 700 }, (_, i) => ({ id: 'voice' + i, friendlyName: 'Voice number ' + i, bitmapChecksum: '9af56b7cb7a87db7b9d4e93852599981', pad: 'x'.repeat(40) }));
-    const big = JSON.stringify({ actionType: 'getVoices', actionObject: { voices: sounds } });
-    assert.ok(big.length > 64 * 1024, 'size ' + big.length);
-    fake.push(JSON.parse(big));
-    await wait(() => /over 64 KB/.test(plugin.last().text), 'too large status');
-    assert.equal(plugin.last().level, 'Warning');
-    assert.equal(plugin.open(), 0);
-    assert.equal(plugin.actions['voicechanger.refreshvoices'].run({}, {}).ok, false);
-    plugin.advance(7000); plugin.tick(); // the plugin still reconnects, with the voice list off
-    await wait(() => plugin.last().level === 'Ok', 'reconnected');
-    assert.equal(plugin.actions['voicechanger.refreshvoices'].run({}, {}).ok, false);
-  } finally { plugin.stop(); fake.close(); }
-});
 
 test('a message that cannot be read does not throw out of the callback', async () => {
   const { fake, plugin } = await connected();
@@ -342,17 +311,6 @@ test('limits: an event flood writes each variable once while its value stays the
   } finally { plugin.stop(); fake.close(); }
 });
 
-test('limits: a very long variable value is cut, the voice list stays bounded', async () => {
-  const { fake, plugin } = await connected();
-  try {
-    await wait(() => plugin.last()?.level === 'Ok', 'connected');
-    plugin.actions['voicechanger.refreshvoices'].run({}, {});
-    const voices = Array.from({ length: 900 }, (_, i) => ({ id: 'voice' + i, friendlyName: 'Voice number ' + i }));
-    fake.push({ actionType: 'getVoices', actionObject: { voices } }); // about 40 KB: under the cap, over our own value cap
-    await wait(() => plugin.vars['voicechanger.voices'], 'voice list');
-    assert.ok(plugin.vars['voicechanger.voices'].length <= 8000);
-  } finally { plugin.stop(); fake.close(); }
-});
 
 test('limits: pressing a button very fast sends at most 10 messages a second and never throws', async () => {
   const { fake, plugin } = await connected();
@@ -389,4 +347,145 @@ test('limits: names, timers and permissions stay inside the host rules', () => {
   for (const n of names) assert.ok(n.length <= 120 && /^[A-Za-z0-9._-]+$/.test(n));
   const timers = [...script.matchAll(/host\.(every|after)\(/g)];
   assert.ok(timers.length <= 20);
+});
+
+// ---- voice and sound lists, search sources ----
+const VOICES = [
+  { id: 'baby', friendlyName: 'Baby', favorited: false },
+  { id: 'deep', friendlyName: 'Deep', favorited: true },
+  { id: 'robot', friendlyName: 'Robot', favorited: false },
+  { id: 'alien', friendlyName: 'Alien', favorited: false },
+];
+const SOUNDBOARDS = [
+  { id: 'b1', name: 'Funny', sounds: [{ id: 's-laugh', name: 'Laugh' }, { id: 's-airhorn', name: 'Air horn' }] },
+  { id: 'b2', name: 'Alerts', sounds: [{ id: 's-nuke', name: 'Nuke alert' }] },
+];
+
+async function withLists() {
+  const ctx = await connected();
+  await wait(() => ctx.fake.received.some((m) => m.action === 'getVoices'), 'getVoices asked');
+  ctx.fake.push({ actionType: 'getVoices', actionObject: { voices: VOICES }, currentVoice: 'baby' });
+  await wait(() => ctx.fake.received.some((m) => m.action === 'getAllSoundboard'), 'getAllSoundboard asked after the voices');
+  ctx.fake.push({ actionType: 'getAllSoundboard', actionObject: { soundboards: SOUNDBOARDS } });
+  await wait(() => ctx.plugin.sources.sounds({ text: '' }).options.length > 0, 'sound list');
+  return ctx;
+}
+
+test('lists: voices then sounds, one at a time; no meme list and no bitmap is ever asked for', async () => {
+  const { fake, plugin } = await connected();
+  try {
+    await wait(() => fake.received.some((m) => m.action === 'getVoices'), 'getVoices');
+    await new Promise((r) => setTimeout(r, 100));
+    assert.ok(!fake.received.some((m) => m.action === 'getAllSoundboard'), 'the second list waits for the first reply');
+    fake.push({ actionType: 'getVoices', actionObject: { voices: VOICES } });
+    await wait(() => fake.received.some((m) => m.action === 'getAllSoundboard'), 'second list');
+    const asked = fake.received.map((m) => m.action);
+    for (const bad of ['getMemes', 'getBitmap']) assert.ok(!asked.includes(bad), bad);
+  } finally { plugin.stop(); fake.close(); }
+});
+
+test('voices source: favorites first, then recent, then A-Z; search; paging; selected', async () => {
+  const { fake, plugin } = await withLists();
+  try {
+    const all = plugin.sources.voices({ text: '', offset: 0, limit: 50 });
+    assert.deepEqual([...all.options.map((o) => o.label)], ['Deep', 'Alien', 'Baby', 'Robot']);
+    assert.deepEqual([...all.options.map((o) => o.group)], ['Favorites', 'All voices', 'All voices', 'All voices']);
+    assert.equal(all.more, false);
+    // a voice that was just used moves up, under "Recent"
+    fake.push({ actionType: 'voiceChangedEvent', actionObject: { voiceID: 'robot' } });
+    await wait(() => plugin.vars['voicechanger.voice'] === 'robot', 'voice event');
+    assert.deepEqual([...plugin.sources.voices({ text: '' }).options.map((o) => o.label)], ['Deep', 'Robot', 'Alien', 'Baby']);
+    assert.equal(plugin.sources.voices({ text: '' }).options[1].group, 'Recent');
+    assert.deepEqual([...plugin.sources.voices({ text: 'RO' }).options.map((o) => o.label)], ['Robot']);
+    const p1 = plugin.sources.voices({ text: '', offset: 0, limit: 2 });
+    assert.equal(p1.options.length, 2); assert.equal(p1.more, true);
+    assert.equal(plugin.sources.voices({ text: '', offset: 2, limit: 2 }).more, false);
+    assert.equal(plugin.sources.voices({ text: '', selected: 'alien', limit: 50 }).selectedMissing, false);
+    assert.equal(plugin.sources.voices({ text: '', selected: 'gone' }).selectedMissing, true);
+    assert.ok(plugin.sources.voices({ text: '', selected: 'baby', offset: 0, limit: 2 }).options.some((o) => o.value === 'baby'), 'the selected voice is on the first page');
+    assert.ok(plugin.sources.voices({ text: '', limit: 9999 }).options.length <= 50);
+  } finally { plugin.stop(); fake.close(); }
+});
+
+test('sounds source: grouped by soundboard, searchable', async () => {
+  const { fake, plugin } = await withLists();
+  try {
+    const all = plugin.sources.sounds({ text: '' });
+    assert.deepEqual([...all.options.map((o) => o.group + '/' + o.label)], ['Funny/Air horn', 'Funny/Laugh', 'Alerts/Nuke alert']);
+    assert.deepEqual([...plugin.sources.sounds({ text: 'nuke' }).options.map((o) => o.value)], ['s-nuke']);
+  } finally { plugin.stop(); fake.close(); }
+});
+
+test('sources: clear errors when no key, not running, loading', async () => {
+  const noKey = loadPlugin({ portMap: {}, apiKey: '' });
+  assert.match(noKey.sources.voices({ text: '' }).error, /API key/);
+  const down = loadPlugin({ portMap: {} });
+  assert.match(down.sources.sounds({ text: '' }).error, /not running/);
+  const { fake, plugin } = await connected();
+  try {
+    await wait(() => plugin.last()?.level === 'Ok', 'connected');
+    assert.match(plugin.sources.voices({ text: '' }).error, /loading/);
+  } finally { plugin.stop(); fake.close(); }
+});
+
+test('actions: NotFound for a removed voice or sound, the id of a listed one is sent', async () => {
+  const { fake, plugin } = await withLists();
+  try {
+    plugin.advance(1100);
+    assert.equal(plugin.actions['voicechanger.loadvoice'].run({}, { voiceID: 'gone' }).code, 'NotFound');
+    assert.equal(plugin.actions['voicechanger.playsound'].run({}, { fileName: 'gone' }).code, 'NotFound');
+    assert.equal(plugin.actions['voicechanger.loadvoice'].run({}, { voiceID: '' }).code, 'NotConfigured');
+    assert.equal(plugin.actions['voicechanger.loadvoice'].run({}, { voiceID: 'alien' }).ok, true);
+    assert.equal(plugin.actions['voicechanger.playsound'].run({}, { fileName: 's-laugh' }).ok, true);
+    await wait(() => fake.received.some((m) => m.action === 'playMeme'), 'playMeme');
+    assert.deepEqual(fake.received.find((m) => m.action === 'playMeme').payload, { FileName: 's-laugh', IsKeyDown: true });
+    assert.deepEqual(fake.received.find((m) => m.action === 'loadVoice').payload, { voiceID: 'alien' });
+  } finally { plugin.stop(); fake.close(); }
+});
+
+test('actions: the pickers are searchable fields with an options source', () => {
+  const plugin = loadPlugin({ portMap: {} });
+  for (const [type, key, source] of [['voicechanger.loadvoice', 'voiceID', 'voices'], ['voicechanger.playsound', 'fileName', 'sounds']]) {
+    const field = plugin.actions[type].fields.find((x) => x.key === key);
+    assert.equal(field.kind, 'Select'); assert.equal(field.searchable, true); assert.equal(field.optionsSource, source);
+  }
+});
+
+test('an oversized reply (over the plugin.json limit): the host closes the socket, that list goes off, Refresh lists tries again', async () => {
+  const { fake, plugin } = await connected();
+  try {
+    await wait(() => fake.received.some((m) => m.action === 'getVoices'), 'getVoices');
+    const voices = Array.from({ length: 4000 }, (_, i) => ({ id: 'voice' + i, friendlyName: 'Voice number ' + i, bitmapChecksum: '9af56b7cb7a87db7b9d4e93852599981', pad: 'x'.repeat(40) }));
+    const big = JSON.stringify({ actionType: 'getVoices', actionObject: { voices } });
+    assert.ok(big.length > CAP, 'size ' + big.length);
+    fake.push(JSON.parse(big));
+    await wait(() => /too large/.test(plugin.last().text), 'too large status');
+    assert.equal(plugin.open(), 0);
+    plugin.advance(7000); plugin.tick();
+    await wait(() => plugin.last().level === 'Ok', 'reconnected');
+    await wait(() => fake.received.filter((m) => m.action === 'getAllSoundboard').length === 1, 'only the sounds are asked for');
+    assert.equal(fake.received.filter((m) => m.action === 'getVoices').length, 1, 'the big list is not asked for again');
+    fake.push({ actionType: 'getAllSoundboard', actionObject: { soundboards: [] } });
+    assert.match(plugin.sources.voices({ text: '' }).error, /too large/);
+    plugin.advance(1100);
+    assert.equal(plugin.actions['voicechanger.refreshvoices'].run({}, {}).ok, true);
+    await wait(() => fake.received.filter((m) => m.action === 'getVoices').length === 2, 'asked again after Refresh lists');
+  } finally { plugin.stop(); fake.close(); }
+});
+
+test('a realistic soundboard list of 500 sounds (about 134 KB) fits the limit and is searchable', async () => {
+  const { fake, plugin } = await connected();
+  try {
+    await wait(() => fake.received.some((m) => m.action === 'getVoices'), 'getVoices');
+    fake.push({ actionType: 'getVoices', actionObject: { voices: VOICES } });
+    await wait(() => fake.received.some((m) => m.action === 'getAllSoundboard'), 'second list');
+    const sounds = Array.from({ length: 500 }, (_, i) => ({ id: 'ad6efa6b-1111-2222-3333-4444555566' + String(i).padStart(2, '0'), name: 'Sound ' + i, isCustom: false, enabled: true, playbackMode: 'PlayRestart', loop: false, muteOtherSounds: false, muteVoice: false, showProLogo: false, bitmapChecksum: '14-04-DB-12-50-09-25-14-18-C5-62-2D-4A-AB-8D-31' }));
+    const reply = JSON.stringify({ actionType: 'getAllSoundboard', actionObject: { soundboards: [{ id: 'x', name: 'Mine', sounds }] } });
+    assert.ok(reply.length > 64 * 1024 && reply.length < CAP, 'size ' + reply.length);
+    fake.push(JSON.parse(reply));
+    await wait(() => plugin.sources.sounds({ text: '' }).options.length > 0, 'sound list');
+    const first = plugin.sources.sounds({ text: '', limit: 50 });
+    assert.equal(first.options.length, 50); assert.equal(first.more, true);
+    assert.equal(plugin.sources.sounds({ text: 'Sound 49', limit: 50 }).options.length, 11);
+  } finally { plugin.stop(); fake.close(); }
 });
