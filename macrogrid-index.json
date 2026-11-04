@@ -68,6 +68,19 @@
                         "kind":  "csharp",
                         "versions":  [
                                          {
+                                             "version":  "0.4.1",
+                                             "minMacroGrid":  "1.4.0",
+                                             "sdkVersion":  "^0.4.0",
+                                             "minServerVersion":  "0.3.2",
+                                             "url":  "https://github.com/Deccoyi/macro-grid-plugin/releases/download/plugin-obs-v0.4.1/obs-0.4.1.zip",
+                                             "sha256":  "69306172185ce2a89fd1acecf5a8ffdb7806f2d5e65f43522f3a136536d261de",
+                                             "size":  51119,
+                                             "permissions":  [
+
+                                                             ],
+                                             "signature":  "pqApWVr0Dn4LS41so3Bnc/WpYuq2bW6x9K1RtCPGg+B0TN6cLDoFYUuvSgIWsnR4F4LdVuHk2ZtMPnIGqDHEuQ=="
+                                         },
+                                         {
                                              "version":  "0.4.0",
                                              "minMacroGrid":  "1.4.0",
                                              "sdkVersion":  "^0.4.0",
