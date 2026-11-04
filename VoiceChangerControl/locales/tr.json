@@ -4,7 +4,6 @@
   "Whether the microphone is muted in the app": "Mikrofon uygulamada sessize alınmış mı",
   "The id of the current voice": "Geçerli sesin kimliği",
   "Unofficial": "Resmi değil",
-  "This plugin works with the Voicemod app on this PC. It is an independent plugin and is not made, endorsed or affiliated with Voicemod. Voicemod is a trademark of its owner. It needs your own Voicemod Control API key.": "Bu eklenti bu bilgisayardaki Voicemod uygulamasıyla çalışır. Bağımsız bir eklentidir; Voicemod tarafından yapılmamıştır, onaylanmamıştır ve Voicemod ile bir bağlantısı yoktur. Voicemod, sahibinin ticari markasıdır. Kendi Voicemod Control API anahtarınız gerekir.",
   "API key": "API anahtarı",
   "Your own Voicemod Control API key. How to get a key: https://deccoyi.github.io/macro-grid/tutorials/voicemod": "Kendi Voicemod Control API anahtarınız. Anahtar nasıl alınır: https://deccoyi.github.io/macro-grid/tutorials/voicemod",
   "Toggle voice changer": "Ses değiştiriciyi aç/kapat",
@@ -36,5 +35,10 @@
   "Panel": "Panel",
   "All panels": "Tüm paneller",
   "Soundboards": "Ses tahtalarım",
-  "There are no sounds in this source.": "Bu kaynakta ses yok."
+  "There are no sounds in this source.": "Bu kaynakta ses yok.",
+  "Sound missing? Voicemod only shows newly added sounds after it is restarted.": "Ses eksik mi? Voicemod yeni eklenen sesleri ancak yeniden başlatıldıktan sonra gösterir.",
+  "There are no sounds in this source. Sound missing? Voicemod only shows newly added sounds after it is restarted.": "Bu kaynakta ses yok. Ses eksik mi? Voicemod yeni eklenen sesleri ancak yeniden başlatıldıktan sonra gösterir.",
+  "Reads the voices and sounds of the Voicemod app again (they are read when the plugin connects). Sound missing? Voicemod only shows newly added sounds after it is restarted.": "Voicemod uygulamasındaki sesleri ve ses efektlerini yeniden okur (eklenti bağlanınca bir kez okunurlar). Ses eksik mi? Voicemod yeni eklenen sesleri ancak yeniden başlatıldıktan sonra gösterir.",
+  "This plugin works with the Voicemod app on this PC. Unofficial plugin. Not affiliated with, endorsed by or sponsored by Voicemod. Voicemod is a trademark of its owner. It needs your own Voicemod Control API key.": "Bu eklenti bu bilgisayardaki Voicemod uygulamasıyla çalışır. Resmi olmayan eklenti. Voicemod ile bağlantılı değildir, Voicemod tarafından onaylanmamış veya desteklenmemiştir. Voicemod, sahibinin ticari markasıdır. Kendi Voicemod Control API anahtarınız gerekir.",
+  "Controls the Voicemod app on this PC. Unofficial plugin. Not affiliated with, endorsed by or sponsored by Voicemod. Voicemod is a trademark of its owner. Needs your own Voicemod Control API key.": "Bu bilgisayardaki Voicemod uygulamasını denetler. Resmi olmayan eklenti. Voicemod ile bağlantılı değildir, Voicemod tarafından onaylanmamış veya desteklenmemiştir. Voicemod, sahibinin ticari markasıdır. Kendi Voicemod Control API anahtarınız gerekir."
 }
