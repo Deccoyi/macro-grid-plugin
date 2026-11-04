@@ -17,6 +17,7 @@ public sealed partial class ObsConnection
             ObsConnectionState.Reconnecting => ($"OBS · retrying in {retryIn?.TotalSeconds:0}s", StatusLevel.Warning),
             ObsConnectionState.WaitingForObs => ("OBS · not running", StatusLevel.Idle),
             ObsConnectionState.AuthFailed => ("OBS · wrong password", StatusLevel.Error),
+            ObsConnectionState.PasswordUnreadable => ("OBS · saved password could not be read on this computer, enter it again in the plugin settings", StatusLevel.Error),
             _ => ("OBS · error", StatusLevel.Error),
         };
         store.Set("obs.status", text);

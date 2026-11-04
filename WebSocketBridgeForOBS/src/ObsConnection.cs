@@ -4,7 +4,7 @@ using MacroGrid.Plugin.Abstractions;
 
 namespace MacroGrid.Plugin.Obs;
 
-public enum ObsConnectionState { Disabled, Connecting, Connected, Reconnecting, WaitingForObs, AuthFailed, Error }
+public enum ObsConnectionState { Disabled, Connecting, Connected, Reconnecting, WaitingForObs, AuthFailed, PasswordUnreadable, Error }
 
 /// <summary>
 /// Owns the (re)connecting OBS WebSocket connection for the whole plugin lifetime: an

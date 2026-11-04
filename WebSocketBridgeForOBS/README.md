@@ -77,7 +77,8 @@ the message is shown on the phone and in the editor's status bar.
 - The handshake and every request have timeouts. If the connection drops, the plugin retries with a growing, jittered wait from 2 up to
   30 seconds.
 - A wrong password or a version mismatch (obs-websocket close codes 4009, 4010 and 4012) stops the retries until the settings change, and
-  shows "wrong password" instead of retrying forever and filling the log.
+  shows "wrong password" instead of retrying forever and filling the log. If the saved password cannot be decrypted on this computer
+  (another Windows user, a restored backup), the status says it could not be read and asks you to enter it again.
 - When OBS announces that it is closing, the connection is closed at once instead of waiting for a TCP timeout.
 - Stream, recording and statistics are polled with a single batched request (every second while streaming or recording, every five seconds
   otherwise). Scenes, inputs, profiles and the rest are kept up to date from OBS events, never polled.
