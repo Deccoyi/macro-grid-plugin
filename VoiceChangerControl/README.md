@@ -2,7 +2,9 @@
 
 Controls the Voicemod app on this PC: switch the voice changer on and off, mute the microphone, load a voice, pick a random voice and play sounds, from a button.
 
-> **Unofficial.** This plugin works with the Voicemod app on this PC. It is an independent plugin and is not made, endorsed or affiliated with Voicemod. Voicemod is a trademark of its owner. It needs your own Voicemod Control API key.
+> **Unofficial plugin. Not affiliated with, endorsed by or sponsored by Voicemod. Voicemod is a trademark of its owner.** Türkçe: Resmi olmayan eklenti. Voicemod ile bağlantılı değildir, Voicemod tarafından onaylanmamış veya desteklenmemiştir. Voicemod, sahibinin ticari markasıdır.
+>
+> This plugin works with the Voicemod app on this PC. It needs your own Voicemod Control API key.
 
 ## Requirements
 

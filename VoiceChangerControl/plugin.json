@@ -1,7 +1,7 @@
 {
   "id": "voicechanger",
   "name": "Voice Changer Control",
-  "description": "Controls the Voicemod app on this PC. Independent plugin, not made, endorsed or affiliated with Voicemod. Needs your own Voicemod Control API key.",
+  "description": "Controls the Voicemod app on this PC. Unofficial plugin. Not affiliated with, endorsed by or sponsored by Voicemod. Voicemod is a trademark of its owner. Needs your own Voicemod Control API key.",
   "category": "Audio",
   "tags": [
     "voice",

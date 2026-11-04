@@ -977,6 +977,28 @@ test('panels: the second dropdown lists the boards of the chosen source with the
   } finally { plugin.stop(); fake.close(); }
 });
 
+test('panels: a sound shared by two boards counts and shows in each board, and is listed once under All panels', async () => {
+  const { fake, plugin } = await connected();
+  try {
+    await wait(() => fake.received.some((m) => m.action === 'getVoices'), 'getVoices');
+    fake.push({ actionType: 'getVoices', actionObject: { voices: VOICES } });
+    await wait(() => fake.received.some((m) => m.action === 'getAllSoundboard'), 'sounds asked');
+    const fah = { id: 'fah', name: 'FAH' };
+    fake.push({ actionType: 'getAllSoundboard', actionObject: { soundboards: [
+      { id: 'b1', name: 'Memes', isCustom: false, sounds: [fah, { id: 'm1', name: 'Bruh' }] },
+      { id: 'b2', name: 'Anime Soundboard', isCustom: false, sounds: [{ id: 'n1', name: 'Naruto' }, fah, { id: 'n2', name: 'Sasuke' }] },
+    ] } });
+    await wait(() => plugin.sources.panels({ text: '' }, { source: 'library' }).options.length > 0, 'panels');
+    const labels = [...plugin.sources.panels({ text: '', limit: 50 }, { source: 'library' }).options.map((o) => o.label)];
+    assert.deepEqual(labels, ['All panels', 'Anime Soundboard (3)', 'Memes (2)']);
+    const sounds = (values) => [...plugin.sources.sounds({ text: '', limit: 50 }, values).options.map((o) => o.value)].sort();
+    assert.deepEqual(sounds({ source: 'library', panel: 'b2' }), ['fah', 'n1', 'n2'], 'the count equals what the panel shows');
+    assert.deepEqual(sounds({ source: 'library', panel: 'b1' }), ['fah', 'm1']);
+    assert.deepEqual(sounds({ source: 'library', panel: '*all' }), ['fah', 'm1', 'n1', 'n2'], 'listed once under All panels');
+    assert.deepEqual(sounds({ source: 'library' }).length, 4);
+  } finally { plugin.stop(); fake.close(); }
+});
+
 test('refresh contract: query.refresh reads the list again, answers at once with refreshing, then the new sound is found; old servers (no flag) and no connection work', async () => {
   const { fake, plugin } = await connected();
   try {

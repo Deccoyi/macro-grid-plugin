@@ -44,7 +44,7 @@ host.variables.describe([
 // A boolean variable shows Açık/Kapalı by default; the text of a widget can pick its own words, for example {voicechanger.enabled|ON/OFF}.
 
 host.settings.page([
-  { key: 'notice', label: 'Unofficial', kind: 'Notice', description: 'This plugin works with the Voicemod app on this PC. It is an independent plugin and is not made, endorsed or affiliated with Voicemod. Voicemod is a trademark of its owner. It needs your own Voicemod Control API key.' },
+  { key: 'notice', label: 'Unofficial', kind: 'Notice', description: 'This plugin works with the Voicemod app on this PC. Unofficial plugin. Not affiliated with, endorsed by or sponsored by Voicemod. Voicemod is a trademark of its owner. It needs your own Voicemod Control API key.' },
   { key: 'apiKey', label: 'API key', kind: 'Password', description: 'Your own Voicemod Control API key. How to get a key: ' + TUTORIAL_URL },
 ]);
 
@@ -264,7 +264,7 @@ const idOf = (v) => (typeof v === 'string' && v ? v : typeof v === 'number' && N
 function readSounds(obj) {
   beginRead('sound:');
   const out = [];
-  const seen = new Set();
+  const seen = new Map(); // source|id -> the listed item; a sound shared by boards is listed once and remembers every board it is in
   for (const board of Array.isArray(obj.soundboards) ? obj.soundboards : (Array.isArray(obj.Soundboards) ? obj.Soundboards : [])) {
     const boardName = clip(pick(board, 'name', 'Name') || 'Sounds', 60);
     const boardOff = pick(board, 'enabled', 'Enabled') === false;
@@ -283,9 +283,11 @@ function readSounds(obj) {
       // The same name is not a duplicate (two sounds may share a name); the same id twice in one source is.
       for (const source of sources) {
         if (out.length >= MAX_ITEMS) return out;
-        if (seen.has(source + '|' + id)) continue;
-        seen.add(source + '|' + id);
-        out.push({ id, name: off ? name + ' (disabled)' : name, board: boardName, boardKey, source, file: fileKey || '', favorite: sd.favorited === true || sd.isFavorite === true, image: imageRef('sound:' + enc(id), 'sound', id, typeof sd.bitmapChecksum === 'string' ? sd.bitmapChecksum : '') });
+        const twin = seen.get(source + '|' + id);
+        if (twin) { if (!twin.boards.some((b) => b.key === boardKey)) twin.boards.push({ key: boardKey, name: boardName }); continue; }
+        const item = { id, name: off ? name + ' (disabled)' : name, board: boardName, boardKey, boards: [{ key: boardKey, name: boardName }], source, file: fileKey || '', favorite: sd.favorited === true || sd.isFavorite === true, image: imageRef('sound:' + enc(id), 'sound', id, typeof sd.bitmapChecksum === 'string' ? sd.bitmapChecksum : '') };
+        seen.set(source + '|' + id, item);
+        out.push(item);
       }
     }
   }
@@ -366,7 +368,7 @@ function textMatcher(raw) {
   const words = lower.split(/\s+/);
   const folded = fold(lower).split(/\s+/);
   return (item) => {
-    const own = item.name + ' ' + (item.board || '');
+    const own = item.name + ' ' + (item.boards ? item.boards.map((b) => b.name).join(' ') : item.board || '');
     if (item.id.toLowerCase().includes(lower)) return true;
     const plain = own.toLowerCase();
     if (!item.hay) item.hay = fold(own);
@@ -374,6 +376,7 @@ function textMatcher(raw) {
   };
 }
 
+const STALE_HINT = 'Sound missing? Voicemod only shows newly added sounds after it is restarted.'; // the app's Control API lists a new custom sound only after the app restarts; Refresh lists cannot change that
 const ALL_PANELS = '*all'; // the host drops an option with an empty value, so "All panels" has its own value; an empty or missing panel means all too
 
 // Why a list cannot be shown yet.
@@ -400,10 +403,13 @@ function panelsOf(source) {
   const r = soundList(source);
   if (!r.list) return r;
   const map = new Map();
+  // A sound shared by several boards counts in each of them, as the app does; the sounds list shows it in each of them too.
   for (const i of r.list) {
-    const g = map.get(i.boardKey) || { key: i.boardKey, name: i.board, count: 0 };
-    g.count++;
-    map.set(i.boardKey, g);
+    for (const b of i.boards) {
+      const g = map.get(b.key) || { key: b.key, name: b.name, count: 0 };
+      g.count++;
+      map.set(b.key, g);
+    }
   }
   return { panels: [...map.values()].sort((a, b) => (a.name.toLowerCase() < b.name.toLowerCase() ? -1 : a.name.toLowerCase() > b.name.toLowerCase() ? 1 : 0)), need: r.need };
 }
@@ -471,14 +477,14 @@ function optionAnswer(kind, query, values) {
   let list = kind === 'sounds' ? found0.list : state.lists[kind];
   if (!list) return notReady(kind, kind === 'sounds' ? found0.need : [kind]);
   if (list.length === 0) {
-    if (kind === 'sounds' && source) return { options: [], error: 'There are no sounds in this source.' };
+    if (kind === 'sounds' && source) return { options: [], error: 'There are no sounds in this source. ' + STALE_HINT };
     if (state.registered && !state.pending && Date.now() - state.lastEmptyRefresh > EMPTY_REFRESH_MS) { state.lastEmptyRefresh = Date.now(); queueLists(); }
     return { options: [], error: 'Voicemod has no entries in this list yet. If you just added some, try again in a moment.' };
   }
   // A panel that does not belong to the source (the source was changed and the editor kept the old panel) is ignored.
   const panel = kind === 'sounds' && values && typeof values.panel === 'string' ? values.panel : '';
-  const panelKey = panel && panel !== ALL_PANELS && list.some((i) => i.boardKey === panel) ? panel : '';
-  if (panelKey) list = list.filter((i) => i.boardKey === panelKey);
+  const panelKey = panel && panel !== ALL_PANELS && list.some((i) => i.boards.some((b) => b.key === panel)) ? panel : '';
+  if (panelKey) list = list.filter((i) => i.boards.some((b) => b.key === panelKey));
   const match = textMatcher(query && query.text);
   const { limit, offset, selected } = readQuery(query);
   const section = (item) => (item.favorite ? 'Favorites' : kind === 'voices' ? (state.recent.includes(item.id) ? 'Recent' : 'All voices') : panelKey ? undefined : item.board);
@@ -742,7 +748,7 @@ registerAction({
 
 registerAction({
   type: 'voicechanger.refreshvoices', name: 'Refresh lists', category: 'Voice Changer',
-  description: 'Reads the voices and sounds of the Voicemod app again (they are read when the plugin connects).',
+  description: 'Reads the voices and sounds of the Voicemod app again (they are read when the plugin connects). ' + STALE_HINT,
   fields: [],
   run() {
     if (!state.registered) return run('getVoices', {});
@@ -776,7 +782,7 @@ registerAction({
       options: [{ value: 'library', label: 'Voicemod' }, { value: 'mine', label: 'Soundboards' }],
     },
     { key: 'panel', label: 'Panel', kind: 'Select', searchable: true, optionsSource: 'panels', dependsOn: ['source'], default: '' },
-    { key: 'fileName', label: 'Sound', kind: 'Select', searchable: true, optionsSource: 'sounds', dependsOn: ['source', 'panel'], default: '' },
+    { key: 'fileName', label: 'Sound', kind: 'Select', description: STALE_HINT, searchable: true, optionsSource: 'sounds', dependsOn: ['source', 'panel'], default: '' },
   ],
   run(context, settings) {
     const value = String(settings.fileName || '').trim();
