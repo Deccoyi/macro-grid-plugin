@@ -19,6 +19,10 @@ public sealed class ObsSettings
     public int Port { get; set; } = 4455;
     public string Password { get; set; } = "";
 
+    /// <summary>True when a saved password exists but the host could not decrypt it (other Windows user, restored
+    /// backup, moved machine); <see cref="Password"/> is then empty.</summary>
+    public bool PasswordUnreadable { get; private set; }
+
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web) { WriteIndented = true };
 
     public static ObsSettings LoadOrCreate(IPluginHost host)
@@ -45,7 +49,11 @@ public sealed class ObsSettings
             };
 
             if (node["protectedPassword"]?.GetValue<string>() is { Length: > 0 } protectedPassword)
-                settings.Password = host.Secrets.Unprotect(protectedPassword) ?? "";
+            {
+                var plain = host.Secrets.Unprotect(protectedPassword);
+                settings.Password = plain ?? "";
+                settings.PasswordUnreadable = plain is null;
+            }
             else if (node["password"]?.GetValue<string>() is { Length: > 0 } legacyPlainPassword)
                 settings.Password = legacyPlainPassword; // pre-migration file; Save() below writes it protected next time
 

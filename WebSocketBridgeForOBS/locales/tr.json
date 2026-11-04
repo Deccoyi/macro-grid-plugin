@@ -88,6 +88,7 @@
   "OBS · connected": "OBS · bağlı",
   "OBS · not running": "OBS · çalışmıyor",
   "OBS · wrong password": "OBS · şifre hatalı",
+  "OBS · saved password could not be read on this computer, enter it again in the plugin settings": "OBS · kayıtlı şifre bu bilgisayarda okunamadı, eklenti ayarlarında yeniden girin",
   "OBS · error": "OBS · hata",
   "Enabled": "Etkin",
   "Host": "Sunucu",
