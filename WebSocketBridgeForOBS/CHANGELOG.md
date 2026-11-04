@@ -3,6 +3,8 @@
 New features and fixes in the OBS plugin. For technical details, see [CHANGELOG-developer.md](CHANGELOG-developer.md).
 
 ## Unreleased
+
+## 0.4.1 - 2026-11-05
 ### Fixed
 - **Unreadable password:** if the saved OBS password cannot be read on this computer, the status now says so and asks you to enter it again, instead of "wrong password".
 

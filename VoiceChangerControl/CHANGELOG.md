@@ -3,6 +3,8 @@
 New features and fixes in the Voice Changer Control plugin. For technical details, see [CHANGELOG-developer.md](CHANGELOG-developer.md).
 
 ## Unreleased
+
+## 0.2.0 - 2026-11-05
 ### New
 - **Better search:** the search ignores accents and Turkish letters and also finds panel names.
 - **Panel counts:** a sound that is in two panels is counted and shown in both, and appears once under all panels.
