@@ -274,6 +274,45 @@
                                      "widget",
                                      "forecast"
                                  ]
+                    },
+                    {
+                        "id":  "voicechanger",
+                        "name":  "Voice Changer Control",
+                        "description":  "Controls the Voicemod app on this PC. Unofficial plugin. Not affiliated with, endorsed by or sponsored by Voicemod. Voicemod is a trademark of its owner. Needs your own Voicemod Control API key.",
+                        "author":  "Deccoyi",
+                        "homepage":  "https://github.com/Deccoyi/macro-grid-plugin/tree/main/VoiceChangerControl",
+                        "kind":  "js",
+                        "versions":  [
+                                         {
+                                             "version":  "0.2.0",
+                                             "minMacroGrid":  "1.6.0",
+                                             "url":  "https://github.com/Deccoyi/macro-grid-plugin/releases/download/plugin-voicechanger-v0.2.0/voicechanger-0.2.0.zip",
+                                             "sha256":  "de9230cc2c2478adefc700e0d98e69b83bebc6bddf6fee5412580a47fc8493c2",
+                                             "size":  24673,
+                                             "permissions":  [
+                                                                 "variables",
+                                                                 "actions",
+                                                                 "ws:localhost:59129",
+                                                                 "ws:localhost:20000",
+                                                                 "ws:localhost:39273",
+                                                                 "ws:localhost:42152",
+                                                                 "ws:localhost:43782",
+                                                                 "ws:localhost:46667",
+                                                                 "ws:localhost:35679",
+                                                                 "ws:localhost:37170",
+                                                                 "ws:localhost:38501",
+                                                                 "ws:localhost:33952",
+                                                                 "ws:localhost:30546"
+                                                             ],
+                                             "signature":  "TSec3ErdjxHGsiR0WDZ6oIz28e33XdRKlEUoTJt/NcJ/MPShDxIAbNi2vDyQ+BZG4sEeVkvNngUKOEsiLJu8pw=="
+                                         }
+                                     ],
+                        "category":  "Audio",
+                        "tags":  [
+                                     "voice",
+                                     "microphone",
+                                     "voicemod"
+                                 ]
                     }
                 ]
 }
