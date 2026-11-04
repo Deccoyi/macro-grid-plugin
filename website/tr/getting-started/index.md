@@ -54,5 +54,5 @@ Aynı olaya bağlanan birden çok aksiyon art arda çalışır; bu da bir makro 
 ## 4. Eklentiler
 
 Eklenti kurmak için Düzenleyici'de **Eklentiler, Eklentileri Yönet…** yolunu açın. Eklentiler, aksiyon seçiciye yeni aksiyonlar ve metin alanlarındaki
-`{...}` seçiciye yeni değişkenler ekler. Bu depodaki eklentiler (OBS kontrolü, PLC simgeleri, SoundBoard, bir JavaScript hello
+`{...}` seçiciye yeni değişkenler ekler. Bu depodaki eklentiler (OBS kontrolü, PLC simgeleri, SoundBoard, bir hava durumu widget'ı, Voice Changer Control, bir JavaScript hello
 world) [Kılavuzlar](/tr/guides/obs-plugin) bölümünde anlatılır ve [kendinizinkini yazabilirsiniz](/tr/tutorials/js-hello-world).

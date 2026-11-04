@@ -142,6 +142,7 @@ What the labels mean. New issues get `needs-triage` and the area on their own; t
 | `plugin: plc-icons` | The PLC Icons plugin |
 | `plugin: hello-js` | The JavaScript example plugin |
 | `plugin: weather` | The WeatherPlugin plugin |
+| `plugin: voicechanger` | The Voice Changer Control plugin |
 | `area: sdk` | The plugin SDK and its docs |
 | `area: store` | The plugin store website |
 | `area: docs-site` | The documentation website |

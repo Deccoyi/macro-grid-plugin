@@ -55,6 +55,11 @@
     "description": "The WeatherPlugin plugin"
   },
   {
+    "name": "plugin: voicechanger",
+    "color": "5319e7",
+    "description": "The Voice Changer Control plugin"
+  },
+  {
     "name": "area: sdk",
     "color": "1d76db",
     "description": "The plugin SDK and its docs"

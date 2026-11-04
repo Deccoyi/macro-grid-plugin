@@ -67,7 +67,7 @@ public sealed partial class ObsConnection
             catch (ObsAuthException ex) when (IsHardAuthFailure(ex.CloseStatus))
             {
                 host.Log($"OBS authentication failed, not retrying until the settings change: {ex.Message}");
-                SetState(store, ObsConnectionState.AuthFailed);
+                SetState(store, settings.PasswordUnreadable ? ObsConnectionState.PasswordUnreadable : ObsConnectionState.AuthFailed);
                 if (!await WaitForSettingsChangeAsync(cancellationToken)) break;
                 continue; // skip the backoff delay below — retry immediately with the new settings.
             }

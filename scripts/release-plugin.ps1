@@ -19,7 +19,7 @@
   ./scripts/release-plugin.ps1 -Name hellojs -Publish   # also release and update the index
 #>
 param(
-    [Parameter(Mandatory)] [ValidateSet('obs', 'plc-icons', 'hellojs', 'soundboard', 'streamtexts', 'weather')] [string]$Name,
+    [Parameter(Mandatory)] [ValidateSet('obs', 'plc-icons', 'hellojs', 'soundboard', 'streamtexts', 'weather', 'voicechanger')] [string]$Name,
     [string]$KeyPath = (Join-Path $env:USERPROFILE 'signing\plugin-signing\plugin-signing-private.pem'),
     [string]$OutDir = (Join-Path ([System.IO.Path]::GetTempPath()) 'macrogrid-plugin-release'),
     # A server repository checkout to build the SDK from, when the sibling ..\macro-grid is not at MacroGridSdkVersion
@@ -40,6 +40,7 @@ $plugins = @{
     'soundboard' = @{ dir = 'SoundBoard'; proj = 'SoundBoard/src/MacroGrid.Plugin.SoundBoard.csproj' }
     'streamtexts' = @{ dir = 'StreamTexts'; proj = 'StreamTexts/src/MacroGrid.Plugin.StreamTexts.csproj' }
     'weather'   = @{ dir = 'WeatherPlugin'; proj = '' }
+    'voicechanger' = @{ dir = 'VoiceChangerControl'; proj = '' }
 }
 $entry = $plugins[$Name]
 $owner = 'Deccoyi'

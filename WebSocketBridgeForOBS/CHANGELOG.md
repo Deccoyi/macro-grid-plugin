@@ -4,6 +4,10 @@ New features and fixes in the OBS plugin. For technical details, see [CHANGELOG-
 
 ## Unreleased
 
+## 0.4.1 - 2026-11-05
+### Fixed
+- **Unreadable password:** if the saved OBS password cannot be read on this computer, the status now says so and asks you to enter it again, instead of "wrong password".
+
 ## 0.4.0 - 2026-10-30
 ### New
 - **Clear results:** when an OBS action does not work, Macro Grid now says why (OBS not connected, nothing chosen, not found, refused, no answer).

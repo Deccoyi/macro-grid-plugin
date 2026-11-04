@@ -175,6 +175,32 @@ public sealed class ObsConnectionTests
         await Task.WhenAny(run, Task.Delay(2000));
     }
 
+    [Fact(Timeout = 15_000)]
+    public async Task Unreadable_saved_password_is_reported_instead_of_wrong_password()
+    {
+        await using var server = new FakeObsServer();
+        server.Start(async (conn, ct) =>
+        {
+            await conn.SendHelloAsync(authSalt: "s4lt==", authChallenge: "ch4llenge==", ct: ct);
+            await conn.ReceiveAsync(ct);
+            await conn.CloseAsync(4009, "wrong password", ct);
+        });
+
+        var (dataDir, host, store) = NewFixture(server.Port);
+        // A stored value the host cannot decrypt (the fake returns null for anything it did not protect).
+        File.WriteAllText(Path.Combine(dataDir, "settings.json"),
+            $$"""{ "enabled": true, "host": "127.0.0.1", "port": {{server.Port}}, "protectedPassword": "not-decryptable" }""");
+        var connection = new ObsConnection(host);
+        using var cts = new CancellationTokenSource();
+        var run = connection.RunAsync(store, cts.Token);
+
+        await WaitUntilAsync(() => ((string?)store.Get("obs.status"))?.Contains("could not be read") == true, TimeSpan.FromSeconds(5),
+            "expected the unreadable-password status after an auth failure");
+
+        cts.Cancel();
+        await Task.WhenAny(run, Task.Delay(2000));
+    }
+
     [Fact(Timeout = 20_000)]
     public async Task Unresponsive_server_times_out_and_then_reconnects()
     {

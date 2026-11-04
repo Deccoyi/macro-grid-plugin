@@ -9,7 +9,7 @@ assignees: ""
 
 Plugin version: [e.g. 0.2.1]  <!-- plugin.json or the Manage Plugins window -->
 Server version: [e.g. 0.2.1]
-Plugin: [obs / plc-icons / hello-js / weather / other]
+Plugin: [obs / plc-icons / hello-js / weather / voicechanger / other]
 What happened: [one or two sentences]
 What I expected: [one sentence]
 Steps: 1. [...]  2. [...]  3. [...]

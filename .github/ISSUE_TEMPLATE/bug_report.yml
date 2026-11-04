@@ -15,6 +15,7 @@ body:
         - PLCIcons
         - HelloJs
         - WeatherPlugin
+        - Voice Changer Control
         - Other or not sure
     validations:
       required: true
