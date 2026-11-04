@@ -806,8 +806,8 @@ test('variables: state is the status text; lasterror holds a failure and is clea
     assert.equal(plugin.vars['voicechanger.lasterror'], '');
     assert.equal(plugin.actions['voicechanger.loadvoice'].run({}, { voiceID: '' }).ok, false);
     assert.match(plugin.vars['voicechanger.lasterror'], /Choose a voice/);
-    const queries = fake.received.map((m) => m.action);
-    for (const q of ['getHearMyselfStatus', 'getBackgroundEffectStatus', 'getMuteMemeForMeStatus']) assert.ok(queries.includes(q), q);
+    // The status queries follow the register reply, so they are awaited, not read at once.
+    for (const q of ['getHearMyselfStatus', 'getBackgroundEffectStatus', 'getMuteMemeForMeStatus']) await wait(() => fake.received.some((m) => m.action === q), q);
   } finally { plugin.stop(); fake.close(); }
 });
 
