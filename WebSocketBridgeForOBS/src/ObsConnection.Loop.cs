@@ -1,6 +1,6 @@
-using System.Diagnostics;
 using System.Net;
 using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using System.Net.WebSockets;
 using MacroGrid.Plugin.Abstractions;
 
@@ -28,11 +28,11 @@ public sealed partial class ObsConnection
                 continue;
             }
 
-            if (failures >= FailuresBeforeProcessCheck && IsLocalHost(settings.Host) && !IsObsProcessRunning())
+            if (failures >= FailuresBeforeProcessCheck && IsLocalHost(settings.Host) && !await IsObsListeningAsync(settings, cancellationToken))
             {
                 SetState(store, ObsConnectionState.WaitingForObs);
                 LogOnce("OBS is not running; connection attempts are paused until it starts.");
-                if (!await WaitForObsProcessAsync(cancellationToken)) break;
+                if (!await WaitForObsListeningAsync(settings, cancellationToken)) break;
                 backoff = InitialBackoff;
                 failures = 0;
                 continue;
@@ -147,33 +147,39 @@ public sealed partial class ObsConnection
         }
     }
 
-    /// <summary>One look at the process list for all the names (each lookup by name takes its own snapshot of every
-    /// process on the machine). Every returned process is disposed, or its handle would leak on each check.</summary>
-    private static bool IsObsProcessRunning()
+    /// <summary>Connects to the OBS WebSocket port and closes at once, with no handshake, so OBS logs nothing. A closed
+    /// local port is refused immediately, which is far cheaper than listing every process on the machine.</summary>
+    private static async Task<bool> IsObsListeningAsync(ObsSettings settings, CancellationToken cancellationToken)
     {
-        var processes = Process.GetProcesses();
+        using var probe = new TcpClient();
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeout.CancelAfter(ProbeTimeout);
         try
         {
-            foreach (var p in processes)
-                if (ObsProcessNames.Contains(p.ProcessName, StringComparer.OrdinalIgnoreCase)) return true;
-            return false;
+            await probe.ConnectAsync(settings.Host, settings.Port, timeout.Token);
+            return true;
         }
-        finally
+        catch (Exception ex) when (ex is SocketException or OperationCanceledException or ArgumentException)
         {
-            foreach (var p in processes) p.Dispose();
+            cancellationToken.ThrowIfCancellationRequested();
+            return false;
         }
     }
 
-    /// <summary>Polls for the OBS process instead of the port — cheap, silent, and returns as soon as OBS
-    /// starts (or the user changes settings, e.g. points to another host).</summary>
-    private async Task<bool> WaitForObsProcessAsync(CancellationToken cancellationToken)
+    /// <summary>Probes the port instead of the process list — cheap, silent, and returns as soon as OBS
+    /// listens (or the user changes settings, e.g. points to another host).</summary>
+    private async Task<bool> WaitForObsListeningAsync(ObsSettings settings, CancellationToken cancellationToken)
     {
-        while (!IsObsProcessRunning())
+        try
         {
-            var woke = await WaitOrSettingsChangedAsync(ProcessPollInterval, cancellationToken);
-            if (woke is null) return false;
-            if (woke == true) return true;
+            while (!await IsObsListeningAsync(settings, cancellationToken))
+            {
+                var woke = await WaitOrSettingsChangedAsync(ProcessPollInterval, cancellationToken);
+                if (woke is null) return false;
+                if (woke == true) return true;
+            }
         }
+        catch (OperationCanceledException) { return false; }
         return true;
     }
 

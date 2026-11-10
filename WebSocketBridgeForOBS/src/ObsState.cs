@@ -149,9 +149,7 @@ public sealed class ObsState
             }
         }
 
-        var sceneItems = new Dictionary<string, List<ObsSceneItem>>(StringComparer.Ordinal);
-        foreach (var scene in scenes)
-            sceneItems[scene] = await FetchSceneItemsAsync(client, scene, cancellationToken);
+        var sceneItems = await FetchAllSceneItemsAsync(client, scenes, cancellationToken);
 
         var transitions = new List<string>();
         var transitionList = await client.RequestAsync("GetSceneTransitionList", null, cancellationToken);
@@ -173,38 +171,67 @@ public sealed class ObsState
         }
     }
 
-    private async Task<List<ObsSceneItem>> FetchSceneItemsAsync(ObsClient client, string sceneName, CancellationToken cancellationToken)
+    private const int MaxBatchSize = 50;
+
+    /// <summary>Scene items for every scene in a few batched requests: one batch for all scenes, then one per
+    /// group nesting level. Batch results are matched to their request by position (they all carry the same
+    /// requestType). A failed entry (scene or group vanished mid-refresh) counts as empty.</summary>
+    private static async Task<Dictionary<string, List<ObsSceneItem>>> FetchAllSceneItemsAsync(ObsClient client, List<string> scenes, CancellationToken cancellationToken)
     {
-        var result = new List<ObsSceneItem>();
-        await CollectSceneItemsAsync(client, sceneName, parentGroup: null, depth: 0, visited: [sceneName], result, cancellationToken);
+        var sceneResponses = await BatchItemListsAsync(client, "GetSceneItemList", scenes, cancellationToken);
+
+        // Groups are keyed by name only: a group's contents don't depend on the scene that shows it.
+        var groupResponses = new Dictionary<string, JsonArray>(StringComparer.Ordinal);
+        var level = sceneResponses.Values.ToList();
+        for (var depth = 1; depth <= MaxGroupDepth && level.Count > 0; depth++)
+        {
+            var names = level.SelectMany(GroupNames).Where(n => !groupResponses.ContainsKey(n)).Distinct(StringComparer.Ordinal).ToList();
+            if (names.Count == 0) break;
+            var fetched = await BatchItemListsAsync(client, "GetGroupSceneItemList", names, cancellationToken);
+            foreach (var (name, items) in fetched) groupResponses[name] = items;
+            level = fetched.Values.ToList();
+        }
+
+        var result = new Dictionary<string, List<ObsSceneItem>>(StringComparer.Ordinal);
+        foreach (var scene in scenes)
+        {
+            var into = new List<ObsSceneItem>();
+            Flatten(sceneResponses[scene], parentGroup: null, depth: 0, visited: [scene], groupResponses, into);
+            result[scene] = into;
+        }
         return result;
     }
 
-    private async Task CollectSceneItemsAsync(ObsClient client, string containerName, string? parentGroup, int depth, HashSet<string> visited, List<ObsSceneItem> into, CancellationToken cancellationToken)
+    private static IEnumerable<string> GroupNames(JsonArray items) =>
+        items.Select(n => n as JsonObject).Where(o => o.TryGetBool("isGroup")).Select(o => o.TryGetString("sourceName")).OfType<string>();
+
+    private static async Task<Dictionary<string, JsonArray>> BatchItemListsAsync(ObsClient client, string requestType, List<string> containers, CancellationToken cancellationToken)
+    {
+        var responses = new Dictionary<string, JsonArray>(StringComparer.Ordinal);
+        for (var start = 0; start < containers.Count; start += MaxBatchSize)
+        {
+            var chunk = containers.Skip(start).Take(MaxBatchSize).ToList();
+            var results = await client.RequestBatchAsync(
+                [.. chunk.Select(name => (requestType, (JsonObject?)new JsonObject { ["sceneName"] = name }))], cancellationToken);
+            for (var i = 0; i < chunk.Count; i++)
+                responses[chunk[i]] = i < results.Count && results[i].Success ? results[i].ResponseData.TryGetArray("sceneItems") ?? [] : [];
+        }
+        return responses;
+    }
+
+    private static void Flatten(JsonArray items, string? parentGroup, int depth, HashSet<string> visited, Dictionary<string, JsonArray> groupResponses, List<ObsSceneItem> into)
     {
         if (depth > MaxGroupDepth) return;
-        JsonObject response;
-        try
-        {
-            response = await client.RequestAsync(parentGroup is null ? "GetSceneItemList" : "GetGroupSceneItemList",
-                new JsonObject { ["sceneName"] = containerName }, cancellationToken);
-        }
-        catch (ObsRequestException)
-        {
-            return; // scene/group vanished mid-refresh — leave it out rather than fail the whole cache build.
-        }
-
-        foreach (var node in response.TryGetArray("sceneItems") ?? [])
+        foreach (var node in items)
         {
             var obj = node as JsonObject;
             var sourceName = obj.TryGetString("sourceName");
             if (sourceName is null) continue;
             var isGroup = obj.TryGetBool("isGroup");
-            var item = new ObsSceneItem(sourceName, obj.TryGetInt("sceneItemId"), isGroup, obj.TryGetBool("sceneItemEnabled", true), parentGroup);
-            into.Add(item);
+            into.Add(new ObsSceneItem(sourceName, obj.TryGetInt("sceneItemId"), isGroup, obj.TryGetBool("sceneItemEnabled", true), parentGroup));
 
-            if (isGroup && visited.Add(sourceName))
-                await CollectSceneItemsAsync(client, sourceName, sourceName, depth + 1, visited, into, cancellationToken);
+            if (isGroup && visited.Add(sourceName) && groupResponses.TryGetValue(sourceName, out var children))
+                Flatten(children, sourceName, depth + 1, visited, groupResponses, into);
         }
     }
 
