@@ -152,7 +152,7 @@ public sealed class ObsState
         var sceneItems = await FetchAllSceneItemsAsync(client, scenes, cancellationToken);
 
         var transitions = new List<string>();
-        var transitionList = await client.RequestAsync("GetSceneTransitionList", null, cancellationToken);
+        var transitionList = await RequestWhenReadyAsync(client, "GetSceneTransitionList", cancellationToken);
         foreach (var node in transitionList.TryGetArray("transitions") ?? [])
         {
             if ((node as JsonObject).TryGetString("transitionName") is { } name) transitions.Add(name);
@@ -168,6 +168,30 @@ public sealed class ObsState
             _inputMuted = muted;
             _inputVolumeDb = volumeDb;
             _hasData = true;
+        }
+    }
+
+    /// <summary>obs-websocket code for "OBS is not ready to handle the request" (seen during OBS start-up).</summary>
+    private const int NotReadyStatusCode = 207;
+    private const int NotReadyMaxTries = 5;
+
+    /// <summary>Pause between tries when OBS answers 207. Tests shorten it.</summary>
+    public static TimeSpan NotReadyRetryDelay { get; set; } = TimeSpan.FromSeconds(1);
+
+    /// <summary>Sends one request; on 207 ("not ready yet") retries a bounded number of times
+    /// (about 5 s in total) before giving up. Any other error is thrown at once.</summary>
+    private static async Task<JsonObject?> RequestWhenReadyAsync(ObsClient client, string requestType, CancellationToken cancellationToken)
+    {
+        for (var attempt = 1; ; attempt++)
+        {
+            try
+            {
+                return await client.RequestAsync(requestType, null, cancellationToken);
+            }
+            catch (ObsRequestException ex) when (ex.StatusCode == NotReadyStatusCode && attempt < NotReadyMaxTries)
+            {
+                await Task.Delay(NotReadyRetryDelay, cancellationToken);
+            }
         }
     }
 
