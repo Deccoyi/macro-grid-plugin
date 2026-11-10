@@ -27,7 +27,7 @@ public sealed class ObsConnectionTests
 
     /// <summary>Accepts one connection, does the Hello/Identify handshake (with or without auth), then
     /// answers RefreshAllAsync's startup RequestBatch so the connection reaches "Connected".</summary>
-    internal static async Task AcceptAndIdentifyAsync(FakeObsConnection conn, string? authSalt = null, string? authChallenge = null, Func<string, JsonObject>? responseDataFor = null, CancellationToken ct = default)
+    internal static async Task AcceptAndIdentifyAsync(FakeObsConnection conn, string? authSalt = null, string? authChallenge = null, Func<string, JsonObject>? responseDataFor = null, CancellationToken ct = default, int notReadyReplies = 0)
     {
         await conn.SendHelloAsync(authSalt, authChallenge, ct: ct);
         var (op, data) = await conn.ReceiveAsync(ct);
@@ -40,7 +40,7 @@ public sealed class ObsConnectionTests
         }
 
         await conn.SendIdentifiedAsync(ct);
-        await RespondToRefreshAllAsync(conn, ct, responseDataFor);
+        await RespondToRefreshAllAsync(conn, ct, responseDataFor, notReadyReplies);
     }
 
     /// <summary>
@@ -50,7 +50,7 @@ public sealed class ObsConnectionTests
     /// response succeeds with empty responseData unless <paramref name="responseDataFor"/> overrides it
     /// for a given requestType (e.g. to seed GetInputList with a fake input).
     /// </summary>
-    private static async Task RespondToRefreshAllAsync(FakeObsConnection conn, CancellationToken ct, Func<string, JsonObject>? responseDataFor = null)
+    private static async Task RespondToRefreshAllAsync(FakeObsConnection conn, CancellationToken ct, Func<string, JsonObject>? responseDataFor = null, int notReadyReplies = 0)
     {
         responseDataFor ??= static _ => [];
         while (true)
@@ -81,6 +81,11 @@ public sealed class ObsConnectionTests
                 {
                     var requestType = data["requestType"]?.GetValue<string>() ?? "";
                     Assert.Equal("GetSceneTransitionList", requestType); // the one single Request RefreshAllAsync sends
+                    if (notReadyReplies-- > 0)
+                    {
+                        await conn.RespondRequestAsync(data["requestId"]!.GetValue<string>(), requestType, success: false, code: 207, comment: "OBS is not ready", ct: ct);
+                        break;
+                    }
                     await conn.RespondRequestAsync(data["requestId"]!.GetValue<string>(), requestType, success: true, ct: ct);
                     return; // RefreshAllAsync's request sequence always ends here.
                 }
@@ -97,6 +102,32 @@ public sealed class ObsConnectionTests
         var host = new FakePluginHost(dataDir);
         new ObsSettings { Enabled = true, Host = "127.0.0.1", Port = port, Password = password }.Save(host);
         return (dataDir, host, new FakeVariableStore());
+    }
+
+    [Fact(Timeout = 10_000)]
+    public async Task Connects_on_first_try_when_transition_list_is_briefly_not_ready_207()
+    {
+        ObsState.NotReadyRetryDelay = TimeSpan.FromMilliseconds(20);
+        await using var server = new FakeObsServer();
+        var accepted = 0;
+        server.Start(async (conn, ct) =>
+        {
+            Interlocked.Increment(ref accepted);
+            await AcceptAndIdentifyAsync(conn, ct: ct, notReadyReplies: 2);
+            await Task.Delay(Timeout.Infinite, ct);
+        });
+
+        var (_, host, store) = NewFixture(server.Port);
+        var connection = new ObsConnection(host);
+        using var cts = new CancellationTokenSource();
+        var run = connection.RunAsync(store, cts.Token);
+
+        await WaitUntilAsync(() => store.Get("obs.connected") is true, TimeSpan.FromSeconds(5),
+            "expected obs.connected to become true despite 207", server, host);
+        Assert.Equal(1, accepted); // no reconnect needed
+
+        cts.Cancel();
+        await Task.WhenAny(run, Task.Delay(2000));
     }
 
     [Fact(Timeout = 10_000)]
