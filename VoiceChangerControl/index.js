@@ -73,6 +73,7 @@ const state = {
   imageSources: new Map(), // image id -> { kind: 'voice' | 'sound', id }
   pictureQueue: [],
   pictureInFlight: null, // { imageId, at }
+  pumpTimer: null, // id of the running picture pump timer; null while nothing is queued or in flight
   pictureSends: [], // timestamps of the getBitmap requests of the last second
   pictureFailures: 0,
   picturesOff: false,
@@ -187,6 +188,7 @@ function onClose(socket) {
     }
   }
   state.pictureQueue = [];
+  stopPump();
   if (state.pending) {
     state.tooBig[state.pending] = true;
     state.pending = null;
@@ -582,13 +584,24 @@ host.images.onRequest((ids) => {
       state.pictureQueue.push(imageId);
       if (state.pictureQueue.length > MAX_PICTURE_QUEUE) state.pictureQueue.shift();
     }
+    startPump();
   });
 });
+
+// The pump timer runs only while a picture is queued or a request is in flight (the in-flight timeout is checked inside pump).
+function startPump() {
+  if (state.pumpTimer === null && state.pictureQueue.length) state.pumpTimer = host.every(PICTURE_PUMP_MS, () => guard(pump));
+}
+
+function stopPump() {
+  if (state.pumpTimer !== null) { host.cancel(state.pumpTimer); state.pumpTimer = null; }
+}
 
 // One getBitmap at a time, at most four a second.
 function pump() {
   const now = Date.now();
   if (state.pictureInFlight && now - state.pictureInFlight.at > PICTURE_TIMEOUT_MS) state.pictureInFlight = null;
+  if (!state.pictureQueue.length && !state.pictureInFlight) { stopPump(); return; }
   if (state.picturesOff || !state.registered || state.pending || state.pictureInFlight || !state.pictureQueue.length) return;
   state.pictureSends = state.pictureSends.filter((t) => now - t < 1000);
   if (state.pictureSends.length >= PICTURES_PER_SECOND) return;
@@ -809,4 +822,3 @@ setVar('voicechanger.lasterror', '');
 setVar('voicechanger.license', '');
 host.after(200, tick);
 host.every(TICK_MS, tick);
-host.every(PICTURE_PUMP_MS, () => guard(pump));

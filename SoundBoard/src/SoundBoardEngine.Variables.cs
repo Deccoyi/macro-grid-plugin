@@ -91,8 +91,9 @@ public sealed partial class SoundBoardEngine
                 continue;
             }
 
+            // Whole seconds: the store ignores an equal value, so the server is woken once a second instead of on every tick.
             var remaining = voice.Duration - voice.Position;
-            store.Set($"soundboard.{entry.Id}.remaining", remaining < TimeSpan.Zero ? TimeSpan.Zero : remaining);
+            store.Set($"soundboard.{entry.Id}.remaining", remaining < TimeSpan.Zero ? TimeSpan.Zero : TimeSpan.FromSeconds(Math.Round(remaining.TotalSeconds)));
         }
         PublishNowPlaying();
     }
