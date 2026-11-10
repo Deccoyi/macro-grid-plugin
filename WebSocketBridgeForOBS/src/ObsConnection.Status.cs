@@ -24,16 +24,15 @@ public sealed partial class ObsConnection
         _statusItem?.Update(text, level, "video");
     }
 
-    private void UpdateConnectedStatusText(bool wasStreaming, bool wasRecording, IVariableStore store)
+    private void UpdateConnectedStatusText(bool wasStreaming, bool wasRecording, IVariableStore store, double fps, TimeSpan? streamDuration, TimeSpan? recordDuration)
     {
         if (_connState != ObsConnectionState.Connected) return;
-        var fps = (double?)store.Get("obs.stats.fps") ?? 0;
         var streaming = (bool?)store.Get("obs.streaming") ?? false;
-        var duration = store.Get(streaming ? "obs.stream.duration" : "obs.record.duration") as TimeSpan?;
+        var duration = streaming ? streamDuration : recordDuration;
         var text = streaming || wasStreaming || (bool?)store.Get("obs.recording") == true || wasRecording
             ? $"OBS · {fps:0} fps · ● {duration?.ToString(@"hh\:mm\:ss") ?? "00:00:00"}"
             : $"OBS · {fps:0} fps";
-        store.Set("obs.status", text);
+        if (host.Demand.IsObserved("obs.status")) store.Set("obs.status", text);
         _statusItem?.Update(text, StatusLevel.Ok, "video");
     }
 }

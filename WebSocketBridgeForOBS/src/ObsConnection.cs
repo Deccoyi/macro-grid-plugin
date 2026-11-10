@@ -30,6 +30,7 @@ public sealed partial class ObsConnection(IPluginHost host) : IVariableProvider,
     private readonly Lock _clientLock = new();
     private readonly ObsState _cache = new();
     private readonly SemaphoreSlim _settingsSignal = new(0, int.MaxValue);
+    private readonly SemaphoreSlim _demandSignal = new(0, 1);
     private ObsClient? _client;
     private CancellationTokenSource? _sessionCts;
     private IPluginStatusItem? _statusItem;

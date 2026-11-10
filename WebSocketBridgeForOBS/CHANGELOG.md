@@ -3,6 +3,8 @@
 New features and fixes in the OBS plugin. For technical details, see [CHANGELOG-developer.md](CHANGELOG-developer.md).
 
 ## Unreleased
+### Changed
+- **Lighter on the PC:** the stream, recording and statistics values are only updated while something on screen or in a rule uses them.
 
 ## 0.4.1 - 2026-11-05
 ### Fixed

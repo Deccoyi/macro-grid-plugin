@@ -12,6 +12,7 @@
         "Label": "Scene",
         "Kind": "Select",
         "OptionsSource": "scenes",
+        "Searchable": false,
         "AllowVariables": false
       }
     ]
@@ -29,6 +30,7 @@
         "Label": "Scene",
         "Kind": "Select",
         "OptionsSource": "scenes",
+        "Searchable": false,
         "AllowVariables": false
       }
     ]
@@ -63,6 +65,7 @@
         "Label": "Transition",
         "Kind": "Select",
         "OptionsSource": "transitions",
+        "Searchable": false,
         "AllowVariables": false
       }
     ]
@@ -80,6 +83,7 @@
         "Label": "Profile",
         "Kind": "Select",
         "OptionsSource": "profiles",
+        "Searchable": false,
         "AllowVariables": false
       }
     ]
@@ -158,6 +162,7 @@
             "Label": "Toggle"
           }
         ],
+        "Searchable": false,
         "AllowVariables": false
       }
     ]
@@ -188,6 +193,7 @@
             "Label": "Toggle"
           }
         ],
+        "Searchable": false,
         "AllowVariables": false
       }
     ]
@@ -218,6 +224,7 @@
             "Label": "Toggle"
           }
         ],
+        "Searchable": false,
         "AllowVariables": false
       }
     ]
@@ -243,6 +250,7 @@
         "Label": "Audio source",
         "Kind": "Select",
         "OptionsSource": "audioInputs",
+        "Searchable": false,
         "AllowVariables": false
       },
       {
@@ -260,6 +268,7 @@
             "Label": "Unmute"
           }
         ],
+        "Searchable": false,
         "AllowVariables": false
       }
     ]
@@ -276,6 +285,7 @@
         "Label": "Audio source",
         "Kind": "Select",
         "OptionsSource": "audioInputs",
+        "Searchable": false,
         "AllowVariables": false
       }
     ]
@@ -292,6 +302,7 @@
         "Label": "Audio source",
         "Kind": "Select",
         "OptionsSource": "audioInputs",
+        "Searchable": false,
         "AllowVariables": false
       },
       {
@@ -302,6 +313,7 @@
         "Min": 0,
         "Max": 100,
         "Step": 1,
+        "Searchable": false,
         "AllowVariables": false
       }
     ]
@@ -319,6 +331,7 @@
         "Label": "Audio source",
         "Kind": "Select",
         "OptionsSource": "audioInputs",
+        "Searchable": false,
         "AllowVariables": false
       },
       {
@@ -327,6 +340,7 @@
         "Kind": "Number",
         "Default": 3,
         "Step": 0.5,
+        "Searchable": false,
         "AllowVariables": false
       }
     ]
@@ -344,6 +358,7 @@
         "Label": "Scene",
         "Kind": "Select",
         "OptionsSource": "scenes",
+        "Searchable": false,
         "AllowVariables": false
       },
       {
@@ -351,6 +366,7 @@
         "Label": "Item",
         "Kind": "Select",
         "OptionsSource": "sceneItems",
+        "Searchable": false,
         "DependsOn": [
           "sceneName"
         ],
@@ -375,6 +391,7 @@
             "Label": "Toggle"
           }
         ],
+        "Searchable": false,
         "AllowVariables": false
       }
     ]
@@ -391,12 +408,14 @@
         "Label": "Text source",
         "Kind": "Select",
         "OptionsSource": "textInputs",
+        "Searchable": false,
         "AllowVariables": false
       },
       {
         "Key": "text",
         "Label": "Text",
         "Kind": "Text",
+        "Searchable": false,
         "AllowVariables": true
       }
     ]
