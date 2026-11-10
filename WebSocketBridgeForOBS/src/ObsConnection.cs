@@ -25,7 +25,7 @@ public sealed partial class ObsConnection(IPluginHost host) : IVariableProvider,
     /// retried — the app is also used without OBS, and hammering a closed port forever is pointless.</summary>
     private const int FailuresBeforeProcessCheck = 3;
     private static readonly TimeSpan ProcessPollInterval = TimeSpan.FromSeconds(5);
-    private static readonly string[] ObsProcessNames = ["obs64", "obs32", "obs"];
+    private static readonly TimeSpan ProbeTimeout = TimeSpan.FromSeconds(1);
 
     private readonly Lock _clientLock = new();
     private readonly ObsState _cache = new();
